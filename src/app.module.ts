@@ -8,7 +8,12 @@ import { AuthController } from './auth/auth.controller';
 import { AuthService } from './auth/auth.service';
 
 @Module({
-  imports: [HttpModule, ConfigModule],
+  imports: [
+    HttpModule,
+    ConfigModule.forRoot({
+      envFilePath: process.env.NODE_ENV === 'dev' ? '.dev.env' : '.env',
+    }),
+  ],
   controllers: [AppController, AuthController],
   providers: [AppService, AuthService],
 })

@@ -8,9 +8,9 @@ import { KakaoLoginInfo } from './interface/kakaoLoginInfo.interface';
 export class AuthService {
   constructor(private readonly httpService: HttpService) {}
 
-  async kakaoLogin(code: string) {
+  async kakaoLogin(apiKey: string, redirectUri: string, code: string) {
     //step 2. 토큰 받기 https://developers.kakao.com/docs/latest/ko/kakaologin/rest-api#request-token
-    const token = await this.getToken(code);
+    const token = await this.getToken(apiKey, redirectUri, code);
 
     // step 3. 사용자 로그인 처리
     const loginInfo = await this.getLoginInfo(
@@ -21,15 +21,19 @@ export class AuthService {
     console.log(loginInfo);
   }
 
-  async getToken(code: string): Promise<KakaoToken> {
+  async getToken(
+    apiKey: string,
+    redirectUri: string,
+    code: string,
+  ): Promise<KakaoToken> {
     const headers = {
       'Content-type': 'application/x-www-form-urlencoded;charset=utf-8',
     };
 
     const requestBody = {
       grant_type: 'authorization_code',
-      client_id: process.env.KAKAO_API_KEY,
-      redirect_uri: process.env.KAKAO_LOGIN_REDIRECT_URL,
+      client_id: apiKey,
+      redirect_uri: redirectUri,
       code,
     };
 
