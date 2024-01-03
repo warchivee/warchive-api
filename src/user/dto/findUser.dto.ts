@@ -1,3 +1,3 @@
 export class FindUserDto {
-  readonly userId: number;
+  readonly id: number;
 }

@@ -6,6 +6,11 @@ import { AppController } from './app.controller';
 import { AppService } from './app.service';
 import { UserModule } from './user/user.module';
 import { AuthModule } from './auth/auth.module';
+import { CategoryModule } from './admin/category/category.module';
+import { GenreModule } from './admin/genre/genre.module';
+import { KeywordModule } from './admin/keyword/keyword.module';
+import { CautionModule } from './admin/caution/caution.module';
+import { WataModule } from './admin/wata/wata.module';
 
 @Module({
   imports: [
@@ -25,6 +30,11 @@ import { AuthModule } from './auth/auth.module';
     }),
     AuthModule,
     UserModule,
+    CategoryModule,
+    GenreModule,
+    KeywordModule,
+    CautionModule,
+    WataModule,
   ],
   controllers: [AppController],
   providers: [AppService],

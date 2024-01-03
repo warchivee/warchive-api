@@ -37,7 +37,7 @@ export class JwtStrategy extends PassportStrategy(Strategy) {
 
   async validate(token: string) {
     const decoded = this.jwtService.decode(token, this.JWT_SECRET);
-    const user = this.userService.findOne({ userId: decoded.userId });
+    const user = this.userService.findOne({ id: decoded.userId });
 
     if (!user) {
       throw new UnauthorizedException();
@@ -48,7 +48,7 @@ export class JwtStrategy extends PassportStrategy(Strategy) {
 
   generateAccessToken(user: User): string {
     const payload = {
-      userId: user.userId,
+      userId: user.id,
       nickname: user.nickname,
       role: user.role,
     };
@@ -59,7 +59,7 @@ export class JwtStrategy extends PassportStrategy(Strategy) {
 
   generateRefreshToken(user: User): string {
     const payload = {
-      userId: user.userId,
+      userId: user.id,
       nickname: user.nickname,
       role: user.role,
     };
