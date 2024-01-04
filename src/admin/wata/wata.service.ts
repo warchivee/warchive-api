@@ -4,6 +4,7 @@ import { UpdateWataDto } from './dto/update-wata.dto';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Wata } from './entities/wata.entity';
 import { Repository } from 'typeorm';
+import { UnableDeleteMergedDataException } from 'src/common/exception/service.exception';
 
 @Injectable()
 export class WataService {
@@ -27,7 +28,12 @@ export class WataService {
     return this.wataRepository.save({ id, ...updateWataDto });
   }
 
-  remove(id: number) {
-    return this.wataRepository.delete({ id });
+  async remove(id: number) {
+    const wata = await this.wataRepository.findOneBy({ id });
+    if (wata.is_merged) {
+      throw UnableDeleteMergedDataException();
+    }
+
+    return this.wataRepository.delete({ id, is_merged: false });
   }
 }
