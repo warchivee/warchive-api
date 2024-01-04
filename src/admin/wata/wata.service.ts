@@ -136,11 +136,27 @@ export class WataService {
 
   async remove(id: number) {
     const wata = await this.wataRepository.findOne({ where: { id } });
+
+    if (!wata) {
+      throw EntityNotFoundException('없는 데이터입니다.');
+    }
+
     if (wata.is_merged) {
       throw UnableDeleteMergedDataException();
     }
 
-    return this.wataRepository.delete({ id, is_merged: false });
+    return this.entityManager.transaction(
+      async (transactionalEntityManager) => {
+        const criteria = { wata: { id } };
+        await transactionalEntityManager.delete(WataKeywordMapping, criteria);
+        await transactionalEntityManager.delete(WataCautionMapping, criteria);
+        await transactionalEntityManager.delete(WataPlatformMapping, criteria);
+
+        await transactionalEntityManager.delete(Wata, id);
+
+        return id;
+      },
+    );
   }
 
   private async verifyAndGetDataToDto(dto: CreateWataDto | UpdateWataDto) {
