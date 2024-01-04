@@ -5,10 +5,10 @@ import { firstValueFrom } from 'rxjs';
 
 import { CreateUserDto } from 'src/user/dto/createUser.dto';
 import { UserService } from 'src/user/user.service';
-import { KakaoToken, TokenType } from '../interface/kakaoToken.interface';
-import { KakaoLoginInfo } from '../interface/kakaoLoginInfo.interface';
+import { KakaoToken, TokenType } from './interface/kakaoToken.interface';
+import { KakaoLoginInfo } from './interface/kakaoLoginInfo.interface';
 
-import { JwtStrategy } from '../strategies/jwt.starategy';
+import { JwtStrategy } from './strategies/jwt.starategy';
 
 /**
  * 참고 문서 : https://developers.kakao.com/docs/latest/ko/kakaologin/rest-api#request-code

@@ -1,16 +1,8 @@
-import {
-  Entity,
-  Column,
-  PrimaryGeneratedColumn,
-  CreateDateColumn,
-  UpdateDateColumn,
-} from 'typeorm';
+import { CommonEntity } from 'src/common/entities/common.entity';
+import { Entity, Column } from 'typeorm';
 
 @Entity({ name: 'user' })
-export class User {
-  @PrimaryGeneratedColumn()
-  userId: number;
-
+export class User extends CommonEntity {
   @Column({ length: 10 })
   nickname: string;
 
@@ -19,10 +11,4 @@ export class User {
 
   @Column({ length: 7, default: 'USER' })
   role: 'MANAGER' | 'USER';
-
-  @CreateDateColumn()
-  createdAt: Date;
-
-  @UpdateDateColumn()
-  updatedAt: Date;
 }

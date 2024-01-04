@@ -1,11 +1,11 @@
-import { Injectable, Scope } from '@nestjs/common';
+import { Injectable } from '@nestjs/common';
 import { CreateUserDto } from './dto/createUser.dto';
 import { User } from './entities/user.entity';
 import { FindUserDto } from './dto/findUser.dto';
 import { Repository } from 'typeorm';
 import { InjectRepository } from '@nestjs/typeorm';
 
-@Injectable({ scope: Scope.TRANSIENT })
+@Injectable()
 export class UserService {
   constructor(
     @InjectRepository(User) private readonly userRepository: Repository<User>,
