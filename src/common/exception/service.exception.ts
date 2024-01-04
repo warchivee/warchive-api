@@ -2,7 +2,7 @@ import {
   ENTITY_NOT_FOUND,
   ErrorCode,
   UNABLE_DELETE_MERGED_DATA,
-} from '../constants/message.const';
+} from '../interface/error-code.type';
 
 export const UnableDeleteMergedDataException = (): ServiceException => {
   return new ServiceException(UNABLE_DELETE_MERGED_DATA);
