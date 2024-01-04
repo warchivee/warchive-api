@@ -2,7 +2,7 @@ import { Injectable } from '@nestjs/common';
 import { CreateKeywordDto } from './dto/create-keyword.dto';
 import { UpdateKeywordDto } from './dto/update-keyword.dto';
 import { Keyword } from './entities/keyword.entity';
-import { Repository } from 'typeorm';
+import { In, Repository } from 'typeorm';
 import { InjectRepository } from '@nestjs/typeorm';
 
 @Injectable()
@@ -26,5 +26,11 @@ export class KeywordService {
 
   remove(id: number) {
     return this.keywordRepository.delete({ id });
+  }
+
+  async validate(ids: number[]) {
+    if (!ids) return true;
+    const findCount = await this.keywordRepository.countBy({ id: In(ids) });
+    return findCount === ids.length;
   }
 }

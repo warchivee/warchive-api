@@ -8,8 +8,8 @@ export const UnableDeleteMergedDataException = (): ServiceException => {
   return new ServiceException(UNABLE_DELETE_MERGED_DATA);
 };
 
-export const EntityNotFoundException = (): ServiceException => {
-  return new ServiceException(ENTITY_NOT_FOUND);
+export const EntityNotFoundException = (message?: string): ServiceException => {
+  return new ServiceException(ENTITY_NOT_FOUND, message);
 };
 
 export class ServiceException extends Error {

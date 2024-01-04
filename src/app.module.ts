@@ -11,6 +11,7 @@ import { GenreModule } from './admin/genre/genre.module';
 import { KeywordModule } from './admin/keyword/keyword.module';
 import { CautionModule } from './admin/caution/caution.module';
 import { WataModule } from './admin/wata/wata.module';
+import { PlatformModule } from './admin/platform/platform.module';
 
 @Module({
   imports: [
@@ -35,6 +36,7 @@ import { WataModule } from './admin/wata/wata.module';
     KeywordModule,
     CautionModule,
     WataModule,
+    PlatformModule,
   ],
   controllers: [AppController],
   providers: [AppService],

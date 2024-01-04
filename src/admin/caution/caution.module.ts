@@ -8,5 +8,6 @@ import { Caution } from './entities/caution.entity';
   imports: [TypeOrmModule.forFeature([Caution])],
   controllers: [CautionController],
   providers: [CautionService],
+  exports: [CautionService],
 })
 export class CautionModule {}

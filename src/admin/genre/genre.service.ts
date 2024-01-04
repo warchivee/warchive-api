@@ -36,4 +36,9 @@ export class GenreService {
   remove(categoryId: number, id: number) {
     return this.genreRepository.delete(id);
   }
+
+  async validate(id: number) {
+    if (!id) return true;
+    return await this.genreRepository.exist({ where: { id } });
+  }
 }

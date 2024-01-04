@@ -2,7 +2,7 @@ import { Injectable } from '@nestjs/common';
 import { CreateCautionDto } from './dto/create-caution.dto';
 import { UpdateCautionDto } from './dto/update-caution.dto';
 import { Caution } from './entities/caution.entity';
-import { Repository } from 'typeorm';
+import { In, Repository } from 'typeorm';
 import { InjectRepository } from '@nestjs/typeorm';
 
 @Injectable()
@@ -26,5 +26,11 @@ export class CautionService {
 
   remove(id: number) {
     return this.categoryRepository.delete({ id });
+  }
+
+  async validate(ids: number[]) {
+    if (!ids) return true;
+    const findCount = await this.categoryRepository.countBy({ id: In(ids) });
+    return findCount === ids.length;
   }
 }
