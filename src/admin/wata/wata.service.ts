@@ -9,16 +9,13 @@ import {
   UnableDeleteMergedDataException,
 } from 'src/common/exception/service.exception';
 import { WataKeywordMapping } from './entities/wata-keyword.entity';
-import { Genre } from '../genre/entities/genre.entity';
-import { Keyword } from '../keyword/entities/keyword.entity';
 import { KeywordService } from '../keyword/keyword.service';
 import { WataCautionMapping } from './entities/wata-caution.entity';
 import { CautionService } from '../caution/caution.service';
-import { Caution } from '../caution/entities/caution.entity';
 import { GenreService } from '../genre/genre.service';
 import { PlatformService } from '../platform/platform.service';
 import { WataPlatformMapping } from './entities/wata-platform.entity';
-import { Platform } from '../platform/entities/platform.entity';
+import { WataMappingService } from './wata-mapping.service';
 
 @Injectable()
 export class WataService {
@@ -28,99 +25,130 @@ export class WataService {
     private readonly keywordService: KeywordService,
     private readonly cautionService: CautionService,
     private readonly platformService: PlatformService,
+    private readonly mappingService: WataMappingService,
     private readonly entityManager: EntityManager,
   ) {}
 
+  relations = [
+    'genre.category',
+    'genre',
+    'keywords',
+    'keywords.keyword',
+    'cautions',
+    'cautions.caution',
+    'platforms',
+    'platforms.platform',
+  ];
+
+  findAll() {
+    return this.wataRepository.find({
+      relations: this.relations,
+    });
+  }
+
+  findOne(id: number) {
+    return this.wataRepository.findOne({
+      where: { id },
+      relations: this.relations,
+    });
+  }
+
   async create(createWataDto: CreateWataDto) {
-    if (!(await this.genreService.validate(createWataDto.genre))) {
-      throw EntityNotFoundException('없는 장르입니다.');
-    }
-
-    if (!(await this.keywordService.validate(createWataDto.keywords))) {
-      throw EntityNotFoundException('없는 키워드입니다.');
-    }
-
-    if (!(await this.cautionService.validate(createWataDto.cautions))) {
-      throw EntityNotFoundException('없는 주의 키워드입니다.');
-    }
-
-    if (
-      !(await this.platformService.validate(
-        createWataDto.platforms?.map((platform) => platform.id),
-      ))
-    ) {
-      throw EntityNotFoundException('없는 플랫폼입니다.');
-    }
+    const create = await this.verifyAndGetDataToDto(createWataDto);
 
     return this.entityManager.transaction(
       async (transactionalEntityManager) => {
         const createdWata = await transactionalEntityManager.save(Wata, {
           title: createWataDto.title,
           creators: createWataDto.creators,
-          genre: { id: createWataDto.genre } as Genre,
+          genre: create.genre,
           thumbnail_url: createWataDto.thumbnail_url,
           note: createWataDto.note,
         } as Wata);
 
-        if (createWataDto.keywords) {
-          const keywords = createWataDto.keywords?.map((keyword: number) => {
-            return {
-              keyword: { id: keyword } as Keyword,
-              wata: createdWata,
-            } as WataKeywordMapping;
-          });
+        await this.mappingService.createKeywordMappings(
+          transactionalEntityManager,
+          createdWata,
+          create.keywords,
+        );
 
-          await transactionalEntityManager.save(WataKeywordMapping, keywords);
-        }
+        await this.mappingService.createCautionMappings(
+          transactionalEntityManager,
+          createdWata,
+          create.cautions,
+        );
 
-        if (createWataDto.cautions) {
-          const cautions = createWataDto.keywords?.map((caution: number) => {
-            return {
-              caution: { id: caution } as Caution,
-              wata: createdWata,
-            } as WataCautionMapping;
-          });
+        await this.mappingService.createPlatformMappings(
+          transactionalEntityManager,
+          createdWata,
+          create.platforms,
+        );
 
-          await transactionalEntityManager.save(WataCautionMapping, cautions);
-        }
-
-        if (createWataDto.platforms) {
-          const platforms = createWataDto.platforms?.map((platform) => {
-            return {
-              platform: { id: platform.id } as Platform,
-              url: platform.url,
-              wata: createdWata,
-            } as WataPlatformMapping;
-          });
-
-          await transactionalEntityManager.save(WataPlatformMapping, platforms);
-        }
-
-        return {
-          ...createdWata,
-        };
+        return createdWata.id;
       },
     );
   }
 
-  findAll() {
-    return this.wataRepository.find();
-  }
+  async update(id: number, updateWataDto: UpdateWataDto) {
+    const wata = await this.findOne(id);
 
-  findOne(id: number) {
-    return this.wataRepository.findOneBy({ id });
-  }
+    if (!wata) {
+      throw EntityNotFoundException('없는 데이터입니다.');
+    }
 
-  update(id: number, updateWataDto: UpdateWataDto) {
-    return { id, ...updateWataDto };
+    const update = await this.verifyAndGetDataToDto(updateWataDto);
+
+    return this.entityManager.transaction(
+      async (transactionalEntityManager) => {
+        await transactionalEntityManager.update(Wata, id, {
+          title: updateWataDto.title,
+          creators: updateWataDto.creators,
+          genre: update.genre,
+          thumbnail_url: updateWataDto.thumbnail_url,
+          note: updateWataDto.note,
+        } as Wata);
+
+        await this.mappingService.mergeMappings(
+          transactionalEntityManager,
+          wata,
+          update.keywords,
+          WataKeywordMapping,
+        );
+
+        await this.mappingService.mergeMappings(
+          transactionalEntityManager,
+          wata,
+          update.cautions,
+          WataCautionMapping,
+        );
+
+        await this.mappingService.mergeMappings(
+          transactionalEntityManager,
+          wata,
+          update.platforms,
+          WataPlatformMapping,
+        );
+
+        return id;
+      },
+    );
   }
 
   async remove(id: number) {
-    const wata = await this.wataRepository.findOneBy({ id });
+    const wata = await this.wataRepository.findOne({ where: { id } });
     if (wata.is_merged) {
       throw UnableDeleteMergedDataException();
     }
 
     return this.wataRepository.delete({ id, is_merged: false });
+  }
+
+  private async verifyAndGetDataToDto(dto: CreateWataDto | UpdateWataDto) {
+    const genre = await this.genreService.validate(dto.genre);
+    const platforms = await this.platformService.validate(dto.platforms);
+    const cautions = await this.cautionService.validate(dto.cautions);
+    const keywords = await this.keywordService.validate(dto.keywords);
+
+    return { genre, platforms, cautions, keywords };
   }
 }

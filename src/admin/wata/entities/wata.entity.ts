@@ -18,13 +18,13 @@ export class Wata extends CommonEntity {
   @JoinColumn({ name: 'genre_id' })
   genre?: Genre;
 
-  @OneToMany(() => WataKeywordMapping, (keyword) => keyword.id)
+  @OneToMany(() => WataKeywordMapping, (keyword) => keyword.wata)
   keywords?: WataKeywordMapping[];
 
-  @OneToMany(() => WataCautionMapping, (caution) => caution.id)
+  @OneToMany(() => WataCautionMapping, (caution) => caution.wata)
   cautions?: WataCautionMapping[];
 
-  @OneToMany(() => WataPlatformMapping, (platform) => platform.id)
+  @OneToMany(() => WataPlatformMapping, (platform) => platform.wata)
   platforms?: WataPlatformMapping[];
 
   @Column({ length: 250, nullable: true })

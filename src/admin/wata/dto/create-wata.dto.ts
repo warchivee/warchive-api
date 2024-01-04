@@ -6,7 +6,7 @@ import {
   IsArray,
 } from 'class-validator';
 
-class PlatformDto {
+export class PlatformWithUrlDto {
   id: number;
 
   @IsUrl(null, { message: '플랫폼에는 url을 입력해야 합니다.' })
@@ -36,7 +36,7 @@ export class CreateWataDto {
 
   @IsOptional()
   @IsArray()
-  platforms?: PlatformDto[];
+  platforms?: PlatformWithUrlDto[];
 
   @IsOptional()
   @IsUrl(null, { message: '썸네일은 url 값을 입력해야 합니다.' })

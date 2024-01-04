@@ -10,6 +10,6 @@ export class WataCautionMapping extends CommonEntity {
   wata: Wata;
 
   @ManyToOne(() => Caution, (caution) => caution.id)
-  @JoinColumn({ name: 'keyword_id' })
+  @JoinColumn({ name: 'caution_id' })
   caution: Caution;
 }

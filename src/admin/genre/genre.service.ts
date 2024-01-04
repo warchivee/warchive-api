@@ -4,6 +4,7 @@ import { UpdateGenreDto } from './dto/update-genre.dto';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Genre } from './entities/genre.entity';
 import { Repository } from 'typeorm';
+import { EntityNotFoundException } from 'src/common/exception/service.exception';
 
 @Injectable()
 export class GenreService {
@@ -38,7 +39,9 @@ export class GenreService {
   }
 
   async validate(id: number) {
-    if (!id) return true;
-    return await this.genreRepository.exist({ where: { id } });
+    if (!id) return null;
+    const genre = await this.genreRepository.findOneBy({ id });
+    if (!genre) throw EntityNotFoundException('없는 장르입니다.');
+    return genre;
   }
 }

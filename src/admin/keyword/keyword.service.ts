@@ -4,6 +4,7 @@ import { UpdateKeywordDto } from './dto/update-keyword.dto';
 import { Keyword } from './entities/keyword.entity';
 import { In, Repository } from 'typeorm';
 import { InjectRepository } from '@nestjs/typeorm';
+import { EntityNotFoundException } from 'src/common/exception/service.exception';
 
 @Injectable()
 export class KeywordService {
@@ -29,8 +30,15 @@ export class KeywordService {
   }
 
   async validate(ids: number[]) {
-    if (!ids) return true;
-    const findCount = await this.keywordRepository.countBy({ id: In(ids) });
-    return findCount === ids.length;
+    if (!ids) return null;
+    const keywords = await this.keywordRepository.find({
+      where: { id: In(ids) },
+    });
+
+    if (keywords.length !== ids.length) {
+      throw EntityNotFoundException('없는 키워드입니다.');
+    }
+
+    return keywords;
   }
 }

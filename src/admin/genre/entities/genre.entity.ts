@@ -4,7 +4,7 @@ import { Column, Entity, JoinColumn, ManyToOne } from 'typeorm';
 
 @Entity({ name: 'genre' })
 export class Genre extends CommonEntity {
-  @ManyToOne(() => Category, (category) => category.id)
+  @ManyToOne(() => Category, (category) => category.genres)
   @JoinColumn({ name: 'category_id' })
   category: Category;
 

@@ -7,6 +7,6 @@ export class Category extends CommonEntity {
   @Column({ length: 12 })
   name: string;
 
-  @OneToMany(() => Genre, (genre) => genre)
+  @OneToMany(() => Genre, (genre) => genre.id)
   genres: Genre[];
 }

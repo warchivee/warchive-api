@@ -4,6 +4,7 @@ import { UpdateCautionDto } from './dto/update-caution.dto';
 import { Caution } from './entities/caution.entity';
 import { In, Repository } from 'typeorm';
 import { InjectRepository } from '@nestjs/typeorm';
+import { EntityNotFoundException } from 'src/common/exception/service.exception';
 
 @Injectable()
 export class CautionService {
@@ -29,8 +30,15 @@ export class CautionService {
   }
 
   async validate(ids: number[]) {
-    if (!ids) return true;
-    const findCount = await this.categoryRepository.countBy({ id: In(ids) });
-    return findCount === ids.length;
+    if (!ids) return null;
+    const cautions = await this.categoryRepository.find({
+      where: { id: In(ids) },
+    });
+
+    if (cautions.length !== ids.length) {
+      throw EntityNotFoundException('없는 주의 키워드입니다.');
+    }
+
+    return cautions;
   }
 }

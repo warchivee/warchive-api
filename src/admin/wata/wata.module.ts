@@ -9,6 +9,7 @@ import { WataCautionMapping } from './entities/wata-caution.entity';
 import { CautionModule } from '../caution/caution.module';
 import { GenreModule } from '../genre/genre.module';
 import { PlatformModule } from '../platform/platform.module';
+import { WataMappingService } from './wata-mapping.service';
 
 @Module({
   imports: [
@@ -19,6 +20,6 @@ import { PlatformModule } from '../platform/platform.module';
     PlatformModule,
   ],
   controllers: [WataController],
-  providers: [WataService],
+  providers: [WataService, WataMappingService],
 })
 export class WataModule {}
