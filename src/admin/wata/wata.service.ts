@@ -7,6 +7,7 @@ import { EntityManager, Repository } from 'typeorm';
 import {
   EntityNotFoundException,
   UnableDeleteMergedDataException,
+  UnableUpdateDataBeforeUpdating,
 } from 'src/common/exception/service.exception';
 import { WataKeywordMapping } from './entities/wata-keyword.entity';
 import { KeywordService } from '../keyword/keyword.service';
@@ -16,6 +17,7 @@ import { GenreService } from '../genre/genre.service';
 import { PlatformService } from '../platform/platform.service';
 import { WataPlatformMapping } from './entities/wata-platform.entity';
 import { WataMappingService } from './wata-mapping.service';
+import { UpdateWataLabelDto } from './dto/update-wata-label.dto';
 
 @Injectable()
 export class WataService {
@@ -46,11 +48,19 @@ export class WataService {
     });
   }
 
-  findOne(id: number) {
-    return this.wataRepository.findOne({
-      where: { id },
-      relations: this.relations,
-    });
+  async findOne(id: number) {
+    try {
+      return await this.wataRepository.findOneOrFail({
+        where: { id },
+        relations: this.relations,
+      });
+    } catch (error) {
+      if (error.name === 'EntityNotFoundError') {
+        throw EntityNotFoundException();
+      } else {
+        throw error;
+      }
+    }
   }
 
   async create(createWataDto: CreateWataDto) {
@@ -89,12 +99,22 @@ export class WataService {
     );
   }
 
-  async update(id: number, updateWataDto: UpdateWataDto) {
-    const wata = await this.findOne(id);
+  async updating(id: number) {
+    await this.validate(id);
 
-    if (!wata) {
-      throw EntityNotFoundException('없는 데이터입니다.');
+    return await this.wataRepository.update(id, {
+      is_updating: true,
+    });
+  }
+
+  async update(id: number, updateWataDto: UpdateWataDto) {
+    const wata = await this.validate(id);
+
+    if (!wata.is_updating) {
+      throw UnableUpdateDataBeforeUpdating();
     }
+
+    // todo is_updating = true 시 수정 요청한 사람 != 수정한 사람 이면 throw 동시수정 x
 
     const update = await this.verifyAndGetDataToDto(updateWataDto);
 
@@ -134,12 +154,16 @@ export class WataService {
     );
   }
 
-  async remove(id: number) {
-    const wata = await this.wataRepository.findOne({ where: { id } });
+  async updateLabel(id: number, updateWataLabelDto: UpdateWataLabelDto) {
+    await this.validate(id);
 
-    if (!wata) {
-      throw EntityNotFoundException('없는 데이터입니다.');
-    }
+    return await this.wataRepository.update(id, {
+      ...updateWataLabelDto,
+    });
+  }
+
+  async remove(id: number) {
+    const wata = await this.validate(id);
 
     if (wata.is_merged) {
       throw UnableDeleteMergedDataException();
@@ -157,6 +181,16 @@ export class WataService {
         return id;
       },
     );
+  }
+
+  private async validate(id: number) {
+    const wata = await this.findOne(id);
+
+    if (!wata) {
+      throw EntityNotFoundException('없는 데이터입니다.');
+    }
+
+    return wata;
   }
 
   private async verifyAndGetDataToDto(dto: CreateWataDto | UpdateWataDto) {

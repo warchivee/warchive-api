@@ -14,6 +14,12 @@ class ErrorCodeVo {
 
 export type ErrorCode = ErrorCodeVo;
 
+export const UNABLE_UPDATE_DATA_BEFORE_UPDATING = new ErrorCodeVo(
+  'Unable Update Data Before Updating',
+  HttpStatus.FORBIDDEN,
+  '/updating 을 먼저 요청해주세요.',
+);
+
 export const UNABLE_DELETE_MERGED_DATA = new ErrorCodeVo(
   'Unable Delete Merged Data',
   HttpStatus.FORBIDDEN,
