@@ -2,6 +2,7 @@ import { Injectable } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 import { JwtService } from '@nestjs/jwt';
 import { User } from 'src/user/entities/user.entity';
+import { UserService } from 'src/user/user.service';
 
 /**
  * 프론트에서 JWT 토큰 확인:
@@ -19,6 +20,7 @@ export class AuthJwtService {
   constructor(
     private readonly configService: ConfigService,
     private readonly jwtService: JwtService,
+    private readonly userService: UserService,
   ) {}
 
   private readonly JWT_SECRET = this.configService.get('JWT_SECRET');
@@ -31,6 +33,18 @@ export class AuthJwtService {
     });
 
     return payload;
+  }
+
+  async validateRefresh(refreshToken: string) {
+    // 리프레시 토큰 검증
+    const payload = await this.jwtService.verifyAsync(refreshToken, {
+      secret: this.JWT_REFRESH_SECRET,
+    });
+
+    // 예시: 디코딩된 토큰에서 사용자 정보 가져오기
+    const user: User = await this.userService.findOne(payload.id);
+
+    return user;
   }
 
   generateAccessToken(user: User): string {

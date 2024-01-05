@@ -3,7 +3,7 @@ import { CreateWataDto } from './dto/create-wata.dto';
 import { UpdateWataDto } from './dto/update-wata.dto';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Wata } from './entities/wata.entity';
-import { EntityManager, Repository } from 'typeorm';
+import { EntityManager, EntityNotFoundError, Repository } from 'typeorm';
 import {
   EntityNotFoundException,
   UnableDeleteMergedDataException,
@@ -57,7 +57,7 @@ export class WataService {
         relations: this.relations,
       });
     } catch (error) {
-      if (error.name === 'EntityNotFoundError') {
+      if (error instanceof EntityNotFoundError) {
         throw EntityNotFoundException();
       } else {
         throw error;

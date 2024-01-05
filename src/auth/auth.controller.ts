@@ -1,4 +1,13 @@
-import { Controller, Get, Header, HttpCode, Query, Res } from '@nestjs/common';
+import {
+  Controller,
+  Get,
+  Header,
+  HttpCode,
+  Post,
+  Query,
+  Request,
+  Res,
+} from '@nestjs/common';
 import { Response } from 'express';
 import { AuthService } from './auth.service';
 import { ApiTags } from '@nestjs/swagger';
@@ -21,5 +30,10 @@ export class AuthController {
   @Get('kakao/redirect')
   async getKakaoInfo(@Query() { code }: { code: string }) {
     return await this.authService.kakaoLogin(code);
+  }
+
+  @Post('refresh')
+  async refreshAccessToken(@Request() req) {
+    return await this.authService.refreshAccessToken(req.user);
   }
 }

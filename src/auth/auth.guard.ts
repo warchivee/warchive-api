@@ -8,6 +8,7 @@ import { Request } from 'express';
 import { Reflector } from '@nestjs/core';
 import { AuthJwtService } from 'src/auth/jwt.service';
 import { IS_PUBLIC_KEY } from './decorators/public.decorator';
+import { TokenExpiredError } from '@nestjs/jwt';
 
 //참고문서: https://docs.nestjs.com/security/authentication
 
@@ -34,10 +35,21 @@ export class AuthGuard implements CanActivate {
     }
 
     try {
-      const payload = await this.authJwtService.validate(token);
+      // Check if it's a 'refresh' request
+      let payload = null;
+      if (request.url.includes('refresh')) {
+        payload = await this.authJwtService.validateRefresh(token);
+      } else {
+        payload = await this.authJwtService.validate(token);
+      }
+
       request['user'] = payload;
-    } catch {
-      throw new UnauthorizedException();
+    } catch (error) {
+      if (error instanceof TokenExpiredError) {
+        throw new UnauthorizedException('토큰이 만료되었습니다.');
+      } else {
+        throw new UnauthorizedException();
+      }
     }
     return true;
   }

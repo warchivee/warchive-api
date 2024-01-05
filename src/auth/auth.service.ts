@@ -8,6 +8,7 @@ import { UserService } from 'src/user/user.service';
 import { KakaoToken, TokenType } from './interface/kakaoToken.interface';
 import { KakaoLoginInfo } from './interface/kakaoLoginInfo.interface';
 import { AuthJwtService } from './jwt.service';
+import { User } from 'src/user/entities/user.entity';
 
 /**
  * 참고 문서 : https://developers.kakao.com/docs/latest/ko/kakaologin/rest-api#request-code
@@ -52,6 +53,10 @@ export class AuthService {
       access_token: accessToken,
       refresh_token: refreshToken,
     };
+  }
+
+  async refreshAccessToken(user: User) {
+    return { access_token: this.authJwtService.generateAccessToken(user) };
   }
 
   private async getToken(
