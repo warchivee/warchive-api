@@ -126,6 +126,7 @@ export class WataService {
           genre: update.genre,
           thumbnail_url: updateWataDto.thumbnail_url,
           note: updateWataDto.note,
+          is_updating: false,
         } as Wata);
 
         await this.mappingService.mergeMappings(
