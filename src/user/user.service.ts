@@ -25,6 +25,6 @@ export class UserService {
   }
 
   async findOne(findUserDto: FindUserDto) {
-    return await this.userRepository.findOneBy({ ...findUserDto });
+    return await this.userRepository.findOne({ where: { ...findUserDto } });
   }
 }
