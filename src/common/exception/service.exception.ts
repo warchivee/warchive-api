@@ -2,7 +2,12 @@ import {
   ENTITY_NOT_FOUND,
   ErrorCode,
   UNABLE_DELETE_MERGED_DATA,
+  UNABLE_UPDATE_DATA_BEFORE_UPDATING,
 } from '../interface/error-code.type';
+
+export const UnableUpdateDataBeforeUpdating = (): ServiceException => {
+  return new ServiceException(UNABLE_UPDATE_DATA_BEFORE_UPDATING);
+};
 
 export const UnableDeleteMergedDataException = (): ServiceException => {
   return new ServiceException(UNABLE_DELETE_MERGED_DATA);

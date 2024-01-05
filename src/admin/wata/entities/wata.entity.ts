@@ -5,6 +5,7 @@ import { Column, Entity, JoinColumn, ManyToOne, OneToMany } from 'typeorm';
 import { WataKeywordMapping } from './wata-keyword.entity';
 import { WataCautionMapping } from './wata-caution.entity';
 import { WataPlatformMapping } from './wata-platform.entity';
+import { WataLabelType } from '../interface/wata.type';
 
 @Entity({ name: 'wata' })
 export class Wata extends CommonEntity {
@@ -34,8 +35,11 @@ export class Wata extends CommonEntity {
   @JoinColumn({ name: 'adder_id' })
   adder: User;
 
-  @Column({ length: 20, default: 'WAIT' })
-  confirm_status?: 'WAIT' | 'PROGRESS' | 'COMPLETE' | 'HOLD' | 'DELETED';
+  @Column({ length: 10, default: 'NEED' })
+  label?: WataLabelType;
+
+  @Column({ default: false })
+  is_updating?: boolean;
 
   @Column({ default: false })
   is_merged?: boolean;
