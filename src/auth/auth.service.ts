@@ -7,8 +7,8 @@ import { CreateUserDto } from 'src/user/dto/createUser.dto';
 import { UserService } from 'src/user/user.service';
 import { KakaoToken, TokenType } from './interface/kakaoToken.interface';
 import { KakaoLoginInfo } from './interface/kakaoLoginInfo.interface';
-
-import { JwtStrategy } from './strategies/jwt.starategy';
+import { AuthJwtService } from './jwt.service';
+import { User } from 'src/user/entities/user.entity';
 
 /**
  * 참고 문서 : https://developers.kakao.com/docs/latest/ko/kakaologin/rest-api#request-code
@@ -20,7 +20,7 @@ export class AuthService {
     private readonly configService: ConfigService,
     private readonly httpService: HttpService,
     private readonly userService: UserService,
-    private readonly jwtStrategy: JwtStrategy,
+    private readonly authJwtService: AuthJwtService,
   ) {}
 
   API_KEY = this.configService.get('KAKAO_API_KEY');
@@ -45,14 +45,18 @@ export class AuthService {
       new CreateUserDto('익명', loginInfo.id),
     );
 
-    const accessToken = this.jwtStrategy.generateAccessToken(user);
-    const refreshToken = this.jwtStrategy.generateRefreshToken(user);
+    const accessToken = this.authJwtService.generateAccessToken(user);
+    const refreshToken = this.authJwtService.generateRefreshToken(user);
 
     return {
       user: user,
       access_token: accessToken,
       refresh_token: refreshToken,
     };
+  }
+
+  async refreshAccessToken(user: User) {
+    return { access_token: this.authJwtService.generateAccessToken(user) };
   }
 
   private async getToken(

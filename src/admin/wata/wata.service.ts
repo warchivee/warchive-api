@@ -3,11 +3,12 @@ import { CreateWataDto } from './dto/create-wata.dto';
 import { UpdateWataDto } from './dto/update-wata.dto';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Wata } from './entities/wata.entity';
-import { EntityManager, Repository } from 'typeorm';
+import { EntityManager, EntityNotFoundError, Repository } from 'typeorm';
 import {
   EntityNotFoundException,
   UnableDeleteMergedDataException,
   UnableUpdateDataBeforeUpdating,
+  UnableUpdatingData,
 } from 'src/common/exception/service.exception';
 import { WataKeywordMapping } from './entities/wata-keyword.entity';
 import { KeywordService } from '../keyword/keyword.service';
@@ -18,6 +19,7 @@ import { PlatformService } from '../platform/platform.service';
 import { WataPlatformMapping } from './entities/wata-platform.entity';
 import { WataMappingService } from './wata-mapping.service';
 import { UpdateWataLabelDto } from './dto/update-wata-label.dto';
+import { User } from 'src/user/entities/user.entity';
 
 @Injectable()
 export class WataService {
@@ -55,7 +57,7 @@ export class WataService {
         relations: this.relations,
       });
     } catch (error) {
-      if (error.name === 'EntityNotFoundError') {
+      if (error instanceof EntityNotFoundError) {
         throw EntityNotFoundException();
       } else {
         throw error;
@@ -63,7 +65,7 @@ export class WataService {
     }
   }
 
-  async create(createWataDto: CreateWataDto) {
+  async create(user: User, createWataDto: CreateWataDto) {
     const create = await this.verifyAndGetDataToDto(createWataDto);
 
     return this.entityManager.transaction(
@@ -74,6 +76,8 @@ export class WataService {
           genre: create.genre,
           thumbnail_url: createWataDto.thumbnail_url,
           note: createWataDto.note,
+          adder: user,
+          updater: user,
         } as Wata);
 
         await this.mappingService.createKeywordMappings(
@@ -99,22 +103,25 @@ export class WataService {
     );
   }
 
-  async updating(id: number) {
+  async updating(user: User, id: number) {
     await this.validate(id);
 
     return await this.wataRepository.update(id, {
       is_updating: true,
+      updater: user,
     });
   }
 
-  async update(id: number, updateWataDto: UpdateWataDto) {
+  async update(user: User, id: number, updateWataDto: UpdateWataDto) {
     const wata = await this.validate(id);
 
     if (!wata.is_updating) {
       throw UnableUpdateDataBeforeUpdating();
     }
 
-    // todo is_updating = true 시 수정 요청한 사람 != 수정한 사람 이면 throw 동시수정 x
+    if (wata.updater.id !== user.id) {
+      throw UnableUpdatingData(user.nickname);
+    }
 
     const update = await this.verifyAndGetDataToDto(updateWataDto);
 
@@ -127,6 +134,7 @@ export class WataService {
           thumbnail_url: updateWataDto.thumbnail_url,
           note: updateWataDto.note,
           is_updating: false,
+          updater: user,
         } as Wata);
 
         await this.mappingService.mergeMappings(
@@ -155,11 +163,16 @@ export class WataService {
     );
   }
 
-  async updateLabel(id: number, updateWataLabelDto: UpdateWataLabelDto) {
+  async updateLabel(
+    user: User,
+    id: number,
+    updateWataLabelDto: UpdateWataLabelDto,
+  ) {
     await this.validate(id);
 
     return await this.wataRepository.update(id, {
       ...updateWataLabelDto,
+      updater: user,
     });
   }
 

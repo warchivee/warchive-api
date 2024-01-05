@@ -14,6 +14,12 @@ class ErrorCodeVo {
 
 export type ErrorCode = ErrorCodeVo;
 
+export const UNABLE_UPDATING_DATA = new ErrorCodeVo(
+  'Unable Updating Data',
+  HttpStatus.FORBIDDEN,
+  '님이 수정 중인 데이터입니다.',
+);
+
 export const UNABLE_UPDATE_DATA_BEFORE_UPDATING = new ErrorCodeVo(
   'Unable Update Data Before Updating',
   HttpStatus.FORBIDDEN,

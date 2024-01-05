@@ -1,10 +1,8 @@
-import { Injectable, UnauthorizedException } from '@nestjs/common';
-import { PassportStrategy } from '@nestjs/passport';
-import { ExtractJwt, Strategy } from 'passport-jwt';
+import { Injectable } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 import { JwtService } from '@nestjs/jwt';
-import { UserService } from 'src/user/user.service';
 import { User } from 'src/user/entities/user.entity';
+import { UserService } from 'src/user/user.service';
 
 /**
  * 프론트에서 JWT 토큰 확인:
@@ -18,37 +16,40 @@ import { User } from 'src/user/entities/user.entity';
  */
 
 @Injectable()
-export class JwtStrategy extends PassportStrategy(Strategy) {
+export class AuthJwtService {
   constructor(
-    private readonly userService: UserService,
     private readonly configService: ConfigService,
     private readonly jwtService: JwtService,
-  ) {
-    super({
-      jwtFromRequest: ExtractJwt.fromAuthHeaderAsBearerToken(),
-      ignoreExpiration: true, // token 만료 검증은 서버에서 따로 진행..
-      secretOrKey: configService.get('JWT_SECRET'),
-    });
-  }
+    private readonly userService: UserService,
+  ) {}
 
   private readonly JWT_SECRET = this.configService.get('JWT_SECRET');
   private readonly JWT_REFRESH_SECRET =
     this.configService.get('JWT_REFRESH_SECRET');
 
   async validate(token: string) {
-    const decoded = this.jwtService.decode(token, this.JWT_SECRET);
-    const user = this.userService.findOne({ id: decoded.userId });
+    const payload = await this.jwtService.verifyAsync(token, {
+      secret: this.JWT_SECRET,
+    });
 
-    if (!user) {
-      throw new UnauthorizedException();
-    }
+    return payload;
+  }
+
+  async validateRefresh(refreshToken: string) {
+    // 리프레시 토큰 검증
+    const payload = await this.jwtService.verifyAsync(refreshToken, {
+      secret: this.JWT_REFRESH_SECRET,
+    });
+
+    // 예시: 디코딩된 토큰에서 사용자 정보 가져오기
+    const user: User = await this.userService.findOne(payload.id);
 
     return user;
   }
 
   generateAccessToken(user: User): string {
     const payload = {
-      userId: user.id,
+      id: user.id,
       nickname: user.nickname,
       role: user.role,
     };
@@ -59,7 +60,7 @@ export class JwtStrategy extends PassportStrategy(Strategy) {
 
   generateRefreshToken(user: User): string {
     const payload = {
-      userId: user.id,
+      id: user.id,
       nickname: user.nickname,
       role: user.role,
     };
