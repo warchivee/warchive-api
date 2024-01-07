@@ -5,7 +5,7 @@ import { firstValueFrom } from 'rxjs';
 
 import { CreateUserDto } from 'src/user/dto/createUser.dto';
 import { UserService } from 'src/user/user.service';
-import { KakaoToken, TokenType } from './interface/kakaoToken.interface';
+import { KakaoToken, TokenType } from './interface/token.interface';
 import { KakaoLoginInfo } from './interface/kakaoLoginInfo.interface';
 import { AuthJwtService } from './jwt.service';
 import { User } from 'src/user/entities/user.entity';
@@ -51,6 +51,7 @@ export class AuthService {
     return {
       user: user,
       access_token: accessToken,
+      token_type: 'Bearer',
       refresh_token: refreshToken,
     };
   }
