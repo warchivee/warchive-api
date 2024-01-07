@@ -26,6 +26,10 @@ export class AuthJwtService {
   private readonly JWT_SECRET = this.configService.get('JWT_SECRET');
   private readonly JWT_REFRESH_SECRET =
     this.configService.get('JWT_REFRESH_SECRET');
+  private readonly JWT_EXPIRES_IN = this.configService.get('JWT_EXPIRES_IN');
+  private readonly JWT_REFRESH_EXPIRES_IN = this.configService.get(
+    'JWT_RESRESH_EXPIRES_IN',
+  );
 
   async validate(token: string) {
     const payload = await this.jwtService.verifyAsync(token, {
@@ -53,7 +57,10 @@ export class AuthJwtService {
       nickname: user.nickname,
       role: user.role,
     };
-    const options = { secret: this.JWT_SECRET, expiresIn: '1h' };
+    const options = {
+      secret: this.JWT_SECRET,
+      expiresIn: this.JWT_EXPIRES_IN,
+    };
 
     return this.jwtService.sign(payload, options);
   }
@@ -64,7 +71,10 @@ export class AuthJwtService {
       nickname: user.nickname,
       role: user.role,
     };
-    const options = { secret: this.JWT_REFRESH_SECRET, expiresIn: '30d' };
+    const options = {
+      secret: this.JWT_REFRESH_SECRET,
+      expiresIn: this.JWT_REFRESH_EXPIRES_IN,
+    };
 
     return this.jwtService.sign(payload, options);
   }
