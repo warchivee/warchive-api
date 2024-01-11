@@ -3,6 +3,7 @@ import { SwaggerModule, DocumentBuilder } from '@nestjs/swagger';
 import { AppModule } from './app.module';
 import { ValidationPipe } from '@nestjs/common';
 import { ServiceExceptionsFilter } from './common/middlewere/exception.filter';
+import * as cookieParser from 'cookie-parser';
 
 async function bootstrap() {
   const serverPort = 3000;
@@ -20,9 +21,11 @@ async function bootstrap() {
 
   app.useGlobalFilters(new ServiceExceptionsFilter());
 
+  app.use(cookieParser());
+
   app.enableCors({
-    origin: true,
-    methods: 'GET,HEAD,PUT,PATCH,POST,DELETE,OPTIONS',
+    origin: process.env.FRONTEND_DOMAIN,
+    methods: 'GET,PUT,PATCH,POST,DELETE',
     credentials: true,
   });
 
