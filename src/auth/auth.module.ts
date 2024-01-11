@@ -1,5 +1,4 @@
 import { Module } from '@nestjs/common';
-import { HttpModule } from '@nestjs/axios';
 import { UserModule } from 'src/user/user.module';
 import { ConfigModule } from '@nestjs/config';
 import { JwtModule } from '@nestjs/jwt';
@@ -14,7 +13,6 @@ import { APP_GUARD } from '@nestjs/core';
     ConfigModule.forRoot({
       envFilePath: process.env.NODE_ENV === 'dev' ? '.dev.env' : '.env',
     }),
-    HttpModule,
     JwtModule.register({}),
     UserModule,
   ],

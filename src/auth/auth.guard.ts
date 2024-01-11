@@ -30,20 +30,20 @@ export class AuthGuard implements CanActivate {
 
     const request = context.switchToHttp().getRequest();
     const token = this.extractTokenFromHeader(request);
+    const cookie = request.cookies;
+
     if (!token) {
       throw new UnauthorizedException();
     }
 
     try {
-      // Check if it's a 'refresh' request
-      let payload = null;
-      if (request.url.includes('refresh')) {
-        payload = await this.authJwtService.validateRefresh(token);
+      if (request.url.includes('reissue')) {
+        const refresh_token = cookie.refresh_token;
+        request['user'] =
+          await this.authJwtService.validateRefresh(refresh_token);
       } else {
-        payload = await this.authJwtService.validate(token);
+        request['user'] = await this.authJwtService.validate(token);
       }
-
-      request['user'] = payload;
     } catch (error) {
       if (error instanceof TokenExpiredError) {
         throw new UnauthorizedException('토큰이 만료되었습니다.');

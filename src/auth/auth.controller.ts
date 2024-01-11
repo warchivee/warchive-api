@@ -1,39 +1,38 @@
-import {
-  Controller,
-  Get,
-  Header,
-  HttpCode,
-  Post,
-  Query,
-  Request,
-  Res,
-} from '@nestjs/common';
-import { Response } from 'express';
+import { Body, Controller, Post, Request, Res } from '@nestjs/common';
 import { AuthService } from './auth.service';
 import { ApiTags } from '@nestjs/swagger';
 import { Public } from './decorators/public.decorator';
+import { LoginDto } from './dto/login.dto';
 
-@ApiTags('OAuth')
-@Controller('oauth')
+@ApiTags('Auth')
+@Controller('auth')
 export class AuthController {
   constructor(private readonly authService: AuthService) {}
 
-  @Public()
-  @HttpCode(302)
-  @Get('kakao')
-  @Header('Content-Type', 'text/html')
-  async kakaoRedirect(@Res() res: Response): Promise<void> {
-    res.redirect(this.authService.getKakaoLoginPage());
-  }
+  tokenCommonOptions = {
+    sameSite: 'strict',
+    secure: true,
+    httpOnly: true,
+  };
 
   @Public()
-  @Get('kakao/redirect')
-  async getKakaoInfo(@Query() { code }: { code: string }) {
-    return await this.authService.kakaoLogin(code);
+  @Post('login')
+  async login(@Res({ passthrough: true }) res, @Body() loginInfo: LoginDto) {
+    const tokens = await this.authService.login(loginInfo);
+
+    res.cookie('refresh_token', tokens.refresh_token.token, {
+      ...this.tokenCommonOptions,
+      path: '/api/v1/auth/reissue',
+      maxAge: tokens.refresh_token.expires_in,
+    });
+
+    return { ...tokens.access_token, user: tokens.user };
   }
 
-  @Post('refresh')
+  @Post('reissue')
   async refreshAccessToken(@Request() req) {
-    return await this.authService.refreshAccessToken(req.user);
+    const tokens = await this.authService.refreshAccessToken(req.user);
+
+    return tokens.access_token;
   }
 }
