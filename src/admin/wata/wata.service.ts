@@ -1,9 +1,16 @@
 import { Injectable } from '@nestjs/common';
+import { FindWataDto } from './dto/find-wata.dto';
 import { CreateWataDto } from './dto/create-wata.dto';
 import { UpdateWataDto } from './dto/update-wata.dto';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Wata } from './entities/wata.entity';
-import { EntityManager, EntityNotFoundError, Repository } from 'typeorm';
+import {
+  EntityManager,
+  EntityNotFoundError,
+  In,
+  Like,
+  Repository,
+} from 'typeorm';
 import {
   EntityNotFoundException,
   UnableDeleteMergedDataException,
@@ -44,10 +51,97 @@ export class WataService {
     'platforms.platform',
   ];
 
-  findAll() {
-    return this.wataRepository.find({
-      relations: this.relations,
-    });
+  async findAll(findWataDto: FindWataDto) {
+    const {
+      page,
+      title,
+      creators,
+      label,
+      categories,
+      genres,
+      keywords,
+      cautions,
+      platforms,
+    } = findWataDto;
+
+    const findWhereConditions: any = {};
+
+    // title
+    if (title) findWhereConditions.title = Like(`%${title}%`);
+
+    // creators
+    if (creators) findWhereConditions.creators = Like(`%${creators}%`);
+
+    // label
+    if (label) {
+      if (typeof label === 'string') findWhereConditions.label = `${label}`;
+      else findWhereConditions.label = In(label);
+    }
+
+    // category
+    if (categories) {
+      if (typeof categories === 'string')
+        findWhereConditions.genre = { category: { id: categories } };
+      else findWhereConditions.genre = { category: { id: In([categories]) } };
+    }
+
+    // genre
+    if (genres) {
+      if (typeof genres === 'string')
+        findWhereConditions.genre = { id: genres };
+      else findWhereConditions.genre = { id: In(genres) };
+    }
+
+    // keyword
+    if (keywords) {
+      if (typeof keywords === 'string')
+        findWhereConditions.keywords = { keyword: { id: keywords } };
+      else findWhereConditions.keywords = { keyword: { id: In(keywords) } };
+    }
+
+    // caution
+    if (cautions) {
+      if (typeof cautions === 'string')
+        findWhereConditions.cautions = { caution: { id: cautions } };
+      else findWhereConditions.cautions = { caution: { id: In(cautions) } };
+    }
+
+    // platform
+    if (platforms) {
+      if (typeof platforms === 'string')
+        findWhereConditions.platforms = { platform: { id: platforms } };
+      else
+        findWhereConditions.platforms = { platform: { id: In(platforms) } };
+    }
+
+    // find, pagination, return
+    try {
+      const take = 10;
+      const [total, totalCount] = await this.wataRepository.findAndCount({
+        relations: this.relations,
+        where: findWhereConditions,
+        take,
+        skip: (page - 1) * take,
+      });
+
+      return await {
+        data: total,
+        meta: {
+          page,
+          take,
+          totalCount,
+          totalPage: Math.ceil(totalCount / take),
+        },
+        // TODO: 0 이하 예외 처리 -> 첫 번째 페이지 나오게
+        // TODO: 페이지 초과 예외 처리 -> 마지막 페이지 나오게
+      };
+    } catch (error) {
+      if (error instanceof EntityNotFoundError) {
+        throw EntityNotFoundException();
+      } else {
+        throw error;
+      }
+    }
   }
 
   async findOne(id: number) {
