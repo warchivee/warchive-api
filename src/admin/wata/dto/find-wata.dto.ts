@@ -1,18 +1,41 @@
 import { ApiProperty } from '@nestjs/swagger';
-import { IsOptional, MaxLength } from 'class-validator';
+import { IsNumber, IsOptional, MaxLength, Min } from 'class-validator';
+import { Type } from 'class-transformer';
+import { WataLabelType } from '../interface/wata.type';
+import {
+  QueryValidEnumArray,
+  QueryValidNumberArray,
+} from '../../../common/decorators/dto.decorator';
+
+// docs - query number[] issue : https://dev.to/avantar/validating-numeric-query-parameters-in-nestjs-gk9
 
 export class FindWataDto {
   // page
   @ApiProperty({
     default: 1,
     required: false,
+    type: Number,
   })
+  @Min(1)
+  @IsNumber()
+  @Type(() => Number)
   @IsOptional()
   page?: number;
 
+  // page size
+  @ApiProperty({
+    default: 10,
+    required: false,
+    type: Number,
+  })
+  @IsNumber()
+  @Min(1)
+  @Type(() => Number)
+  @IsOptional()
+  page_size?: number;
+
   // title
   @ApiProperty({
-    maximum: 250,
     required: false,
   })
   @MaxLength(250, { message: '제목은 250자까지만 입력됩니다.' })
@@ -29,59 +52,32 @@ export class FindWataDto {
   creators?: string;
 
   // label
-  @ApiProperty({
-    // maximum: 20,
-    enum: [
-      'NEED_CHECK',
-      'CHECKING',
-      'CHECKED',
-      'HOLD',
-      'NEED_CANTACT',
-      'CENSOR',
-    ],
-    isArray: true,
-    required: false,
-  })
+  @QueryValidEnumArray(WataLabelType)
   @IsOptional()
-  label?: number[];
+  label?: WataLabelType[];
 
   // category
-  @ApiProperty({
-    isArray: true,
-    required: false,
-  })
+  @QueryValidNumberArray()
   @IsOptional()
   categories?: number[];
 
   // genre
-  @ApiProperty({
-    isArray: true,
-    required: false,
-  })
+  @QueryValidNumberArray()
   @IsOptional()
   genres?: number[];
 
   // keyword
-  @ApiProperty({
-    isArray: true,
-    required: false,
-  })
+  @QueryValidNumberArray()
   @IsOptional()
   keywords?: number[];
 
   //caution
-  @ApiProperty({
-    isArray: true,
-    required: false,
-  })
+  @QueryValidNumberArray()
   @IsOptional()
   cautions?: number[];
 
   // platform
-  @ApiProperty({
-    isArray: true,
-    required: false,
-  })
+  @QueryValidNumberArray()
   @IsOptional()
   platforms?: number[];
 }

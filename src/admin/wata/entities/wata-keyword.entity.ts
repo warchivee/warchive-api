@@ -1,7 +1,7 @@
-import { Keyword } from 'src/admin/keyword/entities/keyword.entity';
 import { CommonEntity } from 'src/common/entities/common.entity';
 import { Entity, JoinColumn, ManyToOne } from 'typeorm';
 import { Wata } from './wata.entity';
+import { Keyword } from 'src/admin/keywords/keyword/entities/keyword.entity';
 
 @Entity({ name: 'wata_keyword' })
 export class WataKeywordMapping extends CommonEntity {

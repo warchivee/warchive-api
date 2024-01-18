@@ -1,13 +1,13 @@
 import { Injectable } from '@nestjs/common';
 import { Wata } from './entities/wata.entity';
-import { Keyword } from '../keyword/entities/keyword.entity';
 import { WataKeywordMapping } from './entities/wata-keyword.entity';
-import { Caution } from '../caution/entities/caution.entity';
 import { WataCautionMapping } from './entities/wata-caution.entity';
 import { PlatformWithUrlDto } from './dto/create-wata.dto';
 import { WataPlatformMapping } from './entities/wata-platform.entity';
-import { Platform } from '../platform/entities/platform.entity';
 import { EntityManager } from 'typeorm';
+import { Keyword } from '../keywords/keyword/entities/keyword.entity';
+import { Caution } from '../keywords/caution/entities/caution.entity';
+import { Platform } from '../keywords/platform/entities/platform.entity';
 
 @Injectable()
 export class WataMappingService {
@@ -101,10 +101,9 @@ export class WataMappingService {
     const addItems = updateItems?.filter(
       (item) =>
         !wata[mappingParams.wataFieldName].some(
-          (value) => value.id === item.id,
+          (mapping) => mapping[mappingParams.mappingFieldName].id === item.id,
         ),
     );
-    await mappingParams.createMappingsHandler(entityManager, wata, addItems);
 
     const deleteItemIds = wata[mappingParams.wataFieldName]
       ?.filter(
@@ -114,6 +113,8 @@ export class WataMappingService {
           ),
       )
       .map((value) => value.id);
+
+    await mappingParams.createMappingsHandler(entityManager, wata, addItems);
 
     if (deleteItemIds.length > 0) {
       await entityManager.delete(mappingEntityType, deleteItemIds);

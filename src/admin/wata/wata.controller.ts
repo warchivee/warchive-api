@@ -14,60 +14,66 @@ import { WataService } from './wata.service';
 import { FindWataDto } from './dto/find-wata.dto';
 import { CreateWataDto } from './dto/create-wata.dto';
 import { UpdateWataDto } from './dto/update-wata.dto';
-import { ApiTags } from '@nestjs/swagger';
-import { UpdateWataLabelDto } from './dto/update-wata-label.dto';
-import { Public } from 'src/auth/decorators/public.decorator';
+import { ApiBearerAuth, ApiOperation, ApiTags } from '@nestjs/swagger';
 
 @ApiTags('Wata')
 @Controller('admin/wata')
 export class WataController {
   constructor(private readonly wataService: WataService) {}
 
-  @Public()
+  @ApiBearerAuth('access_token')
+  @ApiOperation({
+    summary: '검수 데이터 생성',
+    description:
+      '검수 데이터를 생성합니다. 제목과 작가/감독은 필수 입력값입니다.',
+  })
   @Post()
   create(@Request() req, @Body() createWataDto: CreateWataDto) {
     return this.wataService.create(req.user, createWataDto);
   }
 
-  @Public()
+  @ApiBearerAuth('access_token')
+  @ApiOperation({
+    summary: '검수 데이터 목록 조회',
+    description: '검수 데이터 목록을 조회합니다.',
+  })
   @Get()
   findAll(@Query() findWataDto: FindWataDto) {
     return this.wataService.findAll(findWataDto);
   }
 
-  @Public()
+  @ApiBearerAuth('access_token')
+  @ApiOperation({
+    summary: '검수 데이터 단건 조회',
+    description: '검수 데이터를 1개 조회합니다. ',
+  })
   @Get(':id')
-  findOne(@Param('id') id: string) {
+  findOne(@Param('id') id: number) {
     return this.wataService.findOne(+id);
   }
 
-  @Public()
-  @Patch(':id/updating')
-  updating(@Request() req, @Param('id') id: string) {
-    return this.wataService.updating(req.user, +id);
-  }
-
-  @Public()
+  @ApiBearerAuth('access_token')
+  @ApiOperation({
+    summary: '검수 데이터 수정',
+    description: '검수 데이터를 수정합니다.',
+  })
   @Patch(':id')
   update(
     @Request() req,
-    @Param('id') id: string,
+    @Param('id') id: number,
     @Body() updateWataDto: UpdateWataDto,
   ) {
     return this.wataService.update(req.user, +id, updateWataDto);
   }
 
-  @Patch(':id/label')
-  updateLabel(
-    @Request() req,
-    @Param('id') id: string,
-    @Body() updateWataLabelDto: UpdateWataLabelDto,
-  ) {
-    return this.wataService.updateLabel(req.user, +id, updateWataLabelDto);
-  }
-
+  @ApiBearerAuth('access_token')
+  @ApiOperation({
+    summary: '검수 데이터 삭제',
+    description:
+      '검수 데이터를 삭제합니다. 취합완료된 데이터는 삭제할 수 없습니다.',
+  })
   @Delete(':id')
-  remove(@Param('id') id: string) {
+  remove(@Param('id') id: number) {
     return this.wataService.remove(+id);
   }
 }

@@ -14,19 +14,16 @@ import {
 import {
   EntityNotFoundException,
   UnableDeleteMergedDataException,
-  UnableUpdateDataBeforeUpdating,
-  UnableUpdatingData,
 } from 'src/common/exception/service.exception';
 import { WataKeywordMapping } from './entities/wata-keyword.entity';
-import { KeywordService } from '../keyword/keyword.service';
 import { WataCautionMapping } from './entities/wata-caution.entity';
-import { CautionService } from '../caution/caution.service';
-import { GenreService } from '../genre/genre.service';
-import { PlatformService } from '../platform/platform.service';
 import { WataPlatformMapping } from './entities/wata-platform.entity';
 import { WataMappingService } from './wata-mapping.service';
-import { UpdateWataLabelDto } from './dto/update-wata-label.dto';
 import { User } from 'src/user/entities/user.entity';
+import { GenreService } from '../keywords/genre/genre.service';
+import { KeywordService } from '../keywords/keyword/keyword.service';
+import { CautionService } from '../keywords/caution/caution.service';
+import { PlatformService } from '../keywords/platform/platform.service';
 
 @Injectable()
 export class WataService {
@@ -49,11 +46,14 @@ export class WataService {
     'cautions.caution',
     'platforms',
     'platforms.platform',
+    'updater',
+    'adder',
   ];
 
   async findAll(findWataDto: FindWataDto) {
     const {
       page,
+      page_size,
       title,
       creators,
       label,
@@ -74,64 +74,79 @@ export class WataService {
 
     // label
     if (label) {
-      if (typeof label === 'string') findWhereConditions.label = `${label}`;
-      else findWhereConditions.label = In(label);
+      findWhereConditions.label = In(label);
     }
 
     // category
     if (categories) {
-      if (typeof categories === 'string')
-        findWhereConditions.genre = { category: { id: categories } };
-      else findWhereConditions.genre = { category: { id: In([categories]) } };
+      findWhereConditions.genre = { category: { id: In([categories]) } };
     }
 
     // genre
     if (genres) {
-      if (typeof genres === 'string')
-        findWhereConditions.genre = { id: genres };
-      else findWhereConditions.genre = { id: In(genres) };
+      findWhereConditions.genre = { id: In(genres) };
     }
 
     // keyword
     if (keywords) {
-      if (typeof keywords === 'string')
-        findWhereConditions.keywords = { keyword: { id: keywords } };
-      else findWhereConditions.keywords = { keyword: { id: In(keywords) } };
+      findWhereConditions.keywords = { keyword: { id: In(keywords) } };
     }
 
     // caution
     if (cautions) {
-      if (typeof cautions === 'string')
-        findWhereConditions.cautions = { caution: { id: cautions } };
-      else findWhereConditions.cautions = { caution: { id: In(cautions) } };
+      findWhereConditions.cautions = { caution: { id: In(cautions) } };
     }
 
     // platform
     if (platforms) {
-      if (typeof platforms === 'string')
-        findWhereConditions.platforms = { platform: { id: platforms } };
-      else
-        findWhereConditions.platforms = { platform: { id: In(platforms) } };
+      findWhereConditions.platforms = { platform: { id: In(platforms) } };
     }
 
     // find, pagination, return
     try {
-      const take = 10;
       const [total, totalCount] = await this.wataRepository.findAndCount({
         relations: this.relations,
         where: findWhereConditions,
-        take,
-        skip: (page - 1) * take,
+        take: page_size,
+        skip: (page - 1) * page_size,
+      });
+
+      const result = total?.map((wata) => {
+        return {
+          ...wata,
+          adder: {
+            id: wata?.adder?.id,
+            nickname: wata?.adder?.nickname,
+          },
+          updater: {
+            id: wata?.updater?.id,
+            nickname: wata?.updater?.nickname,
+          },
+          keywords: wata.keywords?.map((item) => {
+            return {
+              mapping_id: item?.id,
+              ...item?.keyword,
+            };
+          }),
+          platforms: wata.platforms?.map((item) => {
+            return {
+              mapping_id: item?.id,
+              url: item?.url,
+              ...item?.platform,
+            };
+          }),
+          cautions: wata.cautions?.map((item) => {
+            return {
+              mapping_id: item?.id,
+              ...item?.caution,
+            };
+          }),
+        };
       });
 
       return await {
-        data: total,
-        meta: {
-          page,
-          take,
-          totalCount,
-          totalPage: Math.ceil(totalCount / take),
-        },
+        total_count: totalCount,
+        result: result,
         // TODO: 0 이하 예외 처리 -> 첫 번째 페이지 나오게
         // TODO: 페이지 초과 예외 처리 -> 마지막 페이지 나오게
       };
@@ -197,77 +212,53 @@ export class WataService {
     );
   }
 
-  async updating(user: User, id: number) {
-    await this.validate(id);
-
-    return await this.wataRepository.update(id, {
-      is_updating: true,
-      updater: user,
-    });
-  }
-
   async update(user: User, id: number, updateWataDto: UpdateWataDto) {
     const wata = await this.validate(id);
-
-    if (!wata.is_updating) {
-      throw UnableUpdateDataBeforeUpdating();
-    }
-
-    if (wata.updater.id !== user.id) {
-      throw UnableUpdatingData(user.nickname);
-    }
 
     const update = await this.verifyAndGetDataToDto(updateWataDto);
 
     return this.entityManager.transaction(
       async (transactionalEntityManager) => {
         await transactionalEntityManager.update(Wata, id, {
-          title: updateWataDto.title,
-          creators: updateWataDto.creators,
-          genre: update.genre,
-          thumbnail_url: updateWataDto.thumbnail_url,
-          note: updateWataDto.note,
-          is_updating: false,
+          title: updateWataDto.title ?? wata.title,
+          creators: updateWataDto.creators ?? wata.creators,
+          genre: updateWataDto.genre ? update.genre : wata.genre,
+          thumbnail_url: updateWataDto.thumbnail_url ?? wata.thumbnail_url,
+          note: updateWataDto.note ?? wata.note,
+          label: updateWataDto.label ?? wata.label,
           updater: user,
         } as Wata);
 
-        await this.mappingService.mergeMappings(
-          transactionalEntityManager,
-          wata,
-          update.keywords,
-          WataKeywordMapping,
-        );
+        if (updateWataDto.keywords) {
+          await this.mappingService.mergeMappings(
+            transactionalEntityManager,
+            wata,
+            update.keywords,
+            WataKeywordMapping,
+          );
+        }
 
-        await this.mappingService.mergeMappings(
-          transactionalEntityManager,
-          wata,
-          update.cautions,
-          WataCautionMapping,
-        );
+        if (updateWataDto.cautions) {
+          await this.mappingService.mergeMappings(
+            transactionalEntityManager,
+            wata,
+            update.cautions,
+            WataCautionMapping,
+          );
+        }
 
-        await this.mappingService.mergeMappings(
-          transactionalEntityManager,
-          wata,
-          update.platforms,
-          WataPlatformMapping,
-        );
+        if (updateWataDto.platforms) {
+          await this.mappingService.mergeMappings(
+            transactionalEntityManager,
+            wata,
+            update.platforms,
+            WataPlatformMapping,
+          );
+        }
 
         return id;
       },
     );
-  }
-
-  async updateLabel(
-    user: User,
-    id: number,
-    updateWataLabelDto: UpdateWataLabelDto,
-  ) {
-    await this.validate(id);
-
-    return await this.wataRepository.update(id, {
-      ...updateWataLabelDto,
-      updater: user,
-    });
   }
 
   async remove(id: number) {
