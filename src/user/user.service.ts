@@ -13,15 +13,15 @@ export class UserService {
 
   async findOrCreateUser(createUserDto: CreateUserDto) {
     const findUser = await this.userRepository.findOneBy({
-      kakaoId: createUserDto.kakaoId,
+      kakao_id: createUserDto.kakaoId,
     });
 
-    if (!findUser) {
-      const createUser = this.userRepository.create(createUserDto);
-      return await this.userRepository.save(createUser);
+    if (findUser) {
+      return findUser;
     }
 
-    return findUser;
+    const createUser = this.userRepository.create(createUserDto);
+    return await this.userRepository.save(createUser);
   }
 
   async findOne(findUserDto: FindUserDto) {

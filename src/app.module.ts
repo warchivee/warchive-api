@@ -6,12 +6,13 @@ import { AppController } from './app.controller';
 import { AppService } from './app.service';
 import { UserModule } from './user/user.module';
 import { AuthModule } from './auth/auth.module';
-import { CategoryModule } from './admin/category/category.module';
-import { GenreModule } from './admin/genre/genre.module';
-import { KeywordModule } from './admin/keyword/keyword.module';
-import { CautionModule } from './admin/caution/caution.module';
+import { CategoryModule } from './admin/keywords/category/category.module';
+import { GenreModule } from './admin/keywords/genre/genre.module';
+import { KeywordModule } from './admin/keywords/keyword/keyword.module';
+import { CautionModule } from './admin/keywords/caution/caution.module';
 import { WataModule } from './admin/wata/wata.module';
-import { PlatformModule } from './admin/platform/platform.module';
+import { PlatformModule } from './admin/keywords/platform/platform.module';
+import { KeywordsModule } from './admin/keywords/keywords.module';
 
 @Module({
   imports: [
@@ -26,6 +27,7 @@ import { PlatformModule } from './admin/platform/platform.module';
         database: configService.get('DB_DATABASE'),
         entities: [`${__dirname}/**/entities/*.entity.{ts,js}`],
         synchronize: true,
+        timezone: 'Asia/Seoul',
       }),
       inject: [ConfigService],
     }),
@@ -37,6 +39,7 @@ import { PlatformModule } from './admin/platform/platform.module';
     CautionModule,
     WataModule,
     PlatformModule,
+    KeywordsModule,
   ],
   controllers: [AppController],
   providers: [AppService],

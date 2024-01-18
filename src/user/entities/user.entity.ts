@@ -7,8 +7,8 @@ export class User extends CommonEntity {
   nickname: string;
 
   @Column({ type: 'bigint', unique: true })
-  kakaoId: number;
+  kakao_id: number;
 
   @Column({ length: 7, default: 'USER' })
-  role: 'MANAGER' | 'USER';
+  role: 'ADMIN' | 'USER';
 }
