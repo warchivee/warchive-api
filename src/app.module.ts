@@ -27,7 +27,6 @@ import { KeywordsModule } from './admin/keywords/keywords.module';
         database: configService.get('DB_DATABASE'),
         entities: [`${__dirname}/**/entities/*.entity.{ts,js}`],
         synchronize: true,
-        timezone: 'Asia/Seoul',
       }),
       inject: [ConfigService],
     }),

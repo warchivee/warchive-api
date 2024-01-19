@@ -15,6 +15,7 @@ import { FindWataDto } from './dto/find-wata.dto';
 import { CreateWataDto } from './dto/create-wata.dto';
 import { UpdateWataDto } from './dto/update-wata.dto';
 import { ApiBearerAuth, ApiOperation, ApiTags } from '@nestjs/swagger';
+import { Public } from 'src/common/decorators/public.decorator';
 
 @ApiTags('Wata')
 @Controller('admin/wata')
@@ -32,7 +33,8 @@ export class WataController {
     return this.wataService.create(req.user, createWataDto);
   }
 
-  @ApiBearerAuth('access_token')
+  // @ApiBearerAuth('access_token')
+  @Public()
   @ApiOperation({
     summary: '검수 데이터 목록 조회',
     description: '검수 데이터 목록을 조회합니다.',
