@@ -1,5 +1,5 @@
 import { ApiProperty } from '@nestjs/swagger';
-import { IsNumber, IsOptional, MaxLength, Min } from 'class-validator';
+import { IsDate, IsNumber, IsOptional, MaxLength, Min } from 'class-validator';
 import { Type } from 'class-transformer';
 import { WataLabelType } from '../interface/wata.type';
 import {
@@ -80,4 +80,22 @@ export class FindWataDto {
   @QueryValidNumberArray()
   @IsOptional()
   platforms?: number[];
+
+  @ApiProperty({
+    required: false,
+    type: Date,
+  })
+  @Type(() => Date)
+  @IsDate()
+  @IsOptional()
+  updateStartDate: Date;
+
+  @ApiProperty({
+    required: false,
+    type: Date,
+  })
+  @Type(() => Date)
+  @IsDate()
+  @IsOptional()
+  updateEndDate: Date;
 }

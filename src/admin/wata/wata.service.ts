@@ -7,8 +7,11 @@ import { Wata } from './entities/wata.entity';
 import {
   EntityManager,
   EntityNotFoundError,
+  FindOptionsWhere,
   In,
+  LessThanOrEqual,
   Like,
+  MoreThanOrEqual,
   Repository,
 } from 'typeorm';
 import {
@@ -62,9 +65,11 @@ export class WataService {
       keywords,
       cautions,
       platforms,
+      updateStartDate,
+      updateEndDate,
     } = findWataDto;
 
-    const findWhereConditions: any = {};
+    const findWhereConditions: FindOptionsWhere<Wata> = {};
 
     // title
     if (title) findWhereConditions.title = Like(`%${title}%`);
@@ -100,6 +105,36 @@ export class WataService {
     // platform
     if (platforms) {
       findWhereConditions.platforms = { platform: { id: In(platforms) } };
+    }
+
+    if (updateStartDate) {
+      findWhereConditions.updated_at = MoreThanOrEqual(
+        new Date(
+          Date.UTC(
+            updateStartDate.getUTCFullYear(),
+            updateStartDate.getUTCMonth(),
+            updateStartDate.getUTCDate(),
+            23,
+            59,
+            59,
+          ),
+        ),
+      );
+    }
+
+    if (updateEndDate) {
+      findWhereConditions.updated_at = LessThanOrEqual(
+        new Date(
+          Date.UTC(
+            updateEndDate.getUTCFullYear(),
+            updateEndDate.getUTCMonth(),
+            updateEndDate.getUTCDate(),
+            23,
+            59,
+            59,
+          ),
+        ),
+      );
     }
 
     // find, pagination, return

@@ -23,9 +23,9 @@ export class CommonEntity extends BaseEntity {
   @JoinColumn({ name: 'updater_id' })
   updater: User;
 
-  @CreateDateColumn({ type: 'datetime' })
+  @CreateDateColumn({ type: 'timestamp' })
   created_at: Date;
 
-  @UpdateDateColumn({ type: 'datetime' })
+  @UpdateDateColumn({ type: 'timestamp' })
   updated_at: Date;
 }
