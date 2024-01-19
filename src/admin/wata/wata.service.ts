@@ -144,6 +144,9 @@ export class WataService {
         where: findWhereConditions,
         take: page_size,
         skip: (page - 1) * page_size,
+        order: {
+          updated_at: 'DESC',
+        },
       });
 
       const result = total?.map((wata) => {
