@@ -5,6 +5,7 @@ import { UpdateWataDto } from './dto/update-wata.dto';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Wata } from './entities/wata.entity';
 import {
+  Between,
   EntityManager,
   EntityNotFoundError,
   FindOptionsWhere,
@@ -84,7 +85,7 @@ export class WataService {
 
     // category
     if (categories) {
-      findWhereConditions.genre = { category: { id: In([categories]) } };
+      findWhereConditions.genre = { category: { id: In(categories) } };
     }
 
     // genre
@@ -107,9 +108,8 @@ export class WataService {
       findWhereConditions.platforms = { platform: { id: In(platforms) } };
     }
 
-    if (updateStartDate) {
-      findWhereConditions.updated_at = MoreThanOrEqual(
-        new Date(
+    const startDate = updateStartDate
+      ? new Date(
           Date.UTC(
             updateStartDate.getUTCFullYear(),
             updateStartDate.getUTCMonth(),
@@ -118,13 +118,11 @@ export class WataService {
             59,
             59,
           ),
-        ),
-      );
-    }
+        )
+      : null;
 
-    if (updateEndDate) {
-      findWhereConditions.updated_at = LessThanOrEqual(
-        new Date(
+    const endDate = updateEndDate
+      ? new Date(
           Date.UTC(
             updateEndDate.getUTCFullYear(),
             updateEndDate.getUTCMonth(),
@@ -133,8 +131,15 @@ export class WataService {
             59,
             59,
           ),
-        ),
-      );
+        )
+      : null;
+
+    if (startDate && endDate) {
+      findWhereConditions.updated_at = Between(startDate, endDate);
+    } else if (startDate) {
+      findWhereConditions.updated_at = MoreThanOrEqual(startDate);
+    } else if (endDate) {
+      findWhereConditions.updated_at = LessThanOrEqual(endDate);
     }
 
     // find, pagination, return
@@ -145,7 +150,7 @@ export class WataService {
         take: page_size,
         skip: (page - 1) * page_size,
         order: {
-          updated_at: 'DESC',
+          created_at: 'DESC',
         },
       });
 
@@ -302,7 +307,7 @@ export class WataService {
   async remove(id: number) {
     const wata = await this.validate(id);
 
-    if (wata.is_merged) {
+    if (wata.is_published) {
       throw UnableDeleteMergedDataException();
     }
 

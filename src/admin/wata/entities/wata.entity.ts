@@ -34,7 +34,7 @@ export class Wata extends CommonEntity {
   label?: WataLabelType;
 
   @Column({ default: false })
-  is_merged?: boolean;
+  is_published?: boolean;
 
   @Column({ nullable: true })
   note?: string;
