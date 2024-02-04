@@ -1,6 +1,5 @@
 import { Injectable } from '@nestjs/common';
 
-import { CreateUserDto } from 'src/user/dto/create-user.dto';
 import { UserService } from 'src/user/user.service';
 import { AuthJwtService } from './jwt.service';
 import { User } from 'src/user/entities/user.entity';
@@ -24,9 +23,7 @@ export class AuthService {
    * @returns 액세스토큰, 리프레시토큰, 유저정보
    */
   async login(loginDto: LoginDto) {
-    const user = await this.userService.findOrCreateUser(
-      new CreateUserDto('익명', loginDto.platform_id),
-    );
+    const user = await this.userService.findBySocialIdOrCreateUser(loginDto);
 
     const accessToken = this.authJwtService.generateAccessToken(user);
     const refreshToken = this.authJwtService.generateRefreshToken(user);

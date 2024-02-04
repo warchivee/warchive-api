@@ -1,9 +1,9 @@
 import { Injectable } from '@nestjs/common';
-import { CreateUserDto } from './dto/create-user.dto';
 import { User } from './entities/user.entity';
 import { FindUserDto } from './dto/find-user.dto';
 import { Repository } from 'typeorm';
 import { InjectRepository } from '@nestjs/typeorm';
+import { LoginDto } from 'src/auth/dto/login.dto';
 
 @Injectable()
 export class UserService {
@@ -11,16 +11,20 @@ export class UserService {
     @InjectRepository(User) private readonly userRepository: Repository<User>,
   ) {}
 
-  async findOrCreateUser(createUserDto: CreateUserDto) {
+  async findBySocialIdOrCreateUser(loginDto: LoginDto) {
     const findUser = await this.userRepository.findOneBy({
-      kakao_id: createUserDto.kakaoId,
+      [`${loginDto.platform}_id`]: loginDto.platform_id,
     });
 
     if (findUser) {
       return findUser;
     }
 
-    const createUser = this.userRepository.create(createUserDto);
+    const createUser = this.userRepository.create({
+      nickname: '익명',
+      [`${loginDto.platform}_id`]: loginDto.platform_id,
+    } as unknown as User);
+
     return await this.userRepository.save(createUser);
   }
 
