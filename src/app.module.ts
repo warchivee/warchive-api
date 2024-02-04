@@ -19,6 +19,7 @@ import { KeywordsModule } from './admin/keywords/keywords.module';
     TypeOrmModule.forRootAsync({
       imports: [ConfigModule],
       useFactory: (configService: ConfigService) => ({
+        name: 'default',
         type: 'postgres',
         host: configService.get('DB_HOST'),
         port: +configService.get('DB_PORT'),
@@ -27,6 +28,12 @@ import { KeywordsModule } from './admin/keywords/keywords.module';
         database: configService.get('DB_DATABASE'),
         entities: [`${__dirname}/**/entities/*.entity.{ts,js}`],
         synchronize: true,
+        ssl: true,
+        extra: {
+          ssl: {
+            rejectUnauthorized: false,
+          },
+        },
       }),
       inject: [ConfigService],
     }),
