@@ -28,7 +28,7 @@ export class AuthController {
      * maxAge: 쿠키의 유효 시간
      */
     res.cookie('refresh_token', tokens.refresh_token.token, {
-      sameSite: 'Lax', //api 와 프론트의 도메인이 달라 Lax로만 허용. (reissue. 요청은 GET 요청이라 가능)
+      sameSite: 'none', //api 와 프론트의 도메인이 달라... none 으로 설정 (login 요청이 POST 라 Lax 가 안됨.)
       secure: true,
       httpOnly: true,
       path: '/api/v1/auth/reissue',
