@@ -1,4 +1,4 @@
-import { Body, Controller, Post, Request, Res } from '@nestjs/common';
+import { Body, Controller, Get, Post, Request, Res } from '@nestjs/common';
 import { AuthService } from './auth.service';
 import { ApiCookieAuth, ApiOperation, ApiTags } from '@nestjs/swagger';
 import { Public } from '../common/decorators/public.decorator';
@@ -18,12 +18,21 @@ export class AuthController {
   async login(@Res({ passthrough: true }) res, @Body() loginInfo: LoginDto) {
     const tokens = await this.authService.login(loginInfo);
 
+    /**
+     * cookie 설정 참고
+     * sameSite: 퍼스트파티/서드파티 설정 옵션. strict : 동일한 도메인에서만 이 쿠키가 전송됨(퍼스트파티), Lax: strict 설정에 일부 예외를 둠(GET api, a href, link href 등), none: 서드파티까지 전부 허용
+     * secure: https 요청에서만 이 쿠키를 전송함
+     * httpOnly: true 시 js로 쿠키를 조회 불가능 (쿠키 변조를 막음)
+     * domain: 설정된 도메인과 그 하위 도메인으로만 쿠키를 전송함. (.localhost 설정 시 www.localhost 도 전부 ok), 따로 설정하지 않으면 해당 서버의 도메인을 따름.
+     * path: 해당 path 의 요청으로만 이 쿠키를 전송함
+     * maxAge: 쿠키의 유효 시간
+     */
     res.cookie('refresh_token', tokens.refresh_token.token, {
-      sameSite: 'strict', // cross site 전송 허용 x
-      secure: true, // https 요청에서만 전송
-      httpOnly: true, // 쿠키 변조 차단 위해 js로 쿠키 조회 막음
-      path: '/api/v1/auth/reissue', // 해당 요청에서만 이 쿠키를 전송함
-      maxAge: tokens.refresh_token.expires_in, //쿠키 유효 시간
+      sameSite: 'Lax', //api 와 프론트의 도메인이 달라 Lax로만 허용. (reissue. 요청은 GET 요청이라 가능)
+      secure: true,
+      httpOnly: true,
+      path: '/api/v1/auth/reissue',
+      maxAge: tokens.refresh_token.expires_in,
     });
 
     return { ...tokens.access_token, user: tokens.user };
@@ -35,7 +44,7 @@ export class AuthController {
     description:
       '리프레시 토큰으로 액세스 토큰을 갱신합니다. 리프레시 토큰은 쿠키로 전송합니다.',
   })
-  @Post('reissue')
+  @Get('reissue')
   async refreshAccessToken(@Request() req) {
     const tokens = await this.authService.refreshAccessToken(req.user);
 
