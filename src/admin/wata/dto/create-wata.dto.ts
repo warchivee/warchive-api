@@ -12,9 +12,11 @@ import {
 } from 'class-validator';
 
 export class PlatformWithUrlDto {
+  @IsNumber()
   id: number;
 
-  @IsUrl(null, { message: '플랫폼에는 url을 입력해야 합니다.' })
+  @IsString()
+  // @IsUrl(null, { message: '플랫폼에는 url을 입력해야 합니다.' })
   url: string;
 }
 
