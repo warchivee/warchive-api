@@ -39,7 +39,7 @@ export class CreateWataDto {
   })
   @IsString()
   @MaxLength(20, { message: '작가/감독은 100자까지만 입력됩니다.' })
-  @IsNotEmpty({ message: '작가/감독은 필수 입력값입니다.' })
+  @IsOptional()
   creators: string;
 
   @ApiProperty({
