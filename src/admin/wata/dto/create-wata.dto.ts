@@ -35,10 +35,10 @@ export class CreateWataDto {
   @ApiProperty({
     description: '작가/감독',
     example: '거다 러너',
-    required: true,
+    required: false,
   })
   @IsString()
-  @MaxLength(20, { message: '작가/감독은 20자까지만 입력됩니다.' })
+  @MaxLength(20, { message: '작가/감독은 100자까지만 입력됩니다.' })
   @IsNotEmpty({ message: '작가/감독은 필수 입력값입니다.' })
   creators: string;
 

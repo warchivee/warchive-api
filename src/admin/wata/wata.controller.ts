@@ -24,8 +24,7 @@ export class WataController {
   @ApiBearerAuth('access_token')
   @ApiOperation({
     summary: '검수 데이터 생성',
-    description:
-      '검수 데이터를 생성합니다. 제목과 작가/감독은 필수 입력값입니다.',
+    description: '검수 데이터를 생성합니다. 제목은 필수 입력값입니다.',
   })
   @Post()
   create(@Request() req, @Body() createWataDto: CreateWataDto) {
