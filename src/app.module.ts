@@ -27,7 +27,7 @@ import { KeywordsModule } from './admin/keywords/keywords.module';
         password: configService.get('DB_PASSWORD'),
         database: configService.get('DB_DATABASE'),
         entities: [`${__dirname}/**/entities/*.entity.{ts,js}`],
-        synchronize: true,
+        synchronize: false, //true 로 하면 ddl 이 자동으로 동기화되지만, 데이터가 날아가므로 사용 x, 개발 단계에서만 사용.
         ssl: true,
         extra: {
           ssl: {

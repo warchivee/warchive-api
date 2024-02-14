@@ -11,7 +11,7 @@ export class Wata extends CommonEntity {
   @Column({ length: 250 })
   title: string;
 
-  @Column({ length: 20 })
+  @Column({ length: 30, nullable: true })
   creators: string;
 
   @ManyToOne(() => Genre, (genre) => genre.id)

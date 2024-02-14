@@ -13,6 +13,6 @@ export class WataPlatformMapping extends CommonEntity {
   @JoinColumn({ name: 'platform_id' })
   platform: Platform;
 
-  @Column({ length: 250 })
+  @Column()
   url: string;
 }
