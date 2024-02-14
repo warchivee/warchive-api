@@ -15,7 +15,6 @@ import { FindWataDto } from './dto/find-wata.dto';
 import { CreateWataDto } from './dto/create-wata.dto';
 import { UpdateWataDto } from './dto/update-wata.dto';
 import { ApiBearerAuth, ApiOperation, ApiTags } from '@nestjs/swagger';
-import { Public } from 'src/common/decorators/public.decorator';
 
 @ApiTags('Wata')
 @Controller('admin/wata')

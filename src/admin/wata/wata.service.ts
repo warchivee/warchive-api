@@ -161,10 +161,10 @@ export class WataService {
         const columnInfo = WataRequiredValuesColumnInfo[item];
 
         if (columnInfo.type == 'string') {
-          findWhereConditions.push({ [item]: IsNull() });
-          findWhereConditions.push({ [item]: Like('') });
+          findWhereConditions.push({ [columnInfo.name]: IsNull() });
+          findWhereConditions.push({ [columnInfo.name]: Like('') });
         } else if (columnInfo.type == 'fk') {
-          findWhereConditions.push({ [item]: IsNull() });
+          findWhereConditions.push({ [columnInfo.name]: IsNull() });
         } else if (columnInfo.type == 'mapping-many') {
           findWhereConditions.push({
             [columnInfo.name]: {
