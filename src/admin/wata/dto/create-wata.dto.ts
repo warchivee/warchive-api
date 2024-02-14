@@ -94,7 +94,6 @@ export class CreateWataDto {
   })
   @IsString()
   @IsOptional()
-  @IsUrl({}, { message: '썸네일은 url 값을 입력해야 합니다.' })
   thumbnail_url?: string;
 
   @ApiProperty({

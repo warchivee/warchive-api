@@ -153,26 +153,36 @@ export class WataService {
       itemValueCorrectConditions.is_published = isPublished;
     }
 
-    findWhereConditions.push(itemValueCorrectConditions);
-
     // 필수 입력값들 중 비어있는 경우를 조회
     if (needWriteItems) {
       needWriteItems.forEach((item) => {
         const columnInfo = WataRequiredValuesColumnInfo[item];
 
         if (columnInfo.type == 'string') {
-          findWhereConditions.push({ [columnInfo.name]: IsNull() });
-          findWhereConditions.push({ [columnInfo.name]: Like('') });
+          findWhereConditions.push({
+            ...itemValueCorrectConditions,
+            [columnInfo.name]: IsNull(),
+          });
+          findWhereConditions.push({
+            ...itemValueCorrectConditions,
+            [columnInfo.name]: Like(''),
+          });
         } else if (columnInfo.type == 'fk') {
-          findWhereConditions.push({ [columnInfo.name]: IsNull() });
+          findWhereConditions.push({
+            ...itemValueCorrectConditions,
+            [columnInfo.name]: IsNull(),
+          });
         } else if (columnInfo.type == 'mapping-many') {
           findWhereConditions.push({
+            ...itemValueCorrectConditions,
             [columnInfo.name]: {
               [columnInfo.mappingColumnName]: { id: IsNull() },
             },
           });
         }
       });
+    } else {
+      findWhereConditions.push(itemValueCorrectConditions);
     }
 
     // find, pagination, return
