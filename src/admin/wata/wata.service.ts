@@ -10,6 +10,7 @@ import {
   EntityNotFoundError,
   FindOptionsWhere,
   In,
+  IsNull,
   LessThanOrEqual,
   Like,
   MoreThanOrEqual,
@@ -28,6 +29,7 @@ import { GenreService } from '../keywords/genre/genre.service';
 import { KeywordService } from '../keywords/keyword/keyword.service';
 import { CautionService } from '../keywords/caution/caution.service';
 import { PlatformService } from '../keywords/platform/platform.service';
+import { WataRequiredValuesColumnInfo } from './interface/wata.type';
 
 @Injectable()
 export class WataService {
@@ -68,44 +70,49 @@ export class WataService {
       platforms,
       updateStartDate,
       updateEndDate,
+      isPublished,
+      needWriteItems,
     } = findWataDto;
 
-    const findWhereConditions: FindOptionsWhere<Wata> = {};
+    const findWhereConditions: FindOptionsWhere<Wata>[] = [];
+    const itemValueCorrectConditions: FindOptionsWhere<Wata> = {};
 
     // title
-    if (title) findWhereConditions.title = Like(`%${title}%`);
+    if (title) itemValueCorrectConditions.title = Like(`%${title}%`);
 
     // creators
-    if (creators) findWhereConditions.creators = Like(`%${creators}%`);
+    if (creators) itemValueCorrectConditions.creators = Like(`%${creators}%`);
 
     // label
     if (label) {
-      findWhereConditions.label = In(label);
+      itemValueCorrectConditions.label = In(label);
     }
 
     // category
     if (categories) {
-      findWhereConditions.genre = { category: { id: In(categories) } };
+      itemValueCorrectConditions.genre = { category: { id: In(categories) } };
     }
 
     // genre
     if (genres) {
-      findWhereConditions.genre = { id: In(genres) };
+      itemValueCorrectConditions.genre = { id: In(genres) };
     }
 
     // keyword
     if (keywords) {
-      findWhereConditions.keywords = { keyword: { id: In(keywords) } };
+      itemValueCorrectConditions.keywords = { keyword: { id: In(keywords) } };
     }
 
     // caution
     if (cautions) {
-      findWhereConditions.cautions = { caution: { id: In(cautions) } };
+      itemValueCorrectConditions.cautions = { caution: { id: In(cautions) } };
     }
 
     // platform
     if (platforms) {
-      findWhereConditions.platforms = { platform: { id: In(platforms) } };
+      itemValueCorrectConditions.platforms = {
+        platform: { id: In(platforms) },
+      };
     }
 
     const startDate = updateStartDate
@@ -135,11 +142,37 @@ export class WataService {
       : null;
 
     if (startDate && endDate) {
-      findWhereConditions.updated_at = Between(startDate, endDate);
+      itemValueCorrectConditions.updated_at = Between(startDate, endDate);
     } else if (startDate) {
-      findWhereConditions.updated_at = MoreThanOrEqual(startDate);
+      itemValueCorrectConditions.updated_at = MoreThanOrEqual(startDate);
     } else if (endDate) {
-      findWhereConditions.updated_at = LessThanOrEqual(endDate);
+      itemValueCorrectConditions.updated_at = LessThanOrEqual(endDate);
+    }
+
+    if (isPublished != undefined) {
+      itemValueCorrectConditions.is_published = isPublished;
+    }
+
+    findWhereConditions.push(itemValueCorrectConditions);
+
+    // 필수 입력값들 중 비어있는 경우를 조회
+    if (needWriteItems) {
+      needWriteItems.forEach((item) => {
+        const columnInfo = WataRequiredValuesColumnInfo[item];
+
+        if (columnInfo.type == 'string') {
+          findWhereConditions.push({ [item]: IsNull() });
+          findWhereConditions.push({ [item]: Like('') });
+        } else if (columnInfo.type == 'fk') {
+          findWhereConditions.push({ [item]: IsNull() });
+        } else if (columnInfo.type == 'mapping-many') {
+          findWhereConditions.push({
+            [columnInfo.name]: {
+              [columnInfo.mappingColumnName]: { id: IsNull() },
+            },
+          });
+        }
+      });
     }
 
     // find, pagination, return

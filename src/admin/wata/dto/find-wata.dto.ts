@@ -1,7 +1,14 @@
 import { ApiProperty } from '@nestjs/swagger';
-import { IsDate, IsNumber, IsOptional, MaxLength, Min } from 'class-validator';
-import { Type } from 'class-transformer';
-import { WataLabelType } from '../interface/wata.type';
+import {
+  IsBoolean,
+  IsDate,
+  IsNumber,
+  IsOptional,
+  MaxLength,
+  Min,
+} from 'class-validator';
+import { Transform, Type } from 'class-transformer';
+import { WataLabelType, WataRequiredValuesType } from '../interface/wata.type';
 import {
   QueryValidEnumArray,
   QueryValidNumberArray,
@@ -44,10 +51,10 @@ export class FindWataDto {
 
   // creators
   @ApiProperty({
-    maximum: 20,
+    maximum: 100,
     required: false,
   })
-  @MaxLength(20, { message: '작가/감독은 20자까지만 입력됩니다.' })
+  @MaxLength(100, { message: '작가/감독은 100자까지만 입력됩니다.' })
   @IsOptional()
   creators?: string;
 
@@ -88,7 +95,7 @@ export class FindWataDto {
   @Type(() => Date)
   @IsDate()
   @IsOptional()
-  updateStartDate: Date;
+  updateStartDate?: Date;
 
   @ApiProperty({
     required: false,
@@ -97,5 +104,22 @@ export class FindWataDto {
   @Type(() => Date)
   @IsDate()
   @IsOptional()
-  updateEndDate: Date;
+  updateEndDate?: Date;
+
+  @ApiProperty({
+    required: false,
+    type: Boolean,
+  })
+  @IsBoolean()
+  @Transform(({ obj, key }) => {
+    // query string 은 전부 string 으로 넘어와서 transform 해줘야함.
+    // @IsBoolean 을 사용하면 값이 있으면 true 없으면 false로 넘어와서 아래처럼 작성해줘야함
+    return obj[key] == 'true' ? true : false;
+  })
+  @IsOptional()
+  isPublished?: boolean;
+
+  @QueryValidEnumArray(WataRequiredValuesType)
+  @IsOptional()
+  needWriteItems?: WataRequiredValuesType[];
 }
