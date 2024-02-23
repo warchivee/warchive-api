@@ -3,7 +3,6 @@ import { Type } from 'class-transformer';
 import {
   IsOptional,
   IsNotEmpty,
-  IsUrl,
   MaxLength,
   IsArray,
   IsString,
@@ -88,13 +87,22 @@ export class CreateWataDto {
   platforms?: PlatformWithUrlDto[];
 
   @ApiProperty({
-    description: '썸네일 url',
+    description: '카드용 썸네일 url',
     example: 'http:test.com.jpeg',
     required: false,
   })
   @IsString()
   @IsOptional()
-  thumbnail_url?: string;
+  thumbnail_card?: string;
+
+  @ApiProperty({
+    description: '책용 썸네일 url',
+    example: 'http:test.com.jpeg',
+    required: false,
+  })
+  @IsString()
+  @IsOptional()
+  thumbnail_book?: string;
 
   @ApiProperty({
     description: '비고',

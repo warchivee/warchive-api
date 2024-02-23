@@ -13,7 +13,8 @@ export enum WataRequiredValuesType {
   GENRE = 'genre',
   KEYWORDS = 'keywords',
   PLATFORMS = 'platforms',
-  THUMBNAIL = 'thumbnail',
+  THUMBNAIL_CARD = 'thumbnailCard',
+  THUMBNAIL_BOOK = 'thumbnailBook',
 }
 
 interface WataRequiredValuesColumnInfoType {
@@ -38,8 +39,12 @@ export const WataRequiredValuesColumnInfo: Record<
     name: 'genre',
     type: 'fk',
   },
-  thumbnail: {
-    name: 'thumbnail_url',
+  thumbnailCard: {
+    name: 'thumbnail_card',
+    type: 'string',
+  },
+  thumbnailBook: {
+    name: 'thumbnail_book',
     type: 'string',
   },
   keywords: {
