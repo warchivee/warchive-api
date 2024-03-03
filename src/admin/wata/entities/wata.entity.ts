@@ -28,7 +28,10 @@ export class Wata extends CommonEntity {
   platforms?: WataPlatformMapping[];
 
   @Column({ length: 250, nullable: true })
-  thumbnail_url?: string;
+  thumbnail_card?: string;
+
+  @Column({ length: 250, nullable: true })
+  thumbnail_book?: string;
 
   @Column({ length: 15, default: 'NEED_CHECK' })
   label?: WataLabelType;

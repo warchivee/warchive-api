@@ -2,6 +2,7 @@ import {
   ENTITY_NOT_FOUND,
   ErrorCode,
   UNABLE_DELETE_MERGED_DATA,
+  TOO_MANY_COLLECTION,
 } from '../interface/error-code.type';
 
 export const UnableDeleteMergedDataException = (): ServiceException => {
@@ -10,6 +11,10 @@ export const UnableDeleteMergedDataException = (): ServiceException => {
 
 export const EntityNotFoundException = (message?: string): ServiceException => {
   return new ServiceException(ENTITY_NOT_FOUND, message);
+};
+
+export const TooManyCollectionException = (): ServiceException => {
+  return new ServiceException(TOO_MANY_COLLECTION);
 };
 
 export class ServiceException extends Error {
