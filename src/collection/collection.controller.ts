@@ -46,8 +46,13 @@ export class CollectionController {
     return this.collectionService.update(+id, updateCollectionDto);
   }
 
+  @ApiBearerAuth('access_token')
+  @ApiOperation({
+    summary: '컬렉션 데이터 삭제',
+    description: '컬렉션 데이터를 삭제합니다.',
+  })
   @Delete(':id')
-  remove(@Param('id') id: string) {
+  remove(@Param('id') id: number) {
     return this.collectionService.remove(+id);
   }
 }

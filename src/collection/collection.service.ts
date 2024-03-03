@@ -1,11 +1,12 @@
 import { Injectable } from '@nestjs/common';
 import { User } from 'src/user/entities/user.entity';
-import { Repository } from 'typeorm';
+import { Repository, EntityNotFoundError } from 'typeorm';
 import { InjectRepository } from '@nestjs/typeorm';
 import { CreateCollectionDto } from './dto/create-collection.dto';
 import { UpdateCollectionDto } from './dto/update-collection.dto';
 import { Collection } from './entities/collection.entity';
 import { TooManyCollectionException } from 'src/common/exception/service.exception';
+import { EntityNotFoundException } from 'src/common/exception/service.exception';
 
 @Injectable()
 export class CollectionService {
@@ -37,15 +38,31 @@ export class CollectionService {
     return `This action returns all collection`;
   }
 
-  findOne(id: number) {
-    return `This action returns a #${id} collection`;
+  async findOne(id: number) {
+    try {
+      // 단일 컬렉션 info
+      const collection = await this.collectionRepository.findOneOrFail({
+        where: { id },
+      });
+
+      // TODO 컬랙션에 해당하는 아이템들을 묶어서 같이 던질지 or 프론트에서 따로 호출할지
+      // 전자로 할 경우 validcheck 따로 빼기
+      return collection;
+    } catch (error) {
+      if (error instanceof EntityNotFoundError) {
+        throw EntityNotFoundException();
+      } else {
+        throw error;
+      }
+    }
   }
 
   update(id: number, updateCollectionDto: UpdateCollectionDto) {
     return updateCollectionDto;
   }
 
-  remove(id: number) {
-    return `This action removes a #${id} collection`;
+  async remove(id: number) {
+    await this.findOne(id);
+    return await this.collectionRepository.delete({ id });
   }
 }
