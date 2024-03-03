@@ -6,6 +6,6 @@ export class Collection extends CommonEntity {
   @Column({ length: 50 })
   title: string;
 
-  @Column({ length: 200 })
+  @Column({ length: 200, nullable: true })
   note: string;
 }

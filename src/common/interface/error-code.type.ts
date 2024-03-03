@@ -25,3 +25,9 @@ export const ENTITY_NOT_FOUND = new ErrorCodeVo(
   HttpStatus.NOT_FOUND,
   '데이터가 없습니다.',
 );
+
+export const TOO_MANY_COLLECTION = new ErrorCodeVo(
+  'too many collection',
+  HttpStatus.FORBIDDEN,
+  '컬렉션 생성은 최대 20개까지만 가능합니다.',
+);
