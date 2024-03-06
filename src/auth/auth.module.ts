@@ -11,7 +11,12 @@ import { APP_GUARD } from '@nestjs/core';
 @Module({
   imports: [
     ConfigModule.forRoot({
-      envFilePath: process.env.NODE_ENV === 'dev' ? '.dev.env' : '.env',
+      envFilePath:
+        process.env.NODE_ENV === 'dev'
+          ? '.dev.env'
+          : process.env.NODE_ENV === 'prod'
+            ? '.prod.env'
+            : '.env',
     }),
     JwtModule.register({}),
     UserModule,
