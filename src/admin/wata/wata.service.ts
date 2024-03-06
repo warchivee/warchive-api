@@ -78,10 +78,14 @@ export class WataService {
     const itemValueCorrectConditions: FindOptionsWhere<Wata> = {};
 
     // title
-    if (title) itemValueCorrectConditions.title = Like(`%${title}%`);
+    if (title)
+      itemValueCorrectConditions.title = Like(`%${title?.replace(' ', '')}%`);
 
     // creators
-    if (creators) itemValueCorrectConditions.creators = Like(`%${creators}%`);
+    if (creators)
+      itemValueCorrectConditions.creators = Like(
+        `%${creators?.replace('/', '')?.replace(' ', '')}%`,
+      );
 
     // label
     if (label) {
