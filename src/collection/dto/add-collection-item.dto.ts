@@ -2,7 +2,7 @@ import { ApiProperty } from '@nestjs/swagger';
 import { Type } from 'class-transformer';
 import { IsArray, IsNumber } from 'class-validator';
 
-export class CreateCollectionItemDto {
+export class AddCollectionItemDto {
   @ApiProperty({
     description: '컬렉션 ID',
     example: '1',
@@ -21,12 +21,12 @@ export class CreateCollectionItemDto {
   wata_id: number;
 }
 
-export class CreateCollectionItemListDto {
+export class AddCollectionItemListDto {
   @ApiProperty({
     description: 'list of test',
-    type: [CreateCollectionItemDto],
+    type: [AddCollectionItemDto],
   })
   @IsArray()
-  @Type(() => CreateCollectionItemDto)
-  data: CreateCollectionItemDto[];
+  @Type(() => AddCollectionItemDto)
+  data: AddCollectionItemDto[];
 }

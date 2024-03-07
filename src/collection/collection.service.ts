@@ -11,7 +11,7 @@ import {
 } from 'src/common/exception/service.exception';
 import { EntityNotFoundException } from 'src/common/exception/service.exception';
 import { CollectionItem } from './entities/collection-item.entity';
-import { CreateCollectionItemDto } from './dto/create-collection-item.dto';
+import { AddCollectionItemDto } from './dto/add-collection-item.dto';
 import { WataService } from '../admin/wata/wata.service';
 
 @Injectable()
@@ -75,12 +75,9 @@ export class CollectionService {
     return await this.collectionRepository.delete({ id });
   }
 
-  async createItem(
-    user: User,
-    createCollectionItemDtos: CreateCollectionItemDto[],
-  ) {
+  async addItem(user: User, addCollectionItemDtos: AddCollectionItemDto[]) {
     const collection = await this.findOne(
-      createCollectionItemDtos[0].collection_id,
+      addCollectionItemDtos[0].collection_id,
     );
 
     const [collectionItems, totalCount] =
@@ -94,7 +91,7 @@ export class CollectionService {
     }
 
     const saveEntities: CollectionItem[] = [];
-    for (const dto of createCollectionItemDtos) {
+    for (const dto of addCollectionItemDtos) {
       const wata = await this.wataService.findOne(dto.wata_id);
 
       let exist: boolean = false;
@@ -108,14 +105,14 @@ export class CollectionService {
       // 중복된 아이템이 있으면 저장 건너뜀
       if (exist) continue;
 
-      const createItem = this.collectionItemRepository.create({
+      const addItem = this.collectionItemRepository.create({
         collection: collection,
         wata: wata,
         adder: user,
         updater: user,
       });
 
-      saveEntities.push(createItem);
+      saveEntities.push(addItem);
     }
     return await this.collectionItemRepository.save(saveEntities);
   }
