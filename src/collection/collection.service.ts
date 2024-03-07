@@ -5,14 +5,23 @@ import { InjectRepository } from '@nestjs/typeorm';
 import { CreateCollectionDto } from './dto/create-collection.dto';
 import { UpdateCollectionDto } from './dto/update-collection.dto';
 import { Collection } from './entities/collection.entity';
-import { TooManyCollectionException } from 'src/common/exception/service.exception';
+import {
+  TooManyCollectionException,
+  TooManyCollectionItemException,
+} from 'src/common/exception/service.exception';
 import { EntityNotFoundException } from 'src/common/exception/service.exception';
+import { CollectionItem } from './entities/collection-item.entity';
+import { CreateCollectionItemDto } from './dto/create-collection-item.dto';
+import { WataService } from '../admin/wata/wata.service';
 
 @Injectable()
 export class CollectionService {
   constructor(
     @InjectRepository(Collection)
     private readonly collectionRepository: Repository<Collection>,
+    @InjectRepository(CollectionItem)
+    private readonly collectionItemRepository: Repository<CollectionItem>,
+    private readonly wataService: WataService,
   ) {}
 
   async create(user: User, createCollectionDto: CreateCollectionDto) {
@@ -64,5 +73,50 @@ export class CollectionService {
   async remove(id: number) {
     await this.findOne(id);
     return await this.collectionRepository.delete({ id });
+  }
+
+  async createItem(
+    user: User,
+    createCollectionItemDtos: CreateCollectionItemDto[],
+  ) {
+    const collection = await this.findOne(
+      createCollectionItemDtos[0].collection_id,
+    );
+
+    const [collectionItems, totalCount] =
+      await this.collectionItemRepository.findAndCount({
+        relations: { collection: true, wata: true },
+        where: { collection: { id: collection.id } },
+      });
+
+    if (totalCount >= 500) {
+      throw TooManyCollectionItemException();
+    }
+
+    const saveEntities: CollectionItem[] = [];
+    for (const dto of createCollectionItemDtos) {
+      const wata = await this.wataService.findOne(dto.wata_id);
+
+      let exist: boolean = false;
+      for (const item of collectionItems) {
+        if (item.wata.id === dto.wata_id) {
+          exist = true;
+          break;
+        }
+      }
+
+      // 중복된 아이템이 있으면 저장 건너뜀
+      if (exist) continue;
+
+      const createItem = this.collectionItemRepository.create({
+        collection: collection,
+        wata: wata,
+        adder: user,
+        updater: user,
+      });
+
+      saveEntities.push(createItem);
+    }
+    return await this.collectionItemRepository.save(saveEntities);
   }
 }

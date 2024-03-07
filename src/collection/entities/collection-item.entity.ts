@@ -1,4 +1,3 @@
-// import { CommonEntity } from 'src/common/entities/common.entity';
 import { ManyToOne, JoinColumn, Entity } from 'typeorm';
 import { Collection } from './collection.entity';
 import { Wata } from 'src/admin/wata/entities/wata.entity';
