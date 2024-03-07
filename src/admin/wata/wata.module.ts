@@ -21,5 +21,6 @@ import { GenreModule } from '../keywords/genre/genre.module';
   ],
   controllers: [WataController],
   providers: [WataService, WataMappingService],
+  exports: [WataService],
 })
 export class WataModule {}

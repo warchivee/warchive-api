@@ -12,6 +12,7 @@ import { CollectionService } from './collection.service';
 import { CreateCollectionDto } from './dto/create-collection.dto';
 import { UpdateCollectionDto } from './dto/update-collection.dto';
 import { ApiBearerAuth, ApiOperation, ApiTags } from '@nestjs/swagger';
+import { AddCollectionItemListDto } from './dto/add-collection-item.dto';
 
 @ApiTags('Collection')
 @Controller('collection')
@@ -54,5 +55,15 @@ export class CollectionController {
   @Delete(':id')
   remove(@Param('id') id: number) {
     return this.collectionService.remove(+id);
+  }
+
+  @ApiBearerAuth('access_token')
+  @ApiOperation({
+    summary: '컬렉션 아이템 저장',
+    description: '컬렉션 아이템 저장합니다.',
+  })
+  @Post('/item')
+  createItem(@Request() req, @Body() dto: AddCollectionItemListDto) {
+    return this.collectionService.addItem(req, dto.data);
   }
 }
