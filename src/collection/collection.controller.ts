@@ -40,6 +40,11 @@ export class CollectionController {
     return this.collectionService.findOne(+id);
   }
 
+  @ApiBearerAuth('access_token')
+  @ApiOperation({
+    summary: '컬렉션 이름 변경',
+    description: '컬렉션 이름을 변경합니다.',
+  })
   @Patch(':id')
   update(
     @Param('id') id: string,
