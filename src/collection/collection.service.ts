@@ -67,8 +67,10 @@ export class CollectionService {
     }
   }
 
-  update(id: number, updateCollectionDto: UpdateCollectionDto) {
-    return updateCollectionDto;
+  async update(id: number, updateCollectionDto: UpdateCollectionDto) {
+    await this.findOne(id);
+
+    return this.collectionRepository.save({ id, ...updateCollectionDto });
   }
 
   async remove(id: number) {
@@ -116,7 +118,7 @@ export class CollectionService {
 
       saveEntities.push(addItem);
     }
-    return await this.collectionItemRepository.save(saveEntities);
+    return this.collectionItemRepository.save(saveEntities);
   }
 
   async removeItem(deleteCollectionItemDto: DeleteCollectionItemDto[]) {
@@ -130,7 +132,7 @@ export class CollectionService {
         deletId.push(dto.collection_item_id);
       }
 
-      return await this.collectionItemRepository.delete(deletId);
+      return this.collectionItemRepository.delete(deletId);
     } catch (error) {
       if (error instanceof EntityNotFoundError) {
         throw EntityNotFoundException();
