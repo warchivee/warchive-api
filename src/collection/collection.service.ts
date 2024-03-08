@@ -13,6 +13,7 @@ import { EntityNotFoundException } from 'src/common/exception/service.exception'
 import { CollectionItem } from './entities/collection-item.entity';
 import { AddCollectionItemDto } from './dto/add-collection-item.dto';
 import { WataService } from '../admin/wata/wata.service';
+import { DeleteCollectionItemDto } from './dto/delete-collection-item.dto';
 
 @Injectable()
 export class CollectionService {
@@ -76,6 +77,7 @@ export class CollectionService {
   }
 
   async addItem(user: User, addCollectionItemDtos: AddCollectionItemDto[]) {
+    console.log(addCollectionItemDtos[0].collection_id);
     const collection = await this.findOne(
       addCollectionItemDtos[0].collection_id,
     );
@@ -115,5 +117,26 @@ export class CollectionService {
       saveEntities.push(addItem);
     }
     return await this.collectionItemRepository.save(saveEntities);
+  }
+
+  async removeItem(deleteCollectionItemDto: DeleteCollectionItemDto[]) {
+    try {
+      const deletId: number[] = [];
+      for (const dto of deleteCollectionItemDto) {
+        await this.collectionItemRepository.findOneOrFail({
+          where: { id: dto.collection_item_id },
+        });
+
+        deletId.push(dto.collection_item_id);
+      }
+
+      return await this.collectionItemRepository.delete(deletId);
+    } catch (error) {
+      if (error instanceof EntityNotFoundError) {
+        throw EntityNotFoundException();
+      } else {
+        throw error;
+      }
+    }
   }
 }

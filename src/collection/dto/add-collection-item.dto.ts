@@ -7,7 +7,6 @@ export class AddCollectionItemDto {
     description: '컬렉션 ID',
     example: '1',
     required: true,
-    type: [Number],
   })
   @IsNumber()
   collection_id: number;
@@ -23,8 +22,9 @@ export class AddCollectionItemDto {
 
 export class AddCollectionItemListDto {
   @ApiProperty({
-    description: 'list of test',
+    description: '컬랙션 아이템 추가 리스트',
     type: [AddCollectionItemDto],
+    required: true,
   })
   @IsArray()
   @Type(() => AddCollectionItemDto)
