@@ -62,8 +62,8 @@ export class CollectionController {
     summary: '컬렉션 아이템 저장',
     description: '컬렉션 아이템 저장합니다.',
   })
-  @Post('/item')
-  createItem(@Request() req, @Body() dto: AddCollectionItemListDto) {
+  @Post('/add-item')
+  addItem(@Request() req, @Body() dto: AddCollectionItemListDto) {
     return this.collectionService.addItem(req, dto.data);
   }
 }
