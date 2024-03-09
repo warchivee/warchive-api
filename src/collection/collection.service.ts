@@ -27,8 +27,14 @@ export class CollectionService {
 
   async create(user: User, createCollectionDto: CreateCollectionDto) {
     // 컬렉션 생성 계정당 최대 20개까지
-    const collecionMax = await this.collectionRepository.count(); // TODO 사용자 ID 조건에 넣기
-    if (collecionMax > 20) {
+    const userInfo = new User();
+    userInfo.id = user.id;
+
+    const collecionMax = await this.collectionRepository.count({
+      where: { adder: userInfo },
+    });
+
+    if (collecionMax >= 20) {
       throw TooManyCollectionException();
     }
 
