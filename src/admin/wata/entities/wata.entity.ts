@@ -11,7 +11,7 @@ export class Wata extends CommonEntity {
   @Column({ length: 250 })
   title: string;
 
-  @Column({ length: 100, nullable: true })
+  @Column({ length: 250, nullable: true })
   creators: string;
 
   @ManyToOne(() => Genre, (genre) => genre.id)
@@ -33,7 +33,7 @@ export class Wata extends CommonEntity {
   @Column({ length: 250, nullable: true })
   thumbnail_book?: string;
 
-  @Column({ length: 15, default: 'NEED_CHECK' })
+  @Column({ length: 20, default: 'NEED_CHECK' })
   label?: WataLabelType;
 
   @Column({ default: false })
