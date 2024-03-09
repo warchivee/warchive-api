@@ -1,6 +1,6 @@
 import { Injectable } from '@nestjs/common';
 import { User } from 'src/user/entities/user.entity';
-import { Repository, EntityNotFoundError } from 'typeorm';
+import { Repository, EntityNotFoundError, EntityManager } from 'typeorm';
 import { InjectRepository } from '@nestjs/typeorm';
 import { CreateCollectionDto } from './dto/create-collection.dto';
 import { UpdateCollectionDto } from './dto/update-collection.dto';
@@ -23,6 +23,7 @@ export class CollectionService {
     @InjectRepository(CollectionItem)
     private readonly collectionItemRepository: Repository<CollectionItem>,
     private readonly wataService: WataService,
+    private readonly entityManager: EntityManager,
   ) {}
 
   async create(user: User, createCollectionDto: CreateCollectionDto) {
@@ -81,7 +82,16 @@ export class CollectionService {
 
   async remove(id: number) {
     await this.findOne(id);
-    return await this.collectionRepository.delete({ id });
+
+    return this.entityManager.transaction(
+      async (transactionalEntityManager) => {
+        const criteria = { collection: { id } };
+        await transactionalEntityManager.delete(CollectionItem, criteria);
+        await transactionalEntityManager.delete(Collection, id);
+
+        return id;
+      },
+    );
   }
 
   async addItem(user: User, addCollectionItemDtos: AddCollectionItemDto[]) {
