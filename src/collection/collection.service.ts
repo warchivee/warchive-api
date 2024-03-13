@@ -40,7 +40,6 @@ export class CollectionService {
     if (collecionMax >= 20) {
       throw TooManyCollectionException();
     }
-    // console.log('collecionMax : ', collecionMax);
 
     const createCollection = this.collectionRepository.create({
       title: createCollectionDto.title,
