@@ -39,8 +39,6 @@ export class CollectionService {
       throw TooManyCollectionException();
     }
 
-    // TODO XSS prevent
-
     const createCollection = this.collectionRepository.create({
       title: createCollectionDto.title,
       note: createCollectionDto.note,
@@ -57,13 +55,10 @@ export class CollectionService {
 
   async findOne(id: number) {
     try {
-      // 단일 컬렉션 info
       const collection = await this.collectionRepository.findOneOrFail({
         where: { id },
       });
 
-      // TODO 컬랙션에 해당하는 아이템들을 묶어서 같이 던질지 or 프론트에서 따로 호출할지
-      // 전자로 할 경우 validcheck 따로 빼기
       return collection;
     } catch (error) {
       if (error instanceof EntityNotFoundError) {
