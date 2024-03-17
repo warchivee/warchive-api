@@ -37,7 +37,7 @@ export class CollectionService {
     if (collecionMax >= 20) {
       throw TooManyCollectionException();
     }
-    console.log('collecionMax : ', collecionMax);
+    // console.log('collecionMax : ', collecionMax);
 
     const createCollection = this.collectionRepository.create({
       title: createCollectionDto.title,
@@ -86,7 +86,7 @@ export class CollectionService {
       // items info
       const [itemWataIds, totalCount] =
         await this.findAllItems(findCollectionDto);
-      console.log(itemWataIds);
+      // console.log(itemWataIds);
 
       return {
         collection_info: collectionInfo,
@@ -211,7 +211,7 @@ export class CollectionService {
     collection_id: number,
     deleteCollectionItemDto: DeleteCollectionItemDto[],
   ) {
-    await this.findOne(collection_id);
+    await this.findCollectionInfo(collection_id);
 
     try {
       const deletId: number[] = [];
