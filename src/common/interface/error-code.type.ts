@@ -37,3 +37,9 @@ export const TOO_MANY_COLLECTION_ITEM = new ErrorCodeVo(
   HttpStatus.FORBIDDEN,
   '컬렉션 아이템은 최대 500개까지만 추가할 수 있습니다.',
 );
+
+export const WRONG_ENCRYPTEDTEXT = new ErrorCodeVo(
+  'bad decrypt',
+  HttpStatus.BAD_REQUEST,
+  '조회 아이디를 확인해 주세요.',
+);

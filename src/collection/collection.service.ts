@@ -16,6 +16,8 @@ import { CollectionItem } from './entities/collection-item.entity';
 import { AddCollectionItemDto } from './dto/add-collection-item.dto';
 import { WataService } from '../admin/wata/wata.service';
 import { DeleteCollectionItemDto } from './dto/delete-collection-item.dto';
+import { Encrypt } from './collection.crypto';
+import { CollectionListResponseDto } from './dto/collection-list.dto';
 
 @Injectable()
 export class CollectionService {
@@ -26,6 +28,7 @@ export class CollectionService {
     private readonly collectionItemRepository: Repository<CollectionItem>,
     private readonly wataService: WataService,
     private readonly entityManager: EntityManager,
+    private readonly encrypt: Encrypt,
   ) {}
 
   async createCollection(user: User, createCollectionDto: CreateCollectionDto) {
@@ -63,9 +66,16 @@ export class CollectionService {
         },
       });
 
+      //조회용 암호화된 id 추가
+      const result = [];
+      total.forEach((collection) => {
+        const encryptedText = this.encrypt.encrypt(collection.id);
+        result.push(CollectionListResponseDto.of(collection, encryptedText));
+      });
+
       return {
         total_count: totalCount,
-        result: total,
+        result: result,
       };
     } catch (error) {
       if (error instanceof EntityNotFoundError) {
@@ -78,10 +88,11 @@ export class CollectionService {
 
   async findCollection(findCollectionDto: FindCollectionDto) {
     try {
+      //collection_id 복호화
+      const collection_id = Number(this.encrypt.decrypt(findCollectionDto.id));
+
       // collection info
-      const collectionInfo = await this.findCollectionInfo(
-        findCollectionDto.id,
-      );
+      const collectionInfo = await this.findCollectionInfo(collection_id);
 
       // items info
       const [itemWataIds, totalCount] =
@@ -120,9 +131,14 @@ export class CollectionService {
 
   async findAllItems(findCollectionDto: FindCollectionDto) {
     try {
+      //collection_id 복호화
+      const collection_id = Number(this.encrypt.decrypt(findCollectionDto.id));
+
       const [collectionItems, totalCount] =
         await this.collectionItemRepository.findAndCount({
-          where: { collection: { id: findCollectionDto.id } },
+          where: {
+            collection: { id: collection_id },
+          },
           relations: { wata: true },
           select: ['id', 'wata', 'created_at'],
           skip: findCollectionDto.getSkip(),
@@ -167,7 +183,6 @@ export class CollectionService {
     user: User,
     addCollectionItemDtos: AddCollectionItemDto[],
   ) {
-    console.log(collection_id);
     const collection = await this.findCollectionInfo(collection_id);
 
     const [collectionItems, totalCount] =

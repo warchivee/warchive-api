@@ -4,6 +4,7 @@ import {
   UNABLE_DELETE_MERGED_DATA,
   TOO_MANY_COLLECTION,
   TOO_MANY_COLLECTION_ITEM,
+  WRONG_ENCRYPTEDTEXT,
 } from '../interface/error-code.type';
 
 export const UnableDeleteMergedDataException = (): ServiceException => {
@@ -20,6 +21,10 @@ export const TooManyCollectionException = (): ServiceException => {
 
 export const TooManyCollectionItemException = (): ServiceException => {
   return new ServiceException(TOO_MANY_COLLECTION_ITEM);
+};
+
+export const WrongEncryptedText = (): ServiceException => {
+  return new ServiceException(WRONG_ENCRYPTEDTEXT);
 };
 
 export class ServiceException extends Error {
