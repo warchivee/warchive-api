@@ -16,11 +16,13 @@ export class Encrypt {
   private readonly key = this.crypto.scryptSync(this.password, this.salt, 32);
   private readonly algorithm = 'AES-256-CBC';
 
-  encrypt(collection_id: string) {
+  encrypt(plan) {
     const chipter = createCipheriv(this.algorithm, this.key, this.iv);
 
+    const planText = plan.toString();
+
     const encryptedText = Buffer.concat([
-      chipter.update(collection_id),
+      chipter.update(planText),
       chipter.final(),
     ]);
 
