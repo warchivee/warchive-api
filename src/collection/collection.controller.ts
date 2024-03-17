@@ -93,9 +93,13 @@ export class CollectionController {
     summary: '컬렉션 아이템 저장',
     description: '컬렉션 아이템 저장합니다.',
   })
-  @Post('/add-item')
-  addItem(@Request() req, @Body() dto: AddCollectionItemListDto) {
-    return this.collectionService.addItem(req.user, dto.data);
+  @Post(':id/add-item')
+  addItem(
+    @Param('id') collection_id: number,
+    @Request() req,
+    @Body() dto: AddCollectionItemListDto,
+  ) {
+    return this.collectionService.addItem(collection_id, req.user, dto.data);
   }
 
   @ApiBearerAuth('access_token')
@@ -103,8 +107,11 @@ export class CollectionController {
     summary: '컬렉션 아이템 삭제',
     description: '컬렉션 아이템을 삭제합니다.',
   })
-  @Post('/delete-item')
-  removeItem(@Body() dto: DeleteCollectionItemsDto) {
-    return this.collectionService.removeItem(dto.data);
+  @Delete(':id/delete-item')
+  removeItem(
+    @Param('id') collection_id: number,
+    @Body() dto: DeleteCollectionItemsDto,
+  ) {
+    return this.collectionService.removeItem(collection_id, dto.data);
   }
 }
