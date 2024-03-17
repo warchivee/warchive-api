@@ -1,15 +1,15 @@
 import { ApiProperty } from '@nestjs/swagger';
-import { IsNumber } from 'class-validator';
+import { IsString } from 'class-validator';
 import { Type } from 'class-transformer';
 import { FindAllCollectionDto } from './find-all-collection.dto';
 
 export class FindCollectionDto extends FindAllCollectionDto {
   @ApiProperty({
-    description: 'collection id',
-    example: '1',
+    description: '암호화된 collection id = shared_id',
+    example: 'asdfdsf==',
     required: true,
   })
-  @IsNumber()
-  @Type(() => Number)
-  id: number;
+  @IsString()
+  @Type(() => String)
+  id: string;
 }
