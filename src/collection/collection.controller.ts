@@ -71,11 +71,11 @@ export class CollectionController {
     description: '컬렉션 이름을 변경합니다.',
   })
   @Patch(':id')
-  update(
+  updateCollection(
     @Param('id') id: string,
     @Body() updateCollectionDto: UpdateCollectionDto,
   ) {
-    return this.collectionService.update(+id, updateCollectionDto);
+    return this.collectionService.updateCollection(+id, updateCollectionDto);
   }
 
   @ApiBearerAuth('access_token')

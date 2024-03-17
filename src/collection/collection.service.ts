@@ -142,7 +142,7 @@ export class CollectionService {
     }
   }
 
-  async update(id: number, updateCollectionDto: UpdateCollectionDto) {
+  async updateCollection(id: number, updateCollectionDto: UpdateCollectionDto) {
     await this.findCollectionInfo(id);
 
     return this.collectionRepository.save({ id, ...updateCollectionDto });
