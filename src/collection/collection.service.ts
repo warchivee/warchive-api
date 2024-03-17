@@ -89,11 +89,13 @@ export class CollectionService {
     );
   }
 
-  async addItem(user: User, addCollectionItemDtos: AddCollectionItemDto[]) {
-    console.log(addCollectionItemDtos[0].collection_id);
-    const collection = await this.findOne(
-      addCollectionItemDtos[0].collection_id,
-    );
+  async addItem(
+    collection_id: number,
+    user: User,
+    addCollectionItemDtos: AddCollectionItemDto[],
+  ) {
+    console.log(collection_id);
+    const collection = await this.findOne(collection_id);
 
     const [collectionItems, totalCount] =
       await this.collectionItemRepository.findAndCount({
@@ -132,7 +134,12 @@ export class CollectionService {
     return this.collectionItemRepository.save(saveEntities);
   }
 
-  async removeItem(deleteCollectionItemDto: DeleteCollectionItemDto[]) {
+  async removeItem(
+    collection_id: number,
+    deleteCollectionItemDto: DeleteCollectionItemDto[],
+  ) {
+    await this.findOne(collection_id);
+
     try {
       const deletId: number[] = [];
       for (const dto of deleteCollectionItemDto) {
