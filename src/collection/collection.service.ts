@@ -4,6 +4,8 @@ import { Repository, EntityNotFoundError, EntityManager } from 'typeorm';
 import { InjectRepository } from '@nestjs/typeorm';
 import { CreateCollectionDto } from './dto/create-collection.dto';
 import { UpdateCollectionDto } from './dto/update-collection.dto';
+import { FindCollectionDto } from './dto/find-collection.dto';
+import { FindAllCollectionDto } from './dto/find-all-collection.dto';
 import { Collection } from './entities/collection.entity';
 import {
   TooManyCollectionException,
@@ -26,18 +28,16 @@ export class CollectionService {
     private readonly entityManager: EntityManager,
   ) {}
 
-  async create(user: User, createCollectionDto: CreateCollectionDto) {
+  async createCollection(user: User, createCollectionDto: CreateCollectionDto) {
     // 컬렉션 생성 계정당 최대 20개까지
-    const userInfo = new User();
-    userInfo.id = user.id;
-
     const collecionMax = await this.collectionRepository.count({
-      where: { adder: userInfo },
+      where: { adder: { id: user.id } },
     });
 
     if (collecionMax >= 20) {
       throw TooManyCollectionException();
     }
+    // console.log('collecionMax : ', collecionMax);
 
     const createCollection = this.collectionRepository.create({
       title: createCollectionDto.title,
@@ -49,11 +49,60 @@ export class CollectionService {
     return await this.collectionRepository.save(createCollection);
   }
 
-  findAll() {
-    return `This action returns all collection`;
+  async findAllCollections(
+    FindallCollectionDto: FindAllCollectionDto,
+    user: User,
+  ) {
+    try {
+      const [total, totalCount] = await this.collectionRepository.findAndCount({
+        where: { adder: { id: user.id } },
+        skip: FindallCollectionDto.getSkip(),
+        take: FindallCollectionDto.getTake(),
+        order: {
+          created_at: 'DESC',
+        },
+      });
+
+      return {
+        total_count: totalCount,
+        result: total,
+      };
+    } catch (error) {
+      if (error instanceof EntityNotFoundError) {
+        throw EntityNotFoundException();
+      } else {
+        throw error;
+      }
+    }
   }
 
-  async findOne(id: number) {
+  async findCollection(findCollectionDto: FindCollectionDto) {
+    try {
+      // collection info
+      const collectionInfo = await this.findCollectionInfo(
+        findCollectionDto.id,
+      );
+
+      // items info
+      const [itemWataIds, totalCount] =
+        await this.findAllItems(findCollectionDto);
+      // console.log(itemWataIds);
+
+      return {
+        collection_info: collectionInfo,
+        collection_items: itemWataIds,
+        items_total_count: totalCount,
+      };
+    } catch (error) {
+      if (error instanceof EntityNotFoundError) {
+        throw EntityNotFoundException();
+      } else {
+        throw error;
+      }
+    }
+  }
+
+  async findCollectionInfo(id: number) {
     try {
       const collection = await this.collectionRepository.findOneOrFail({
         where: { id },
@@ -69,14 +118,38 @@ export class CollectionService {
     }
   }
 
+  async findAllItems(findCollectionDto: FindCollectionDto) {
+    try {
+      const [collectionItems, totalCount] =
+        await this.collectionItemRepository.findAndCount({
+          where: { collection: { id: findCollectionDto.id } },
+          relations: { wata: true },
+          select: ['id', 'wata', 'created_at'],
+          skip: findCollectionDto.getSkip(),
+          take: findCollectionDto.getTake(),
+          order: {
+            created_at: 'DESC',
+          },
+        });
+
+      return [collectionItems.map((row) => row.wata.id), totalCount];
+    } catch (error) {
+      if (error instanceof EntityNotFoundError) {
+        throw EntityNotFoundException();
+      } else {
+        throw error;
+      }
+    }
+  }
+
   async update(id: number, updateCollectionDto: UpdateCollectionDto) {
-    await this.findOne(id);
+    await this.findCollectionInfo(id);
 
     return this.collectionRepository.save({ id, ...updateCollectionDto });
   }
 
-  async remove(id: number) {
-    await this.findOne(id);
+  async removeCollection(id: number) {
+    await this.findCollectionInfo(id);
 
     return this.entityManager.transaction(
       async (transactionalEntityManager) => {
@@ -95,7 +168,7 @@ export class CollectionService {
     addCollectionItemDtos: AddCollectionItemDto[],
   ) {
     console.log(collection_id);
-    const collection = await this.findOne(collection_id);
+    const collection = await this.findCollectionInfo(collection_id);
 
     const [collectionItems, totalCount] =
       await this.collectionItemRepository.findAndCount({
@@ -138,7 +211,7 @@ export class CollectionService {
     collection_id: number,
     deleteCollectionItemDto: DeleteCollectionItemDto[],
   ) {
-    await this.findOne(collection_id);
+    await this.findCollectionInfo(collection_id);
 
     try {
       const deletId: number[] = [];

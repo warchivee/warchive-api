@@ -14,6 +14,7 @@ import {
   LessThanOrEqual,
   Like,
   MoreThanOrEqual,
+  Raw,
   Repository,
 } from 'typeorm';
 import {
@@ -78,10 +79,18 @@ export class WataService {
     const itemValueCorrectConditions: FindOptionsWhere<Wata> = {};
 
     // title
-    if (title) itemValueCorrectConditions.title = Like(`%${title}%`);
+    if (title)
+      itemValueCorrectConditions.title = Raw(
+        (alias) => `replace(${alias}, ' ', '') like :title`,
+        { title: `%${title?.replace(' ', '')}%` },
+      );
 
     // creators
-    if (creators) itemValueCorrectConditions.creators = Like(`%${creators}%`);
+    if (creators)
+      itemValueCorrectConditions.creators = Raw(
+        (alias) => `replace(${alias}, ' ', '') like :creators`,
+        { creators: `%${creators?.replace('/', '')?.replace(' ', '')}%` },
+      );
 
     // label
     if (label) {
