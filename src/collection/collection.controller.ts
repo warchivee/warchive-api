@@ -11,7 +11,6 @@ import {
 } from '@nestjs/common';
 import { CollectionService } from './collection.service';
 import { CreateCollectionDto } from './dto/create-collection.dto';
-import { UpdateCollectionDto } from './dto/update-collection.dto';
 import { FindAllCollectionDto } from './dto/find-all-collection.dto';
 import { FindCollectionDto } from './dto/find-collection.dto';
 import { ApiBearerAuth, ApiOperation, ApiTags } from '@nestjs/swagger';
@@ -67,13 +66,13 @@ export class CollectionController {
 
   @ApiBearerAuth('access_token')
   @ApiOperation({
-    summary: '컬렉션 이름 변경',
-    description: '컬렉션 이름을 변경합니다.',
+    summary: '컬렉션 변경',
+    description: '컬렉션 이름이나 내용을 변경합니다.',
   })
   @Patch(':id')
   updateCollection(
     @Param('id') id: string,
-    @Body() updateCollectionDto: UpdateCollectionDto,
+    @Body() updateCollectionDto: CreateCollectionDto,
   ) {
     return this.collectionService.updateCollection(+id, updateCollectionDto);
   }

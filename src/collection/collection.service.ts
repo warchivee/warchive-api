@@ -3,7 +3,6 @@ import { User } from 'src/user/entities/user.entity';
 import { Repository, EntityNotFoundError, EntityManager } from 'typeorm';
 import { InjectRepository } from '@nestjs/typeorm';
 import { CreateCollectionDto } from './dto/create-collection.dto';
-import { UpdateCollectionDto } from './dto/update-collection.dto';
 import { FindCollectionDto } from './dto/find-collection.dto';
 import { FindAllCollectionDto } from './dto/find-all-collection.dto';
 import { Collection } from './entities/collection.entity';
@@ -157,7 +156,7 @@ export class CollectionService {
     }
   }
 
-  async updateCollection(id: number, updateCollectionDto: UpdateCollectionDto) {
+  async updateCollection(id: number, updateCollectionDto: CreateCollectionDto) {
     await this.findCollectionInfo(id);
 
     return this.collectionRepository.save({ id, ...updateCollectionDto });
