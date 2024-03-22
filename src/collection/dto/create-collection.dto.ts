@@ -6,6 +6,7 @@ import {
   MaxLength,
   Matches,
 } from 'class-validator';
+import { Transform } from 'class-transformer';
 
 export class CreateCollectionDto {
   @ApiProperty({
@@ -25,8 +26,10 @@ export class CreateCollectionDto {
     description: '코멘트',
     example: '제일 좋아하는 드라마를 모아봤습니다~',
     required: false,
+    nullable: true,
   })
   @IsString()
+  @Transform((params) => (params.value?.length > 0 ? params.value : undefined))
   @MaxLength(200, { message: '코멘트는 200자까지만 입력됩니다.' })
   @IsOptional()
   @Matches(/^[\w\s가-힣ㄱ-ㅎㅏ-ㅣ\!\?\,\.\-\_\&\:\~]+$/g, {
