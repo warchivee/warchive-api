@@ -6,11 +6,18 @@ import {
   Patch,
   Param,
   Delete,
+  UseInterceptors,
 } from '@nestjs/common';
 import { KeywordService } from './keyword.service';
 import { CreateKeywordDto } from './dto/create-keyword.dto';
 import { UpdateKeywordDto } from './dto/update-keyword.dto';
 import { ApiBearerAuth, ApiOperation, ApiTags } from '@nestjs/swagger';
+import { CacheKey, CacheTTL } from '@nestjs/cache-manager';
+import {
+  HttpCacheInterceptor,
+  KEYWORD_CACHEKEY,
+  CACHE_TTL,
+} from 'src/admin/wata/httpcache.interceptor';
 
 @ApiTags('Keywords')
 @Controller('admin/keyword')
@@ -32,6 +39,9 @@ export class KeywordController {
     summary: '키워드 목록 조회',
     description: '키워드 목록을 조회합니다.',
   })
+  @UseInterceptors(HttpCacheInterceptor)
+  @CacheKey(KEYWORD_CACHEKEY)
+  @CacheTTL(CACHE_TTL)
   @Get()
   findAll() {
     return this.keywordService.findAll();

@@ -10,6 +10,7 @@ import { PlatformModule } from '../keywords/platform/platform.module';
 import { CautionModule } from '../keywords/caution/caution.module';
 import { KeywordModule } from '../keywords/keyword/keyword.module';
 import { GenreModule } from '../keywords/genre/genre.module';
+import { CacheModule } from '@nestjs/cache-manager';
 
 @Module({
   imports: [
@@ -18,6 +19,7 @@ import { GenreModule } from '../keywords/genre/genre.module';
     KeywordModule,
     CautionModule,
     PlatformModule,
+    CacheModule.register(),
   ],
   controllers: [WataController],
   providers: [WataService, WataMappingService],
