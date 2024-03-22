@@ -13,10 +13,11 @@ import {
 import { EntityNotFoundException } from 'src/common/exception/service.exception';
 import { CollectionItem } from './entities/collection-item.entity';
 import { AddCollectionItemDto } from './dto/add-collection-item.dto';
-import { WataService } from '../admin/wata/wata.service';
 import { DeleteCollectionItemDto } from './dto/delete-collection-item.dto';
 import { Encrypt } from './collection.crypto';
 import { CollectionListResponseDto } from './dto/collection-list.dto';
+import { Wata } from 'src/admin/wata/entities/wata.entity';
+import { WataLabelType } from 'src/admin/wata/interface/wata.type';
 
 @Injectable()
 export class CollectionService {
@@ -25,7 +26,9 @@ export class CollectionService {
     private readonly collectionRepository: Repository<Collection>,
     @InjectRepository(CollectionItem)
     private readonly collectionItemRepository: Repository<CollectionItem>,
-    private readonly wataService: WataService,
+    @InjectRepository(Wata)
+    private readonly wataRepository: Repository<Wata>,
+    // private readonly wataService: WataService,
     private readonly entityManager: EntityManager,
     private readonly encrypt: Encrypt,
   ) {}
@@ -193,31 +196,46 @@ export class CollectionService {
       throw TooManyCollectionItemException();
     }
 
-    const saveEntities: CollectionItem[] = [];
-    for (const dto of addCollectionItemDtos) {
-      const wata = await this.wataService.findOne(dto.wata_id);
+    try {
+      const saveEntities: CollectionItem[] = [];
+      for (const dto of addCollectionItemDtos) {
+        const wata = await this.wataRepository.findOneOrFail({
+          where: {
+            id: dto.wata_id,
+            is_published: true,
+            label: WataLabelType.CHECKED,
+          },
+        });
 
-      let exist: boolean = false;
-      for (const item of collectionItems) {
-        if (item.wata.id === dto.wata_id) {
-          exist = true;
-          break;
+        let exist: boolean = false;
+
+        for (const item of collectionItems) {
+          if (item.wata.id === dto.wata_id) {
+            exist = true;
+            break;
+          }
         }
+
+        // 중복된 아이템이 있으면 저장 건너뜀
+        if (exist) continue;
+
+        const addItem = this.collectionItemRepository.create({
+          collection: collection,
+          wata: wata,
+          adder: user,
+          updater: user,
+        });
+
+        saveEntities.push(addItem);
       }
-
-      // 중복된 아이템이 있으면 저장 건너뜀
-      if (exist) continue;
-
-      const addItem = this.collectionItemRepository.create({
-        collection: collection,
-        wata: wata,
-        adder: user,
-        updater: user,
-      });
-
-      saveEntities.push(addItem);
+      return this.collectionItemRepository.save(saveEntities);
+    } catch (error) {
+      if (error instanceof EntityNotFoundError) {
+        throw EntityNotFoundException();
+      } else {
+        throw error;
+      }
     }
-    return this.collectionItemRepository.save(saveEntities);
   }
 
   async removeItem(
