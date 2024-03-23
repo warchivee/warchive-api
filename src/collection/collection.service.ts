@@ -13,6 +13,8 @@ import { EntityNotFoundException } from 'src/common/exception/service.exception'
 import { CollectionItem } from './entities/collection-item.entity';
 import { Wata } from 'src/admin/wata/entities/wata.entity';
 import { WataLabelType } from 'src/admin/wata/interface/wata.type';
+import Sqids from 'sqids';
+import { ConfigService } from '@nestjs/config';
 
 @Injectable()
 export class CollectionService {
@@ -23,7 +25,6 @@ export class CollectionService {
     private readonly collectionItemRepository: Repository<CollectionItem>,
     @InjectRepository(Wata)
     private readonly wataRepository: Repository<Wata>,
-    // private readonly wataService: WataService,
     private readonly entityManager: EntityManager,
     private readonly configService: ConfigService,
   ) {}
@@ -109,7 +110,7 @@ export class CollectionService {
       //조회용 암호화된 id 추가
       const result = [];
       total.forEach((collection) => {
-        const encryptedText = this.encrypt.encrypt(collection.id);
+        const encryptedText = this.sqids.encode([collection.id]);
         result.push(CollectionListResponseDto.of(collection, encryptedText));
       });
 
@@ -187,7 +188,7 @@ export class CollectionService {
   async findAllItems(findCollectionDto: FindCollectionDto) {
     try {
       //collection_id 복호화
-      const collection_id = Number(this.encrypt.decrypt(findCollectionDto.id));
+      const collection_id = this.sqids.decode(findCollectionDto.id)[0];
 
       const [collectionItems, totalCount] =
         await this.collectionItemRepository.findAndCount({
