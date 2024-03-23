@@ -39,19 +39,20 @@ export class CollectionService {
     minLength: 4,
   });
 
-  private async whiteSpaceCheck(createCollectionDto: CreateCollectionDto) {
-    let note = createCollectionDto.note;
-    if (note !== null && note !== undefined) {
-      note = note.replaceAll(' ', '');
-
-      if (note === '') {
-        return 'Y';
-      }
-    }
+  private async getSharedId(id: number) {
+    return this.sqids.encode([id]);
   }
 
   private async checkPermission(user: User, collectionId: number | number[]) {
     const collections = await this.collectionRepository.find({
+      select: {
+        adder: {
+          id: true,
+        },
+      },
+      relations: {
+        adder: true,
+      },
       where: {
         id: Array.isArray(collectionId) ? In([...collectionId]) : collectionId,
         adder: { id: user.id } as User,
@@ -175,55 +176,23 @@ export class CollectionService {
     }
   }
 
-  async findCollectionInfo(id: number) {
-    try {
-      const collection = await this.collectionRepository.findOneOrFail({
-        where: { id },
-      });
+  async updateCollection(
+    id: number,
+    updater: User,
+    updateCollectionDto: CreateCollectionDto,
+  ) {
+    await this.userCheck(updater, id);
 
-      return collection;
-    } catch (error) {
-      if (error instanceof EntityNotFoundError) {
-        throw EntityNotFoundException();
-      } else {
-        throw error;
-      }
+    const noteWhiteSpace = await this.whiteSpaceCheck(updateCollectionDto);
+    if (noteWhiteSpace === 'Y') {
+      updateCollectionDto.note = null;
     }
-  }
 
-  async findAllItems(findCollectionDto: FindCollectionDto) {
-    try {
-      //collection_id 복호화
-      const collection_id = this.sqids.decode(findCollectionDto.id)[0];
-
-      const [collectionItems, totalCount] =
-        await this.collectionItemRepository.findAndCount({
-          where: {
-            collection: { id: collection_id },
-          },
-          relations: { wata: true },
-          select: ['id', 'wata', 'created_at'],
-          skip: findCollectionDto.getSkip(),
-          take: findCollectionDto.getTake(),
-          order: {
-            created_at: 'DESC',
-          },
-        });
-
-      return [collectionItems.map((row) => row.wata.id), totalCount];
-    } catch (error) {
-      if (error instanceof EntityNotFoundError) {
-        throw EntityNotFoundException();
-      } else {
-        throw error;
-      }
-    }
-  }
-
-  async updateCollection(id: number, updateCollectionDto: CreateCollectionDto) {
-    await this.findCollectionInfo(id);
-
-    return this.collectionRepository.save({ id, ...updateCollectionDto });
+    return this.collectionRepository.save({
+      id,
+      ...updateCollectionDto,
+      updater: updater,
+    });
   }
 
   async removeCollection(user: User, id: number) {
