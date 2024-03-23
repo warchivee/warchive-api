@@ -13,7 +13,6 @@ import { Wata } from 'src/admin/wata/entities/wata.entity';
     ConfigModule,
   ],
   controllers: [CollectionController],
-  providers: [CollectionService],
-  exports: [CollectionService],
+  providers: [CollectionService, Encrypt],
 })
 export class CollectionModule {}

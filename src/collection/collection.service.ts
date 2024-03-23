@@ -27,8 +27,11 @@ export class CollectionService {
     private readonly collectionRepository: Repository<Collection>,
     @InjectRepository(CollectionItem)
     private readonly collectionItemRepository: Repository<CollectionItem>,
+    @InjectRepository(Wata)
+    private readonly wataRepository: Repository<Wata>,
+    // private readonly wataService: WataService,
     private readonly entityManager: EntityManager,
-    private readonly configService: ConfigService,
+    private readonly encrypt: Encrypt,
   ) {}
 
   private readonly sqids = new Sqids({
@@ -121,6 +124,11 @@ export class CollectionService {
           items: collection?.items?.map((item) => item?.wata?.id),
         };
       });
+
+      return {
+        total_count: totalCount,
+        result: result,
+      };
     } catch (error) {
       if (error instanceof EntityNotFoundError) {
         throw EntityNotFoundException();
@@ -133,7 +141,7 @@ export class CollectionService {
   async findShareCollection(sharedId: string) {
     try {
       //collection_id 복호화
-      const collection_id = Number(this.encrypt.decrypt(findCollectionDto.id));
+      const collection_id = this.sqids.decode(findCollectionDto.id)[0];
 
       // collection info
       const result = await this.collectionRepository.findOneOrFail({
