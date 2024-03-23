@@ -133,7 +133,7 @@ export class CollectionService {
   async findShareCollection(sharedId: string) {
     try {
       //collection_id 복호화
-      const collection_id = this.sqids.decode(findCollectionDto.id)[0];
+      const collection_id = this.sqids.decode(sharedId)[0];
 
       // collection info
       const result = await this.collectionRepository.findOneOrFail({
