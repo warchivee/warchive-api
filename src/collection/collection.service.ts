@@ -11,6 +11,10 @@ import {
 } from 'src/common/exception/service.exception';
 import { EntityNotFoundException } from 'src/common/exception/service.exception';
 import { CollectionItem } from './entities/collection-item.entity';
+import { AddCollectionItemDto } from './dto/add-collection-item.dto';
+import { DeleteCollectionItemDto } from './dto/delete-collection-item.dto';
+import { Encrypt } from './collection.crypto';
+import { CollectionListResponseDto } from './dto/collection-list.dto';
 import { Wata } from 'src/admin/wata/entities/wata.entity';
 import { WataLabelType } from 'src/admin/wata/interface/wata.type';
 import Sqids from 'sqids';
@@ -23,41 +27,12 @@ export class CollectionService {
     private readonly collectionRepository: Repository<Collection>,
     @InjectRepository(CollectionItem)
     private readonly collectionItemRepository: Repository<CollectionItem>,
+    @InjectRepository(Wata)
+    private readonly wataRepository: Repository<Wata>,
+    // private readonly wataService: WataService,
     private readonly entityManager: EntityManager,
-    private readonly configService: ConfigService,
+    private readonly encrypt: Encrypt,
   ) {}
-
-  private readonly sqids = new Sqids({
-    alphabet: this.configService.get('SQIDS_AlPHABET'),
-    minLength: 4,
-  });
-
-  private async getSharedId(id: number) {
-    return this.sqids.encode([id]);
-  }
-
-  private async checkPermission(user: User, collectionId: number | number[]) {
-    const collections = await this.collectionRepository.find({
-      select: {
-        adder: {
-          id: true,
-        },
-      },
-      relations: {
-        adder: true,
-      },
-      where: {
-        id: Array.isArray(collectionId) ? In([...collectionId]) : collectionId,
-        adder: { id: user.id } as User,
-      },
-    });
-
-    collections.forEach((collection) => {
-      if (collection.adder.id !== user.id) {
-        throw PermissionDenied();
-      }
-    });
-  }
 
   async createCollection(user: User, createCollectionDto: CreateCollectionDto) {
     // 컬렉션 생성 개수 제한 검사
@@ -131,7 +106,7 @@ export class CollectionService {
   async findShareCollection(sharedId: string) {
     try {
       //collection_id 복호화
-      const collection_id = this.sqids.decode(sharedId)[0];
+      const collection_id = Number(this.encrypt.decrypt(findCollectionDto.id));
 
       // collection info
       const result = await this.collectionRepository.findOneOrFail({
