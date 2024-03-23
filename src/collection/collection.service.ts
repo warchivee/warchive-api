@@ -11,13 +11,14 @@ import {
 } from 'src/common/exception/service.exception';
 import { EntityNotFoundException } from 'src/common/exception/service.exception';
 import { CollectionItem } from './entities/collection-item.entity';
-import { AddCollectionItemDto } from './dto/add-collection-item.dto';
-import { DeleteCollectionItemDto } from './dto/delete-collection-item.dto';
-import { CollectionListResponseDto } from './dto/collection-list.dto';
 import { Wata } from 'src/admin/wata/entities/wata.entity';
 import Sqids from 'sqids';
 import { ConfigService } from '@nestjs/config';
 import { UpdateItemDto } from './dto/update-item.dto';
+import {
+  COLLECTIONS_LIMMIT_COUNT,
+  COLLECTION_ITEMS_LIMIT_COUNT,
+} from 'src/common/utils/collection.const';
 
 @Injectable()
 export class CollectionService {
@@ -28,7 +29,6 @@ export class CollectionService {
     private readonly collectionItemRepository: Repository<CollectionItem>,
     @InjectRepository(Wata)
     private readonly wataRepository: Repository<Wata>,
-    // private readonly wataService: WataService,
     private readonly entityManager: EntityManager,
     private readonly configService: ConfigService,
   ) {}
@@ -38,19 +38,20 @@ export class CollectionService {
     minLength: 4,
   });
 
-  private async whiteSpaceCheck(createCollectionDto: CreateCollectionDto) {
-    let note = createCollectionDto.note;
-    if (note !== null && note !== undefined) {
-      note = note.replaceAll(' ', '');
-
-      if (note === '') {
-        return 'Y';
-      }
-    }
+  private async getSharedId(id: number) {
+    return this.sqids.encode([id]);
   }
 
   private async checkPermission(user: User, collectionId: number | number[]) {
     const collections = await this.collectionRepository.find({
+      select: {
+        adder: {
+          id: true,
+        },
+      },
+      relations: {
+        adder: true,
+      },
       where: {
         id: Array.isArray(collectionId) ? In([...collectionId]) : collectionId,
         adder: { id: user.id } as User,
@@ -113,11 +114,14 @@ export class CollectionService {
         },
       });
 
-      //조회용 암호화된 id 추가
-      const result = [];
-      total.forEach((collection) => {
-        const encryptedText = this.sqids.encode([collection.id]);
-        result.push(CollectionListResponseDto.of(collection, encryptedText));
+      return result.map((collection) => {
+        return {
+          id: collection.id,
+          shared_id: this.getSharedId(collection.id),
+          title: collection.title,
+          note: collection.note,
+          items: collection?.items?.map((item) => item?.wata?.id),
+        };
       });
     } catch (error) {
       if (error instanceof EntityNotFoundError) {
@@ -131,7 +135,7 @@ export class CollectionService {
   async findShareCollection(sharedId: string) {
     try {
       //collection_id 복호화
-      const collection_id = this.sqids.decode(findCollectionDto.id)[0];
+      const collection_id = this.sqids.decode(sharedId)[0];
 
       // collection info
       const result = await this.collectionRepository.findOneOrFail({
@@ -175,12 +179,7 @@ export class CollectionService {
     updater: User,
     updateCollectionDto: CreateCollectionDto,
   ) {
-    await this.userCheck(updater, id);
-
-    const noteWhiteSpace = await this.whiteSpaceCheck(updateCollectionDto);
-    if (noteWhiteSpace === 'Y') {
-      updateCollectionDto.note = null;
-    }
+    this.checkPermission(updater, id);
 
     return this.collectionRepository.save({ id, ...updateCollectionDto });
   }
