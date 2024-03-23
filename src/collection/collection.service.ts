@@ -14,10 +14,11 @@ import { EntityNotFoundException } from 'src/common/exception/service.exception'
 import { CollectionItem } from './entities/collection-item.entity';
 import { AddCollectionItemDto } from './dto/add-collection-item.dto';
 import { DeleteCollectionItemDto } from './dto/delete-collection-item.dto';
-import { Encrypt } from './collection.crypto';
 import { CollectionListResponseDto } from './dto/collection-list.dto';
 import { Wata } from 'src/admin/wata/entities/wata.entity';
 import { WataLabelType } from 'src/admin/wata/interface/wata.type';
+import Sqids from 'sqids';
+import { ConfigService } from '@nestjs/config';
 
 @Injectable()
 export class CollectionService {
@@ -28,10 +29,13 @@ export class CollectionService {
     private readonly collectionItemRepository: Repository<CollectionItem>,
     @InjectRepository(Wata)
     private readonly wataRepository: Repository<Wata>,
-    // private readonly wataService: WataService,
     private readonly entityManager: EntityManager,
-    private readonly encrypt: Encrypt,
+    private readonly configService: ConfigService,
   ) {}
+
+  private readonly sqids = new Sqids({
+    alphabet: this.configService.get('SQIDS_AlPHABET'),
+  });
 
   async createCollection(user: User, createCollectionDto: CreateCollectionDto) {
     // 컬렉션 생성 계정당 최대 20개까지
@@ -70,7 +74,7 @@ export class CollectionService {
       //조회용 암호화된 id 추가
       const result = [];
       total.forEach((collection) => {
-        const encryptedText = this.encrypt.encrypt(collection.id);
+        const encryptedText = this.sqids.encode([collection.id]);
         result.push(CollectionListResponseDto.of(collection, encryptedText));
       });
 
@@ -90,7 +94,7 @@ export class CollectionService {
   async findCollection(findCollectionDto: FindCollectionDto) {
     try {
       //collection_id 복호화
-      const collection_id = Number(this.encrypt.decrypt(findCollectionDto.id));
+      const collection_id = this.sqids.decode(findCollectionDto.id)[0];
 
       // collection info
       const collectionInfo = await this.findCollectionInfo(collection_id);
@@ -133,7 +137,7 @@ export class CollectionService {
   async findAllItems(findCollectionDto: FindCollectionDto) {
     try {
       //collection_id 복호화
-      const collection_id = Number(this.encrypt.decrypt(findCollectionDto.id));
+      const collection_id = this.sqids.decode(findCollectionDto.id)[0];
 
       const [collectionItems, totalCount] =
         await this.collectionItemRepository.findAndCount({
