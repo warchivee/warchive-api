@@ -25,7 +25,7 @@ export class CreateCollectionDto {
   @IsString()
   @IsOptional()
   @MaxLength(200, { message: '코멘트는 200자까지만 입력됩니다.' })
-  @Transform((params) => (params.value?.length > 0 ? params.value : undefined))
+  @Transform((params) => (params.value?.length > 0 ? params.value : null))
   @Matches(/^[\w\s가-힣ㄱ-ㅎㅏ-ㅣ\!\?\,\.\-\_\&\:\~]+$/g, {
     message: '코멘트는 한글,영문,숫자,특수문자(!?.,:~-_&)만 입력 가능합니다',
   })
