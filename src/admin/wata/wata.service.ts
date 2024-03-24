@@ -93,7 +93,7 @@ export class WataService {
 
     if (title)
       itemValueCorrectConditions.title = Raw(
-        (alias) => `replace(${alias}, ' ', '') like :title`,
+        (alias) => `replace(${alias}, ' ', '') ILike :title`,
         { title: `%${title?.replace(' ', '')}%` },
       );
 
