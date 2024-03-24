@@ -37,7 +37,23 @@ export class CollectionService {
     alphabet: this.configService.get('SQIDS_AlPHABET'),
   });
 
+  private async whiteSpaceCheck(createCollectionDto: CreateCollectionDto) {
+    let note = createCollectionDto.note;
+    if (note !== null && note !== undefined) {
+      note = note.replaceAll(' ', '');
+
+      if (note === '') {
+        return 'Y';
+      }
+    }
+  }
+
   async createCollection(user: User, createCollectionDto: CreateCollectionDto) {
+    const noteWhiteSpace = await this.whiteSpaceCheck(createCollectionDto);
+    if (noteWhiteSpace === 'Y') {
+      createCollectionDto.note = null;
+    }
+
     // 컬렉션 생성 계정당 최대 20개까지
     const collecionMax = await this.collectionRepository.count({
       where: { adder: { id: user.id } },
@@ -165,6 +181,11 @@ export class CollectionService {
 
   async updateCollection(id: number, updateCollectionDto: CreateCollectionDto) {
     await this.findCollectionInfo(id);
+
+    const noteWhiteSpace = await this.whiteSpaceCheck(updateCollectionDto);
+    if (noteWhiteSpace === 'Y') {
+      updateCollectionDto.note = null;
+    }
 
     return this.collectionRepository.save({ id, ...updateCollectionDto });
   }
