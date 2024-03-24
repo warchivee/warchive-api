@@ -316,8 +316,6 @@ export class WataService {
   async update(user: User, id: number, updateWataDto: UpdateWataDto) {
     const wata = await this.validate(id);
 
-    const update = await this.verifyAndGetDataToDto(updateWataDto);
-
     await this.removeCache(); // 캐시 삭제
 
     return this.entityManager.transaction(
@@ -325,7 +323,7 @@ export class WataService {
         await transactionalEntityManager.update(Wata, id, {
           title: updateWataDto.title ?? wata.title,
           creators: updateWataDto.creators ?? wata.creators,
-          genre: updateWataDto.genre ? update.genre : wata.genre,
+          genre: updateWataDto.genre ?? wata.genre,
           thumbnail_card: updateWataDto.thumbnail_card ?? wata.thumbnail_card,
           thumbnail_book: updateWataDto.thumbnail_book ?? wata.thumbnail_book,
           note: updateWataDto.note ?? wata.note,
@@ -337,7 +335,7 @@ export class WataService {
           await this.mappingService.mergeMappings(
             transactionalEntityManager,
             wata,
-            update.keywords,
+            updateWataDto.keywords,
             WataKeywordMapping,
           );
         }
@@ -346,7 +344,7 @@ export class WataService {
           await this.mappingService.mergeMappings(
             transactionalEntityManager,
             wata,
-            update.cautions,
+            updateWataDto.cautions,
             WataCautionMapping,
           );
         }
@@ -355,7 +353,7 @@ export class WataService {
           await this.mappingService.mergeMappings(
             transactionalEntityManager,
             wata,
-            update.platforms,
+            updateWataDto.platforms,
             WataPlatformMapping,
           );
         }

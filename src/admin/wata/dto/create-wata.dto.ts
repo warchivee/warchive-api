@@ -14,6 +14,10 @@ export class PlatformWithUrlDto {
   @IsNumber()
   id: number;
 
+  @IsOptional()
+  @IsNumber()
+  mappingId?: number;
+
   @IsString()
   // todo : dto 검증 시 @IsUrl() 사용하면 cannot read property 'protocols' error 나는 이슈
   // @IsUrl(null, { message: '플랫폼에는 url을 입력해야 합니다.' })
