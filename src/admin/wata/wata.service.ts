@@ -208,6 +208,7 @@ export class WataService {
         skip: (page - 1) * page_size,
         order: {
           created_at: 'DESC',
+          id: 'ASC', // 처음에 밀어넣었던 데이터들의 생성 시간이 같아, id 순서로 정렬하는 옵션 추가
         },
       });
 
