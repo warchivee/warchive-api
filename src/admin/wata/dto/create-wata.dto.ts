@@ -42,7 +42,6 @@ export class CreateWataDto {
   })
   @IsString()
   @MaxLength(250, { message: '작가/감독은 250자까지만 입력됩니다.' })
-  @IsOptional()
   creators: string;
 
   @ApiProperty({

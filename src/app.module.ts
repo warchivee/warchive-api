@@ -14,6 +14,7 @@ import { WataModule } from './admin/wata/wata.module';
 import { PlatformModule } from './admin/keywords/platform/platform.module';
 import { KeywordsModule } from './admin/keywords/keywords.module';
 import { CollectionModule } from './collection/collection.module';
+import { PublishWataModule } from './publish-wata/publish-wata.module';
 
 @Module({
   imports: [
@@ -48,6 +49,7 @@ import { CollectionModule } from './collection/collection.module';
     PlatformModule,
     KeywordsModule,
     CollectionModule,
+    PublishWataModule,
   ],
   controllers: [AppController],
   providers: [AppService],

@@ -3,6 +3,7 @@ import { CACHE_KEY_METADATA, CacheInterceptor } from '@nestjs/cache-manager';
 
 export const CACHE_TTL = 0;
 export const WATA_CACHEKEY = 'GET_WATA_CACHE';
+export const PUBLISH_WATA_CACHEKEY = 'GET_PUBLISH_WATA_CACHE';
 export const KEYWORD_CACHEKEY = 'GET_KEYWORD_CACHE';
 export const KEYWORDS_CACHEKEY = 'GET_KEYWORDS_CACHE';
 

@@ -38,8 +38,9 @@ import { WATA_CACHEKEY } from './httpcache.interceptor';
 export class WataService {
   constructor(
     @InjectRepository(Wata) private readonly wataRepository: Repository<Wata>,
-    private readonly genreService: GenreService,
+
     private readonly keywordService: KeywordService,
+    private readonly genreService: GenreService,
     private readonly cautionService: CautionService,
     private readonly platformService: PlatformService,
     private readonly mappingService: WataMappingService,
