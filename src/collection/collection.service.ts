@@ -180,7 +180,11 @@ export class CollectionService {
     }
   }
 
-  async updateCollection(id: number, updateCollectionDto: CreateCollectionDto) {
+  async updateCollection(
+    id: number,
+    updater: User,
+    updateCollectionDto: CreateCollectionDto,
+  ) {
     await this.findCollectionInfo(id);
 
     const noteWhiteSpace = await this.whiteSpaceCheck(updateCollectionDto);
@@ -188,7 +192,11 @@ export class CollectionService {
       updateCollectionDto.note = null;
     }
 
-    return this.collectionRepository.save({ id, ...updateCollectionDto });
+    return this.collectionRepository.save({
+      id,
+      ...updateCollectionDto,
+      updater: updater,
+    });
   }
 
   async removeCollection(id: number) {
