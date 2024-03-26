@@ -35,6 +35,7 @@ export class CollectionService {
 
   private readonly sqids = new Sqids({
     alphabet: this.configService.get('SQIDS_AlPHABET'),
+    minLength: 4,
   });
 
   private async whiteSpaceCheck(createCollectionDto: CreateCollectionDto) {
