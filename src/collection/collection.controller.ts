@@ -71,10 +71,15 @@ export class CollectionController {
   })
   @Patch(':id')
   updateCollection(
-    @Param('id') id: string,
+    @Param('id') id: number,
+    @Request() req,
     @Body() updateCollectionDto: CreateCollectionDto,
   ) {
-    return this.collectionService.updateCollection(+id, updateCollectionDto);
+    return this.collectionService.updateCollection(
+      id,
+      req.user,
+      updateCollectionDto,
+    );
   }
 
   @ApiBearerAuth('access_token')
