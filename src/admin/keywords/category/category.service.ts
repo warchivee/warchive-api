@@ -18,7 +18,17 @@ export class CategoryService {
 
   findAll() {
     return this.categoryRepository.find({
-      relations: ['genres'],
+      relations: {
+        genres: true,
+      },
+      select: {
+        id: true,
+        name: true,
+        genres: {
+          id: true,
+          name: true,
+        },
+      },
     });
   }
 

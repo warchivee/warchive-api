@@ -5,6 +5,7 @@ import {
   TOO_MANY_COLLECTION,
   TOO_MANY_COLLECTION_ITEM,
   WRONG_ENCRYPTEDTEXT,
+  PERMISSION_DENIED,
 } from '../interface/error-code.type';
 
 export const UnableDeleteMergedDataException = (): ServiceException => {
@@ -25,6 +26,10 @@ export const TooManyCollectionItemException = (): ServiceException => {
 
 export const WrongEncryptedText = (): ServiceException => {
   return new ServiceException(WRONG_ENCRYPTEDTEXT);
+};
+
+export const PermissionDenied = (): ServiceException => {
+  return new ServiceException(PERMISSION_DENIED);
 };
 
 export class ServiceException extends Error {

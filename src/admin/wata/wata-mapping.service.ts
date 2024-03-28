@@ -64,6 +64,7 @@ export class WataMappingService {
 
     const created = platforms?.map((platform: PlatformWithUrlDto) => {
       return {
+        id: platform.mappingId,
         platform: { id: platform.id } as Platform,
         url: platform.url,
         wata,
@@ -98,23 +99,23 @@ export class WataMappingService {
       throw new Error('잘못된 접근입니다.');
     }
 
-    const addItems = updateItems?.filter(
-      (item) =>
-        !wata[mappingParams.wataFieldName].some(
-          (mapping) => mapping[mappingParams.mappingFieldName].id === item.id,
-        ),
-    );
+    const addOrUpdateItems = updateItems;
 
     const deleteItemIds = wata[mappingParams.wataFieldName]
       ?.filter(
         (mapping) =>
           !updateItems.some(
-            (item) => item.id === mapping[mappingParams.mappingFieldName].id,
+            (item) =>
+              item.mapping_id === mapping[mappingParams.mappingFieldName].id,
           ),
       )
       .map((value) => value.id);
 
-    await mappingParams.createMappingsHandler(entityManager, wata, addItems);
+    await mappingParams.createMappingsHandler(
+      entityManager,
+      wata,
+      addOrUpdateItems,
+    );
 
     if (deleteItemIds.length > 0) {
       await entityManager.delete(mappingEntityType, deleteItemIds);

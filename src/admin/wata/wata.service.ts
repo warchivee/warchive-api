@@ -1,4 +1,4 @@
-import { Injectable } from '@nestjs/common';
+import { Inject, Injectable } from '@nestjs/common';
 import { FindWataDto } from './dto/find-wata.dto';
 import { CreateWataDto } from './dto/create-wata.dto';
 import { UpdateWataDto } from './dto/update-wata.dto';
@@ -31,17 +31,21 @@ import { KeywordService } from '../keywords/keyword/keyword.service';
 import { CautionService } from '../keywords/caution/caution.service';
 import { PlatformService } from '../keywords/platform/platform.service';
 import { WataRequiredValuesColumnInfo } from './interface/wata.type';
+import { CACHE_MANAGER } from '@nestjs/cache-manager';
+import { WATA_CACHEKEY } from './httpcache.interceptor';
 
 @Injectable()
 export class WataService {
   constructor(
     @InjectRepository(Wata) private readonly wataRepository: Repository<Wata>,
-    private readonly genreService: GenreService,
+
     private readonly keywordService: KeywordService,
+    private readonly genreService: GenreService,
     private readonly cautionService: CautionService,
     private readonly platformService: PlatformService,
     private readonly mappingService: WataMappingService,
     private readonly entityManager: EntityManager,
+    @Inject(CACHE_MANAGER) private cacheManager: any,
   ) {}
 
   relations = [
@@ -56,6 +60,16 @@ export class WataService {
     'updater',
     'adder',
   ];
+
+  // 지정된 캐시키로 시작되는 캐시 데이터들 삭제
+  async removeCache() {
+    const keys: string[] = await this.cacheManager.store.keys();
+    keys.forEach((key) => {
+      if (key.startsWith(WATA_CACHEKEY)) {
+        this.cacheManager.del(key);
+      }
+    });
+  }
 
   async findAll(findWataDto: FindWataDto) {
     const {
@@ -78,46 +92,38 @@ export class WataService {
     const findWhereConditions: FindOptionsWhere<Wata>[] = [];
     const itemValueCorrectConditions: FindOptionsWhere<Wata> = {};
 
-    // title
     if (title)
       itemValueCorrectConditions.title = Raw(
-        (alias) => `replace(${alias}, ' ', '') like :title`,
+        (alias) => `replace(${alias}, ' ', '') ILike :title`,
         { title: `%${title?.replace(' ', '')}%` },
       );
 
-    // creators
     if (creators)
       itemValueCorrectConditions.creators = Raw(
         (alias) => `replace(${alias}, ' ', '') like :creators`,
         { creators: `%${creators?.replace('/', '')?.replace(' ', '')}%` },
       );
 
-    // label
     if (label) {
       itemValueCorrectConditions.label = In(label);
     }
 
-    // category
     if (categories) {
       itemValueCorrectConditions.genre = { category: { id: In(categories) } };
     }
 
-    // genre
     if (genres) {
       itemValueCorrectConditions.genre = { id: In(genres) };
     }
 
-    // keyword
     if (keywords) {
       itemValueCorrectConditions.keywords = { keyword: { id: In(keywords) } };
     }
 
-    // caution
     if (cautions) {
       itemValueCorrectConditions.cautions = { caution: { id: In(cautions) } };
     }
 
-    // platform
     if (platforms) {
       itemValueCorrectConditions.platforms = {
         platform: { id: In(platforms) },
@@ -203,6 +209,7 @@ export class WataService {
         skip: (page - 1) * page_size,
         order: {
           created_at: 'DESC',
+          id: 'ASC', // 처음에 밀어넣었던 데이터들의 생성 시간이 같아, id 순서로 정렬하는 옵션 추가
         },
       });
 
@@ -242,8 +249,6 @@ export class WataService {
       return await {
         total_count: totalCount,
         result: result,
-        // TODO: 0 이하 예외 처리 -> 첫 번째 페이지 나오게
-        // TODO: 페이지 초과 예외 처리 -> 마지막 페이지 나오게
       };
     } catch (error) {
       if (error instanceof EntityNotFoundError) {
@@ -271,6 +276,8 @@ export class WataService {
 
   async create(user: User, createWataDto: CreateWataDto) {
     const create = await this.verifyAndGetDataToDto(createWataDto);
+
+    await this.removeCache(); // 캐시 삭제
 
     return this.entityManager.transaction(
       async (transactionalEntityManager) => {
@@ -311,14 +318,14 @@ export class WataService {
   async update(user: User, id: number, updateWataDto: UpdateWataDto) {
     const wata = await this.validate(id);
 
-    const update = await this.verifyAndGetDataToDto(updateWataDto);
+    await this.removeCache(); // 캐시 삭제
 
     return this.entityManager.transaction(
       async (transactionalEntityManager) => {
         await transactionalEntityManager.update(Wata, id, {
           title: updateWataDto.title ?? wata.title,
           creators: updateWataDto.creators ?? wata.creators,
-          genre: updateWataDto.genre ? update.genre : wata.genre,
+          genre: updateWataDto.genre ?? wata.genre,
           thumbnail_card: updateWataDto.thumbnail_card ?? wata.thumbnail_card,
           thumbnail_book: updateWataDto.thumbnail_book ?? wata.thumbnail_book,
           note: updateWataDto.note ?? wata.note,
@@ -330,7 +337,7 @@ export class WataService {
           await this.mappingService.mergeMappings(
             transactionalEntityManager,
             wata,
-            update.keywords,
+            updateWataDto.keywords,
             WataKeywordMapping,
           );
         }
@@ -339,7 +346,7 @@ export class WataService {
           await this.mappingService.mergeMappings(
             transactionalEntityManager,
             wata,
-            update.cautions,
+            updateWataDto.cautions,
             WataCautionMapping,
           );
         }
@@ -348,7 +355,7 @@ export class WataService {
           await this.mappingService.mergeMappings(
             transactionalEntityManager,
             wata,
-            update.platforms,
+            updateWataDto.platforms,
             WataPlatformMapping,
           );
         }
@@ -364,6 +371,8 @@ export class WataService {
     if (wata.is_published) {
       throw UnableDeleteMergedDataException();
     }
+
+    await this.removeCache(); // 캐시 삭제
 
     return this.entityManager.transaction(
       async (transactionalEntityManager) => {

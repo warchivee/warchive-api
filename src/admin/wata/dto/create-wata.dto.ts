@@ -14,6 +14,10 @@ export class PlatformWithUrlDto {
   @IsNumber()
   id: number;
 
+  @IsOptional()
+  @IsNumber()
+  mappingId?: number;
+
   @IsString()
   // todo : dto 검증 시 @IsUrl() 사용하면 cannot read property 'protocols' error 나는 이슈
   // @IsUrl(null, { message: '플랫폼에는 url을 입력해야 합니다.' })
@@ -37,8 +41,7 @@ export class CreateWataDto {
     required: false,
   })
   @IsString()
-  @MaxLength(20, { message: '작가/감독은 100자까지만 입력됩니다.' })
-  @IsOptional()
+  @MaxLength(250, { message: '작가/감독은 250자까지만 입력됩니다.' })
   creators: string;
 
   @ApiProperty({
