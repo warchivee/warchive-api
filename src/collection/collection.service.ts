@@ -9,6 +9,7 @@ import { Collection } from './entities/collection.entity';
 import {
   TooManyCollectionException,
   TooManyCollectionItemException,
+  PermissionDenied,
 } from 'src/common/exception/service.exception';
 import { EntityNotFoundException } from 'src/common/exception/service.exception';
 import { CollectionItem } from './entities/collection-item.entity';
@@ -46,6 +47,19 @@ export class CollectionService {
       if (note === '') {
         return 'Y';
       }
+    }
+  }
+
+  private async userCheck(user: User, id: number) {
+    const result = await this.collectionRepository
+      .createQueryBuilder('collection')
+      .leftJoinAndSelect('collection.adder', 'adder')
+      .where('collection.id = :id', { id: id })
+      .select(['adder.id'])
+      .getRawOne();
+
+    if (user.id !== result.adder_id) {
+      throw PermissionDenied();
     }
   }
 
@@ -169,6 +183,7 @@ export class CollectionService {
             created_at: 'DESC',
           },
         });
+      // console.log(collectionItems);
 
       return [collectionItems.map((row) => row.wata.id), totalCount];
     } catch (error) {
@@ -185,6 +200,7 @@ export class CollectionService {
     updater: User,
     updateCollectionDto: CreateCollectionDto,
   ) {
+    await this.userCheck(updater, id);
     await this.findCollectionInfo(id);
 
     const noteWhiteSpace = await this.whiteSpaceCheck(updateCollectionDto);
@@ -199,7 +215,8 @@ export class CollectionService {
     });
   }
 
-  async removeCollection(id: number) {
+  async removeCollection(user: User, id: number) {
+    await this.userCheck(user, id);
     await this.findCollectionInfo(id);
 
     return this.entityManager.transaction(
@@ -218,6 +235,7 @@ export class CollectionService {
     user: User,
     addCollectionItemDtos: AddCollectionItemDto[],
   ) {
+    await this.userCheck(user, collection_id);
     const collection = await this.findCollectionInfo(collection_id);
 
     const [collectionItems, totalCount] =
@@ -274,8 +292,10 @@ export class CollectionService {
 
   async removeItem(
     collection_id: number,
+    user: User,
     deleteCollectionItemDto: DeleteCollectionItemDto[],
   ) {
+    await this.userCheck(user, collection_id);
     await this.findCollectionInfo(collection_id);
 
     try {

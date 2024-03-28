@@ -43,3 +43,9 @@ export const WRONG_ENCRYPTEDTEXT = new ErrorCodeVo(
   HttpStatus.BAD_REQUEST,
   '조회 아이디를 확인해 주세요.',
 );
+
+export const PERMISSION_DENIED = new ErrorCodeVo(
+  'permission denied',
+  HttpStatus.FORBIDDEN,
+  '권한이 없습니다.',
+);
