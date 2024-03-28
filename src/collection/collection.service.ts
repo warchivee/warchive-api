@@ -3,7 +3,6 @@ import { User } from 'src/user/entities/user.entity';
 import { Repository, EntityNotFoundError, EntityManager } from 'typeorm';
 import { InjectRepository } from '@nestjs/typeorm';
 import { CreateCollectionDto } from './dto/create-collection.dto';
-import { UpdateCollectionDto } from './dto/update-collection.dto';
 import { FindCollectionDto } from './dto/find-collection.dto';
 import { FindAllCollectionDto } from './dto/find-all-collection.dto';
 import { Collection } from './entities/collection.entity';
@@ -14,10 +13,12 @@ import {
 import { EntityNotFoundException } from 'src/common/exception/service.exception';
 import { CollectionItem } from './entities/collection-item.entity';
 import { AddCollectionItemDto } from './dto/add-collection-item.dto';
-import { WataService } from '../admin/wata/wata.service';
 import { DeleteCollectionItemDto } from './dto/delete-collection-item.dto';
-import { Encrypt } from './collection.crypto';
 import { CollectionListResponseDto } from './dto/collection-list.dto';
+import { Wata } from 'src/admin/wata/entities/wata.entity';
+import { WataLabelType } from 'src/admin/wata/interface/wata.type';
+import Sqids from 'sqids';
+import { ConfigService } from '@nestjs/config';
 
 @Injectable()
 export class CollectionService {
@@ -26,12 +27,34 @@ export class CollectionService {
     private readonly collectionRepository: Repository<Collection>,
     @InjectRepository(CollectionItem)
     private readonly collectionItemRepository: Repository<CollectionItem>,
-    private readonly wataService: WataService,
+    @InjectRepository(Wata)
+    private readonly wataRepository: Repository<Wata>,
     private readonly entityManager: EntityManager,
-    private readonly encrypt: Encrypt,
+    private readonly configService: ConfigService,
   ) {}
 
+  private readonly sqids = new Sqids({
+    alphabet: this.configService.get('SQIDS_AlPHABET'),
+    minLength: 4,
+  });
+
+  private async whiteSpaceCheck(createCollectionDto: CreateCollectionDto) {
+    let note = createCollectionDto.note;
+    if (note !== null && note !== undefined) {
+      note = note.replaceAll(' ', '');
+
+      if (note === '') {
+        return 'Y';
+      }
+    }
+  }
+
   async createCollection(user: User, createCollectionDto: CreateCollectionDto) {
+    const noteWhiteSpace = await this.whiteSpaceCheck(createCollectionDto);
+    if (noteWhiteSpace === 'Y') {
+      createCollectionDto.note = null;
+    }
+
     // 컬렉션 생성 계정당 최대 20개까지
     const collecionMax = await this.collectionRepository.count({
       where: { adder: { id: user.id } },
@@ -68,7 +91,7 @@ export class CollectionService {
       //조회용 암호화된 id 추가
       const result = [];
       total.forEach((collection) => {
-        const encryptedText = this.encrypt.encrypt(collection.id);
+        const encryptedText = this.sqids.encode([collection.id]);
         result.push(CollectionListResponseDto.of(collection, encryptedText));
       });
 
@@ -88,7 +111,7 @@ export class CollectionService {
   async findCollection(findCollectionDto: FindCollectionDto) {
     try {
       //collection_id 복호화
-      const collection_id = Number(this.encrypt.decrypt(findCollectionDto.id));
+      const collection_id = this.sqids.decode(findCollectionDto.id)[0];
 
       // collection info
       const collectionInfo = await this.findCollectionInfo(collection_id);
@@ -131,7 +154,7 @@ export class CollectionService {
   async findAllItems(findCollectionDto: FindCollectionDto) {
     try {
       //collection_id 복호화
-      const collection_id = Number(this.encrypt.decrypt(findCollectionDto.id));
+      const collection_id = this.sqids.decode(findCollectionDto.id)[0];
 
       const [collectionItems, totalCount] =
         await this.collectionItemRepository.findAndCount({
@@ -157,10 +180,23 @@ export class CollectionService {
     }
   }
 
-  async updateCollection(id: number, updateCollectionDto: UpdateCollectionDto) {
+  async updateCollection(
+    id: number,
+    updater: User,
+    updateCollectionDto: CreateCollectionDto,
+  ) {
     await this.findCollectionInfo(id);
 
-    return this.collectionRepository.save({ id, ...updateCollectionDto });
+    const noteWhiteSpace = await this.whiteSpaceCheck(updateCollectionDto);
+    if (noteWhiteSpace === 'Y') {
+      updateCollectionDto.note = null;
+    }
+
+    return this.collectionRepository.save({
+      id,
+      ...updateCollectionDto,
+      updater: updater,
+    });
   }
 
   async removeCollection(id: number) {
@@ -194,31 +230,46 @@ export class CollectionService {
       throw TooManyCollectionItemException();
     }
 
-    const saveEntities: CollectionItem[] = [];
-    for (const dto of addCollectionItemDtos) {
-      const wata = await this.wataService.findOne(dto.wata_id);
+    try {
+      const saveEntities: CollectionItem[] = [];
+      for (const dto of addCollectionItemDtos) {
+        const wata = await this.wataRepository.findOneOrFail({
+          where: {
+            id: dto.wata_id,
+            is_published: true,
+            label: WataLabelType.CHECKED,
+          },
+        });
 
-      let exist: boolean = false;
-      for (const item of collectionItems) {
-        if (item.wata.id === dto.wata_id) {
-          exist = true;
-          break;
+        let exist: boolean = false;
+
+        for (const item of collectionItems) {
+          if (item.wata.id === dto.wata_id) {
+            exist = true;
+            break;
+          }
         }
+
+        // 중복된 아이템이 있으면 저장 건너뜀
+        if (exist) continue;
+
+        const addItem = this.collectionItemRepository.create({
+          collection: collection,
+          wata: wata,
+          adder: user,
+          updater: user,
+        });
+
+        saveEntities.push(addItem);
       }
-
-      // 중복된 아이템이 있으면 저장 건너뜀
-      if (exist) continue;
-
-      const addItem = this.collectionItemRepository.create({
-        collection: collection,
-        wata: wata,
-        adder: user,
-        updater: user,
-      });
-
-      saveEntities.push(addItem);
+      return this.collectionItemRepository.save(saveEntities);
+    } catch (error) {
+      if (error instanceof EntityNotFoundError) {
+        throw EntityNotFoundException();
+      } else {
+        throw error;
+      }
     }
-    return this.collectionItemRepository.save(saveEntities);
   }
 
   async removeItem(
