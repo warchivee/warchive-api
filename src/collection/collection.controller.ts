@@ -88,8 +88,8 @@ export class CollectionController {
     description: '컬렉션 데이터를 삭제합니다.',
   })
   @Delete(':id')
-  removeCollection(@Param('id') id: number) {
-    return this.collectionService.removeCollection(+id);
+  removeCollection(@Request() req, @Param('id') id: number) {
+    return this.collectionService.removeCollection(req.user, +id);
   }
 
   @ApiBearerAuth('access_token')
@@ -114,8 +114,9 @@ export class CollectionController {
   @Delete(':id/delete-item')
   removeItem(
     @Param('id') collection_id: number,
+    @Request() req,
     @Body() dto: DeleteCollectionItemsDto,
   ) {
-    return this.collectionService.removeItem(collection_id, dto.data);
+    return this.collectionService.removeItem(collection_id, req.user, dto.data);
   }
 }
