@@ -22,15 +22,15 @@ import { PublishWataModule } from './publish-wata/publish-wata.module';
       imports: [ConfigModule],
       useFactory: (configService: ConfigService) => ({
         name: 'default',
-        type: 'postgres',
+        type: 'mysql',
         host: configService.get('DB_HOST'),
         port: +configService.get('DB_PORT'),
         username: configService.get('DB_USERNAME'),
         password: configService.get('DB_PASSWORD'),
         database: configService.get('DB_DATABASE'),
         entities: [`${__dirname}/**/entities/*.entity.{ts,js}`],
-        synchronize: false, //true 로 하면 ddl 이 자동으로 동기화되지만, 데이터가 날아가므로 사용 x, 개발 단계에서만 사용.
-        ssl: true,
+        synchronize: true, //true 로 하면 ddl 이 자동으로 동기화되지만, 데이터가 날아가므로 사용 x, 개발 단계에서만 사용.
+        ssl: false,
         extra: {
           ssl: {
             rejectUnauthorized: false,
