@@ -9,7 +9,7 @@ export class DeleteCollectionItemDto {
     required: true,
   })
   @IsNumber()
-  collection_item_id: number;
+  wata_id: number;
 }
 
 export class DeleteCollectionItemsDto {

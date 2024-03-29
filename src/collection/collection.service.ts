@@ -301,11 +301,15 @@ export class CollectionService {
     try {
       const deletId: number[] = [];
       for (const dto of deleteCollectionItemDto) {
-        await this.collectionItemRepository.findOneOrFail({
-          where: { id: dto.collection_item_id },
-        });
+        const collection_item =
+          await this.collectionItemRepository.findOneOrFail({
+            where: {
+              collection: { id: collection_id },
+              wata: { id: dto.wata_id },
+            },
+          });
 
-        deletId.push(dto.collection_item_id);
+        deletId.push(collection_item.id);
       }
 
       return this.collectionItemRepository.delete(deletId);
