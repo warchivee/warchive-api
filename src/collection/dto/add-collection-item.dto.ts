@@ -1,24 +1,12 @@
 import { ApiProperty } from '@nestjs/swagger';
-import { Type } from 'class-transformer';
 import { IsArray, IsNumber } from 'class-validator';
-
-export class AddCollectionItemDto {
-  @ApiProperty({
-    description: '와타 ID',
-    example: '1',
-    required: true,
-  })
-  @IsNumber()
-  wata_id: number;
-}
 
 export class AddCollectionItemListDto {
   @ApiProperty({
     description: '컬랙션 아이템 추가 리스트',
-    type: [AddCollectionItemDto],
     required: true,
   })
+  @IsNumber({}, { each: true })
   @IsArray()
-  @Type(() => AddCollectionItemDto)
-  data: AddCollectionItemDto[];
+  add_ids: number[];
 }

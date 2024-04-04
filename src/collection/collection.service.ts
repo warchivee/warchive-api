@@ -1,10 +1,13 @@
 import { Injectable } from '@nestjs/common';
 import { User } from 'src/user/entities/user.entity';
-import { Repository, EntityNotFoundError, EntityManager } from 'typeorm';
+import {
+  Repository,
+  EntityNotFoundError,
+  EntityManager,
+  FindOptionsWhere,
+} from 'typeorm';
 import { InjectRepository } from '@nestjs/typeorm';
 import { CreateCollectionDto } from './dto/create-collection.dto';
-import { FindCollectionDto } from './dto/find-collection.dto';
-import { FindAllCollectionDto } from './dto/find-all-collection.dto';
 import { Collection } from './entities/collection.entity';
 import {
   TooManyCollectionException,
@@ -13,13 +16,10 @@ import {
 } from 'src/common/exception/service.exception';
 import { EntityNotFoundException } from 'src/common/exception/service.exception';
 import { CollectionItem } from './entities/collection-item.entity';
-import { AddCollectionItemDto } from './dto/add-collection-item.dto';
-import { DeleteCollectionItemDto } from './dto/delete-collection-item.dto';
-import { CollectionListResponseDto } from './dto/collection-list.dto';
 import { Wata } from 'src/admin/wata/entities/wata.entity';
-import { WataLabelType } from 'src/admin/wata/interface/wata.type';
 import Sqids from 'sqids';
 import { ConfigService } from '@nestjs/config';
+import { UpdateItemDto } from './dto/update-item.dto';
 
 @Injectable()
 export class CollectionService {
@@ -88,31 +88,41 @@ export class CollectionService {
     return await this.collectionRepository.save(createCollection);
   }
 
-  async findAllCollections(
-    FindallCollectionDto: FindAllCollectionDto,
-    user: User,
-  ) {
+  async findCollections(user: User) {
     try {
-      const [total, totalCount] = await this.collectionRepository.findAndCount({
+      const result = await this.collectionRepository.find({
+        select: {
+          id: true,
+          title: true,
+          note: true,
+          items: {
+            id: true,
+            wata: {
+              id: true,
+            },
+          },
+        },
         where: { adder: { id: user.id } },
-        skip: FindallCollectionDto.getSkip(),
-        take: FindallCollectionDto.getTake(),
+        relations: {
+          items: {
+            wata: true,
+          },
+        },
         order: {
-          created_at: 'DESC',
+          created_at: 'ASC',
         },
       });
 
-      //조회용 암호화된 id 추가
-      const result = [];
-      total.forEach((collection) => {
+      return result.map((collection) => {
         const encryptedText = this.sqids.encode([collection.id]);
-        result.push(CollectionListResponseDto.of(collection, encryptedText));
+        return {
+          id: collection.id,
+          shared_id: encryptedText,
+          title: collection.title,
+          note: collection.note,
+          items: collection?.items?.map((item) => item?.wata?.id),
+        };
       });
-
-      return {
-        total_count: totalCount,
-        result: result,
-      };
     } catch (error) {
       if (error instanceof EntityNotFoundError) {
         throw EntityNotFoundException();
@@ -122,70 +132,39 @@ export class CollectionService {
     }
   }
 
-  async findCollection(findCollectionDto: FindCollectionDto) {
+  async findShareCollection(sharedId: string) {
     try {
       //collection_id 복호화
-      const collection_id = this.sqids.decode(findCollectionDto.id)[0];
+      const collection_id = this.sqids.decode(sharedId)[0];
 
       // collection info
-      const collectionInfo = await this.findCollectionInfo(collection_id);
-
-      // items info
-      const [itemWataIds, totalCount] =
-        await this.findAllItems(findCollectionDto);
-      // console.log(itemWataIds);
-
-      return {
-        collection_info: collectionInfo,
-        collection_items: itemWataIds,
-        items_total_count: totalCount,
-      };
-    } catch (error) {
-      if (error instanceof EntityNotFoundError) {
-        throw EntityNotFoundException();
-      } else {
-        throw error;
-      }
-    }
-  }
-
-  async findCollectionInfo(id: number) {
-    try {
-      const collection = await this.collectionRepository.findOneOrFail({
-        where: { id },
+      const result = await this.collectionRepository.findOneOrFail({
+        select: {
+          id: true,
+          title: true,
+          note: true,
+          items: {
+            id: true,
+            wata: {
+              id: true,
+            },
+          },
+        },
+        where: { id: collection_id },
+        relations: {
+          items: {
+            wata: true,
+          },
+        },
       });
 
-      return collection;
-    } catch (error) {
-      if (error instanceof EntityNotFoundError) {
-        throw EntityNotFoundException();
-      } else {
-        throw error;
-      }
-    }
-  }
-
-  async findAllItems(findCollectionDto: FindCollectionDto) {
-    try {
-      //collection_id 복호화
-      const collection_id = this.sqids.decode(findCollectionDto.id)[0];
-
-      const [collectionItems, totalCount] =
-        await this.collectionItemRepository.findAndCount({
-          where: {
-            collection: { id: collection_id },
-          },
-          relations: { wata: true },
-          select: ['id', 'wata', 'created_at'],
-          skip: findCollectionDto.getSkip(),
-          take: findCollectionDto.getTake(),
-          order: {
-            created_at: 'DESC',
-          },
-        });
-      // console.log(collectionItems);
-
-      return [collectionItems.map((row) => row.wata.id), totalCount];
+      return {
+        id: result.id,
+        shared_id: sharedId,
+        title: result.title,
+        note: result.note,
+        items: result?.items?.map((item) => item?.wata?.id),
+      };
     } catch (error) {
       if (error instanceof EntityNotFoundError) {
         throw EntityNotFoundException();
@@ -201,7 +180,6 @@ export class CollectionService {
     updateCollectionDto: CreateCollectionDto,
   ) {
     await this.userCheck(updater, id);
-    await this.findCollectionInfo(id);
 
     const noteWhiteSpace = await this.whiteSpaceCheck(updateCollectionDto);
     if (noteWhiteSpace === 'Y') {
@@ -217,7 +195,6 @@ export class CollectionService {
 
   async removeCollection(user: User, id: number) {
     await this.userCheck(user, id);
-    await this.findCollectionInfo(id);
 
     return this.entityManager.transaction(
       async (transactionalEntityManager) => {
@@ -230,50 +207,24 @@ export class CollectionService {
     );
   }
 
-  async addItem(
-    collection_id: number,
-    user: User,
-    addCollectionItemDtos: AddCollectionItemDto[],
-  ) {
+  async addItem(user: User, collection_id: number, addIds: number[]) {
     await this.userCheck(user, collection_id);
-    const collection = await this.findCollectionInfo(collection_id);
 
-    const [collectionItems, totalCount] =
-      await this.collectionItemRepository.findAndCount({
-        relations: { collection: true, wata: true },
-        where: { collection: { id: collection.id } },
-      });
+    const totalCount = await this.collectionItemRepository.count({
+      relations: { collection: true, wata: true },
+      where: { collection: { id: collection_id } },
+    });
 
-    if (totalCount >= 500) {
+    if (totalCount >= 200) {
       throw TooManyCollectionItemException();
     }
 
     try {
       const saveEntities: CollectionItem[] = [];
-      for (const dto of addCollectionItemDtos) {
-        const wata = await this.wataRepository.findOneOrFail({
-          where: {
-            id: dto.wata_id,
-            is_published: true,
-            label: WataLabelType.CHECKED,
-          },
-        });
-
-        let exist: boolean = false;
-
-        for (const item of collectionItems) {
-          if (item.wata.id === dto.wata_id) {
-            exist = true;
-            break;
-          }
-        }
-
-        // 중복된 아이템이 있으면 저장 건너뜀
-        if (exist) continue;
-
+      for (const id of addIds) {
         const addItem = this.collectionItemRepository.create({
-          collection: collection,
-          wata: wata,
+          collection: { id: collection_id } as Collection,
+          wata: { id: id } as Wata,
           adder: user,
           updater: user,
         });
@@ -290,22 +241,17 @@ export class CollectionService {
     }
   }
 
-  async removeItem(
-    collection_id: number,
-    user: User,
-    deleteCollectionItemDto: DeleteCollectionItemDto[],
-  ) {
+  async removeItem(collection_id: number, user: User, deleteIds: number[]) {
     await this.userCheck(user, collection_id);
-    await this.findCollectionInfo(collection_id);
 
     try {
       const deletId: number[] = [];
-      for (const dto of deleteCollectionItemDto) {
+      for (const id of deleteIds) {
         const collection_item =
           await this.collectionItemRepository.findOneOrFail({
             where: {
               collection: { id: collection_id },
-              wata: { id: dto.wata_id },
+              wata: { id: id } as Wata,
             },
           });
 
@@ -320,5 +266,41 @@ export class CollectionService {
         throw error;
       }
     }
+  }
+
+  async updateItem(user: User, updateItems: UpdateItemDto[]) {
+    const addItems = [];
+    let isDelete = false;
+
+    const deleteQueryBuilder = await this.collectionItemRepository
+      .createQueryBuilder()
+      .delete();
+
+    updateItems.forEach((updateItem) => {
+      if (updateItem.action === 'ADD') {
+        const item = this.collectionItemRepository.create({
+          collection: { id: updateItem?.collection_id } as Collection,
+          wata: { id: updateItem?.wata_id } as Wata,
+          adder: user,
+        });
+
+        addItems.push(item);
+      } else if (updateItem.action === 'DELETE') {
+        isDelete = true;
+        deleteQueryBuilder.orWhere(
+          `(wata.id = ${updateItem?.wata_id} and collection.id = ${updateItem?.collection_id} and adder.id = ${user.id})`,
+        );
+      }
+    });
+
+    if (addItems.length !== 0) {
+      await this.collectionItemRepository.save(addItems);
+    }
+
+    if (isDelete) {
+      await deleteQueryBuilder.execute();
+    }
+
+    return updateItems;
   }
 }
