@@ -14,5 +14,6 @@ import { Wata } from 'src/admin/wata/entities/wata.entity';
   ],
   controllers: [CollectionController],
   providers: [CollectionService],
+  exports: [CollectionService],
 })
 export class CollectionModule {}

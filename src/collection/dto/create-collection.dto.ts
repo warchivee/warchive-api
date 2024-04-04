@@ -11,9 +11,13 @@ export class CreateCollectionDto {
   @IsString()
   @Matches(/[^ ]+/, { message: '제목은 필수 입력값입니다.' })
   @MaxLength(50, { message: '제목은 50자까지만 입력됩니다.' })
-  @Matches(/^[\w\s가-힣ㄱ-ㅎㅏ-ㅣ\!\?\,\.\-\_\&\:\~]+$/g, {
-    message: '제목은 한글,영문,숫자,특수문자(!?.,:~-_&)만 입력 가능합니다',
-  })
+  @Matches(
+    /^(?![\s\S]*\<|\>|\&|\[|\]|\(|\)|\{|\}|\|\'|\"|\bon(load|click|mouseover|...)\s*=|javascript:)/gi,
+    {
+      message:
+        '컬렉션 이름에는 괄호, &, 따옴표, 외부 주소를 입력할 수 없습니다.',
+    },
+  )
   title: string;
 
   @ApiProperty({
@@ -26,8 +30,11 @@ export class CreateCollectionDto {
   @IsOptional()
   @MaxLength(200, { message: '코멘트는 200자까지만 입력됩니다.' })
   @Transform((params) => (params.value?.length > 0 ? params.value : null))
-  @Matches(/^[\w\s가-힣ㄱ-ㅎㅏ-ㅣ\!\?\,\.\-\_\&\:\~]+$/g, {
-    message: '코멘트는 한글,영문,숫자,특수문자(!?.,:~-_&)만 입력 가능합니다',
-  })
+  @Matches(
+    /^(?![\s\S]*\<|\>|\&|\[|\]|\(|\)|\{|\}|\|\'|\"|\bon(load|click|mouseover|...)\s*=|javascript:)/gi,
+    {
+      message: '코멘트에는 괄호, &, 따옴표, 외부 주소를 입력할 수 없습니다.',
+    },
+  )
   note: string;
 }
