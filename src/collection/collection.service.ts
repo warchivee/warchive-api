@@ -85,7 +85,12 @@ export class CollectionService {
       updater: user,
     } as Collection);
 
-    return await this.collectionRepository.save(createCollection);
+    const added = await this.collectionRepository.save(createCollection);
+
+    return {
+      ...added,
+      shared_id: this.sqids.encode([added.id]),
+    };
   }
 
   async findCollections(user: User) {
