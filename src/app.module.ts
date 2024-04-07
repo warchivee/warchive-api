@@ -29,7 +29,6 @@ import { PublishWataModule } from './publish-wata/publish-wata.module';
         password: configService.get('DB_PASSWORD'),
         database: configService.get('DB_DATABASE'),
         entities: [`${__dirname}/**/entities/*.entity.{ts,js}`],
-<<<<<<< HEAD
         synchronize: true, //true 로 하면 ddl 이 자동으로 동기화되지만, 데이터가 날아가므로 사용 x, 개발 단계에서만 사용.
         ssl: false,
         extra: {
@@ -37,24 +36,6 @@ import { PublishWataModule } from './publish-wata/publish-wata.module';
             rejectUnauthorized: false,
           },
         },
-=======
-        synchronize: false, //true 로 하면 ddl 이 자동으로 동기화되지만, 데이터가 날아가므로 사용 x, 개발 단계에서만 사용.
-<<<<<<< HEAD
-        // ssl: true,
-        // extra: {
-        //   ssl: {
-        //     rejectUnauthorized: false,
-        //   },
-        // },
->>>>>>> bb0abfc (feat: 암호화 알고리즘 -> Sqids로 변경)
-=======
-        ssl: true,
-        extra: {
-          ssl: {
-            rejectUnauthorized: false,
-          },
-        },
->>>>>>> 6c0b2d0 (app module ssl 주석 해제)
       }),
       inject: [ConfigService],
     }),
