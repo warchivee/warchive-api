@@ -54,6 +54,7 @@ export class PublishWataService {
             id: wata.genre.id,
             name: wata.genre.name,
           },
+          thumbnail: wata.thumbnail,
           thumbnail_card: wata.thumbnail_card,
           thumbnail_book: wata.thumbnail_book,
           keywords: wata.keywords?.map((item) => {
