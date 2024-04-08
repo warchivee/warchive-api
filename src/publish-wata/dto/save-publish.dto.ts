@@ -6,6 +6,8 @@ import {
   IsArray,
   ValidateNested,
   IsOptional,
+  isArray,
+  IsDate,
 } from 'class-validator';
 
 export class InfoDto {
@@ -63,14 +65,22 @@ export class SavePublishWataDto {
     example: 'https://i.ibb.co/jWy32Jc/Neo-Cab-card.jpg',
   })
   @IsString()
-  thumbnail_card: string;
+  @IsOptional()
+  thumbnail: string;
 
   @ApiProperty({
     description: '책 썸네일 url',
     example: 'https://i.ibb.co/zQFyQ86/Neo-Cab-book.jpg',
   })
   @IsString()
-  thumbnail_book: string;
+  thumbnail_card: WataThumbnailCropAreaType;
+
+  @ApiProperty({
+    description: '책용 썸네일 crop size',
+    example: '{"w": 331, "h": 137, "x": 114, "y": 57}',
+  })
+  @IsString()
+  thumbnail_book: WataThumbnailCropAreaType;
 
   @ApiProperty({
     description: '카테고리 정보',
@@ -79,54 +89,42 @@ export class SavePublishWataDto {
   @ValidateNested({ each: true })
   @IsArray()
   @IsOptional()
-  @Type(() => InfoDto)
-  category: InfoDto[];
+  thumbnail_book?: WataThumbnailCropAreaType;
 
   @ApiProperty({
     description: '장르 정보',
     type: [InfoDto],
   })
-  @ValidateNested({ each: true })
-  @IsArray()
+  // @ValidateNested({ each: true })
+  // @IsArray()
   @Type(() => InfoDto)
-  genre: InfoDto[];
+  genre: InfoDto;
 
   @ApiProperty({
     description: '키워드 정보',
-    type: [InfoDto],
+    // type: [InfoDto],
   })
-  @ValidateNested({ each: true })
-  @IsArray()
+  // @ValidateNested({ each: true })
+  // @IsArray()
   @Type(() => InfoDto)
-  keywords: InfoDto[];
+  keywords: InfoDto;
 
   @ApiProperty({
     description: '주의 정보',
-    type: [InfoDto],
+    // type: [InfoDto],
   })
-  @ValidateNested({ each: true })
-  @IsArray()
+  // @ValidateNested({ each: true })
+  // @IsArray()
   @IsOptional()
   @Type(() => InfoDto)
-  cautions: InfoDto[];
+  cautions?: InfoDto;
 
   @ApiProperty({
     description: '플랫폼 정보',
-    type: [PlatformInfoDto],
+    // type: [PlatformInfoDto],
   })
-  @ValidateNested({ each: true })
-  @IsArray()
+  // @ValidateNested({ each: true })
+  // @IsArray()
   @Type(() => PlatformInfoDto)
-  platforms: PlatformInfoDto[];
-}
-
-export class SavePublishWataDtoList {
-  @ApiProperty({
-    description: 'list of publishWata',
-    type: [SavePublishWataDto], // List 로 받을 객체의 타입을 선언해준다.
-  })
-  @ValidateNested({ each: true })
-  @IsArray()
-  @Type(() => SavePublishWataDto)
-  data: SavePublishWataDto[];
+  platforms: PlatformInfoDto;
 }
