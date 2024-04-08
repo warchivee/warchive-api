@@ -3,17 +3,7 @@ import { InjectRepository } from '@nestjs/typeorm';
 import { KeywordsService } from 'src/admin/keywords/keywords.service';
 import { Wata } from 'src/admin/wata/entities/wata.entity';
 import { EntityNotFoundException } from 'src/common/exception/service.exception';
-import {
-  EntityManager,
-  EntityNotFoundError,
-  FindOptionsWhere,
-  Repository,
-} from 'typeorm';
-import { SavePublishWataDtoList } from './dto/save-publish.dto';
-import { PublishWata } from './entities/publish-wata.entity';
-import { WataLabelType } from 'src/admin/wata/interface/wata.type';
-import { User } from 'src/user/entities/user.entity';
-import { WataService } from 'src/admin/wata/wata.service';
+import { EntityNotFoundError, FindOptionsWhere, Repository } from 'typeorm';
 
 @Injectable()
 export class PublishWataService {
