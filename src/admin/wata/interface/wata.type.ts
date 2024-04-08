@@ -3,7 +3,7 @@ export enum WataLabelType {
   CHECKING = 'CHECKING',
   CHECKED = 'CHECKED',
   HOLD = 'HOLD',
-  NEED_CANTACT = 'NEED_CANTACT',
+  NEED_CONTACT = 'NEED_CONTACT',
   CENSOR = 'CENSOR',
 }
 
@@ -13,14 +13,20 @@ export enum WataRequiredValuesType {
   GENRE = 'genre',
   KEYWORDS = 'keywords',
   PLATFORMS = 'platforms',
-  THUMBNAIL_CARD = 'thumbnailCard',
-  THUMBNAIL_BOOK = 'thumbnailBook',
+  THUMBNAIL = 'thumbnail',
 }
 
 interface WataRequiredValuesColumnInfoType {
   name: string;
   type: 'string' | 'fk' | 'mapping-many';
   mappingColumnName?: string;
+}
+
+export interface WataThumbnailCropAreaType {
+  w: number;
+  h: number;
+  x: number;
+  y: number;
 }
 
 export const WataRequiredValuesColumnInfo: Record<
@@ -39,12 +45,8 @@ export const WataRequiredValuesColumnInfo: Record<
     name: 'genre',
     type: 'fk',
   },
-  thumbnailCard: {
-    name: 'thumbnail_card',
-    type: 'string',
-  },
-  thumbnailBook: {
-    name: 'thumbnail_book',
+  thumbnail: {
+    name: 'thumbnail',
     type: 'string',
   },
   keywords: {

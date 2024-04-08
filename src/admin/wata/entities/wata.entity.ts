@@ -3,16 +3,19 @@ import { Column, Entity, JoinColumn, ManyToOne, OneToMany } from 'typeorm';
 import { WataKeywordMapping } from './wata-keyword.entity';
 import { WataCautionMapping } from './wata-caution.entity';
 import { WataPlatformMapping } from './wata-platform.entity';
-import { WataLabelType } from '../interface/wata.type';
+import {
+  WataLabelType,
+  WataThumbnailCropAreaType,
+} from '../interface/wata.type';
 import { Genre } from 'src/admin/keywords/genre/entities/genre.entity';
 
 @Entity({ name: 'wata' })
 export class Wata extends CommonEntity {
-  @Column({ length: 250 })
+  @Column()
   title: string;
 
-  @Column({ length: 250, nullable: true })
-  creators: string;
+  @Column({ nullable: true })
+  creators?: string;
 
   @ManyToOne(() => Genre, (genre) => genre.id)
   @JoinColumn({ name: 'genre_id' })
@@ -27,11 +30,16 @@ export class Wata extends CommonEntity {
   @OneToMany(() => WataPlatformMapping, (platform) => platform.wata)
   platforms?: WataPlatformMapping[];
 
-  @Column({ length: 250, nullable: true })
-  thumbnail_card?: string;
+  @Column({ nullable: true })
+  thumbnail?: string;
 
-  @Column({ length: 250, nullable: true })
-  thumbnail_book?: string;
+  // https://orkhan.gitbook.io/typeorm/docs/entities#simple-json-column-type
+  @Column({ type: 'simple-json', nullable: true })
+  thumbnail_card?: WataThumbnailCropAreaType;
+
+  // https://orkhan.gitbook.io/typeorm/docs/entities#simple-json-column-type
+  @Column({ type: 'simple-json', nullable: true })
+  thumbnail_book?: WataThumbnailCropAreaType;
 
   @Column({ length: 20, default: 'NEED_CHECK' })
   label?: WataLabelType;

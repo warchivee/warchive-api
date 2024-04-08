@@ -9,6 +9,7 @@ import {
   IsNumber,
   ValidateNested,
 } from 'class-validator';
+import { WataThumbnailCropAreaType } from '../interface/wata.type';
 
 export class PlatformWithUrlDto {
   @IsNumber()
@@ -90,22 +91,29 @@ export class CreateWataDto {
   platforms?: PlatformWithUrlDto[];
 
   @ApiProperty({
-    description: '카드용 썸네일 url',
+    description: '썸네일 url',
     example: 'http:test.com.jpeg',
     required: false,
   })
   @IsString()
   @IsOptional()
-  thumbnail_card?: string;
+  thumbnail?: string;
 
   @ApiProperty({
-    description: '책용 썸네일 url',
-    example: 'http:test.com.jpeg',
+    description: '카드용 썸네일 crop size',
+    example: '{"w": 331, "h": 137, "x": 114, "y": 57}',
     required: false,
   })
-  @IsString()
   @IsOptional()
-  thumbnail_book?: string;
+  thumbnail_card?: WataThumbnailCropAreaType;
+
+  @ApiProperty({
+    description: '책용 썸네일 crop size',
+    example: '{"w": 331, "h": 137, "x": 114, "y": 57}',
+    required: false,
+  })
+  @IsOptional()
+  thumbnail_book?: WataThumbnailCropAreaType;
 
   @ApiProperty({
     description: '비고',
