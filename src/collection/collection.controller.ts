@@ -36,7 +36,7 @@ export class CollectionController {
     summary: '공유 컬렉션 조회',
     description: '단일 컬렉션 정보 및 해당 아이템들을 조회합니다.',
   })
-  @Get(':sharedId')
+  @Get('/shared/:sharedId')
   findCollection(@Param('sharedId') sharedId: string) {
     return this.collectionService.findShareCollection(sharedId);
   }
