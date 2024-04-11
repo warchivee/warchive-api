@@ -11,12 +11,14 @@ import { CategoryService } from './category.service';
 import { CreateCategoryDto } from './dto/create-category.dto';
 import { UpdateCategoryDto } from './dto/update-category.dto';
 import { ApiBearerAuth, ApiOperation, ApiTags } from '@nestjs/swagger';
+import { Admin } from 'src/common/decorators/admin.decorator';
 
 @ApiTags('Keywords')
 @Controller('admin/category')
 export class CategoryController {
   constructor(private readonly categoryService: CategoryService) {}
 
+  @Admin()
   @ApiBearerAuth('access_token')
   @ApiOperation({
     summary: '카테고리 생성',
@@ -27,6 +29,7 @@ export class CategoryController {
     return this.categoryService.create(createCategoryDto);
   }
 
+  @Admin()
   @ApiBearerAuth('access_token')
   @ApiOperation({
     summary: '카테고리 목록 조회',
@@ -37,6 +40,7 @@ export class CategoryController {
     return this.categoryService.findAll();
   }
 
+  @Admin()
   @ApiBearerAuth('access_token')
   @ApiOperation({
     summary: '카테고리 수정',
@@ -50,6 +54,7 @@ export class CategoryController {
     return this.categoryService.update(+id, updateCategoryDto);
   }
 
+  @Admin()
   @ApiBearerAuth('access_token')
   @ApiOperation({
     summary: '카테고리 삭제',

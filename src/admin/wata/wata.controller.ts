@@ -22,12 +22,14 @@ import {
   HttpCacheInterceptor,
 } from './httpcache.interceptor';
 import { CacheKey, CacheTTL } from '@nestjs/cache-manager';
+import { Admin } from 'src/common/decorators/admin.decorator';
 
 @ApiTags('Wata')
 @Controller('admin/wata')
 export class WataController {
   constructor(private readonly wataService: WataService) {}
 
+  @Admin()
   @ApiBearerAuth('access_token')
   @ApiOperation({
     summary: '검수 데이터 생성',
@@ -38,6 +40,7 @@ export class WataController {
     return this.wataService.create(req.user, createWataDto);
   }
 
+  @Admin()
   @ApiBearerAuth('access_token')
   @ApiOperation({
     summary: '검수 데이터 목록 조회',
@@ -51,6 +54,7 @@ export class WataController {
     return this.wataService.findAll(findWataDto);
   }
 
+  @Admin()
   @ApiBearerAuth('access_token')
   @ApiOperation({
     summary: '검수 데이터 단건 조회',
@@ -61,6 +65,7 @@ export class WataController {
     return this.wataService.findOne(+id);
   }
 
+  @Admin()
   @ApiBearerAuth('access_token')
   @ApiOperation({
     summary: '검수 데이터 수정',
@@ -75,6 +80,7 @@ export class WataController {
     return this.wataService.update(req.user, +id, updateWataDto);
   }
 
+  @Admin()
   @ApiBearerAuth('access_token')
   @ApiOperation({
     summary: '검수 데이터 삭제',

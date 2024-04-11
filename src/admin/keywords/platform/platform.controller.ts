@@ -11,12 +11,14 @@ import { PlatformService } from './platform.service';
 import { CreatePlatformDto } from './dto/create-platform.dto';
 import { UpdatePlatformDto } from './dto/update-platform.dto';
 import { ApiBearerAuth, ApiOperation, ApiTags } from '@nestjs/swagger';
+import { Admin } from 'src/common/decorators/admin.decorator';
 
 @ApiTags('Keywords')
 @Controller('admin/platform')
 export class PlatformController {
   constructor(private readonly platformService: PlatformService) {}
 
+  @Admin()
   @ApiBearerAuth('access_token')
   @ApiOperation({
     summary: '플랫폼 생성',
@@ -27,6 +29,7 @@ export class PlatformController {
     return this.platformService.create(createPlatformDto);
   }
 
+  @Admin()
   @ApiBearerAuth('access_token')
   @ApiOperation({
     summary: '플랫폼 목록 조회',
@@ -37,6 +40,7 @@ export class PlatformController {
     return this.platformService.findAll();
   }
 
+  @Admin()
   @ApiBearerAuth('access_token')
   @ApiOperation({
     summary: '플랫폼 수정',
@@ -50,6 +54,7 @@ export class PlatformController {
     return this.platformService.update(+id, updatePlatformDto);
   }
 
+  @Admin()
   @ApiBearerAuth('access_token')
   @ApiOperation({
     summary: '플랫폼 삭제',

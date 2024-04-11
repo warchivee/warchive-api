@@ -11,12 +11,14 @@ import { GenreService } from './genre.service';
 import { CreateGenreDto } from './dto/create-genre.dto';
 import { UpdateGenreDto } from './dto/update-genre.dto';
 import { ApiBearerAuth, ApiOperation, ApiTags } from '@nestjs/swagger';
+import { Admin } from 'src/common/decorators/admin.decorator';
 
 @ApiTags('Keywords')
 @Controller('admin/category/:categoryId/genre')
 export class GenreController {
   constructor(private readonly genreService: GenreService) {}
 
+  @Admin()
   @ApiBearerAuth('access_token')
   @ApiOperation({
     summary: '장르 생성',
@@ -32,6 +34,7 @@ export class GenreController {
     return this.genreService.create(+categoryId, createGenreDto);
   }
 
+  @Admin()
   @ApiBearerAuth('access_token')
   @ApiOperation({
     summary: '장르 목록 조회',
@@ -42,6 +45,7 @@ export class GenreController {
     return this.genreService.findAll();
   }
 
+  @Admin()
   @ApiBearerAuth('access_token')
   @ApiOperation({
     summary: '장르 수정',
@@ -57,6 +61,7 @@ export class GenreController {
     return this.genreService.update(+categoryId, +id, updateGenreDto);
   }
 
+  @Admin()
   @ApiBearerAuth('access_token')
   @ApiOperation({
     summary: '장르 삭제',

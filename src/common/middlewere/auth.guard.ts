@@ -10,6 +10,7 @@ import { Reflector } from '@nestjs/core';
 import { AuthJwtService } from 'src/auth/jwt.service';
 import { IS_PUBLIC_KEY } from '../decorators/public.decorator';
 import { TokenExpiredError } from '@nestjs/jwt';
+import { IS_ADMIN_KEY } from '../decorators/admin.decorator';
 
 //docs: https://docs.nestjs.com/security/authentication
 
@@ -34,7 +35,6 @@ export class AuthGuard implements CanActivate {
     }
 
     const isReissueRequest = request.url.includes('reissue');
-    const isAdminRequest = request.url.includes('admin');
 
     // 액세스토큰 갱신 요청이면 cookie 에 담긴 refresh token 을 검증한다.
     if (isReissueRequest) {
@@ -54,8 +54,7 @@ export class AuthGuard implements CanActivate {
         const user = await this.authJwtService.validate(token);
 
         // admin 요청은 ADMIN 권한을 가진 유저만 요청 가능하다.
-        // todo 이 문서를 적용하는 것이 유리한지 고려해보기 (https://docs.nestjs.com/security/authorization)
-        if (isAdminRequest && user.role !== 'ADMIN') {
+        if (this.checkAdmin(context) && user.role !== 'ADMIN') {
           throw new ForbiddenException();
         }
 
@@ -89,5 +88,18 @@ export class AuthGuard implements CanActivate {
   private extractTokenFromHeader(request: Request): string | undefined {
     const [type, token] = request.headers.authorization?.split(' ') ?? [];
     return type === 'Bearer' ? token : undefined;
+  }
+
+  private checkAdmin(context: ExecutionContext): boolean {
+    const isAdmin = this.reflector.getAllAndOverride<boolean>(IS_ADMIN_KEY, [
+      context.getHandler(),
+      context.getClass(),
+    ]);
+
+    if (isAdmin) {
+      return true;
+    }
+
+    return false;
   }
 }

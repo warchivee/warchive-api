@@ -2,7 +2,7 @@ import { Controller, Get, UseInterceptors } from '@nestjs/common';
 import { PublishWataService } from './publish-wata.service';
 import { ApiOperation, ApiTags } from '@nestjs/swagger';
 import { CacheKey, CacheTTL } from '@nestjs/cache-manager';
-import { Public } from 'src/common/decorators/public.decorator';
+import { Public } from 'src/common/public.decorator.ts/public.decorator';
 import {
   CACHE_TTL,
   HttpCacheInterceptor,

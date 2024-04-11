@@ -18,12 +18,14 @@ import {
   KEYWORD_CACHEKEY,
   CACHE_TTL,
 } from 'src/admin/wata/httpcache.interceptor';
+import { Admin } from 'src/common/decorators/admin.decorator';
 
 @ApiTags('Keywords')
 @Controller('admin/keyword')
 export class KeywordController {
   constructor(private readonly keywordService: KeywordService) {}
 
+  @Admin()
   @ApiBearerAuth('access_token')
   @ApiOperation({
     summary: '키워드 생성',
@@ -34,6 +36,7 @@ export class KeywordController {
     return this.keywordService.create(createKeywordDto);
   }
 
+  @Admin()
   @ApiBearerAuth('access_token')
   @ApiOperation({
     summary: '키워드 목록 조회',
@@ -47,6 +50,7 @@ export class KeywordController {
     return this.keywordService.findAll();
   }
 
+  @Admin()
   @ApiBearerAuth('access_token')
   @ApiOperation({
     summary: '키워드 수정',
@@ -57,6 +61,7 @@ export class KeywordController {
     return this.keywordService.update(+id, updateKeywordDto);
   }
 
+  @Admin()
   @ApiBearerAuth('access_token')
   @ApiOperation({
     summary: '키워드 삭제',

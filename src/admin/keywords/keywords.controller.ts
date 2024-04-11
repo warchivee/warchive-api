@@ -7,12 +7,14 @@ import {
   KEYWORDS_CACHEKEY,
   CACHE_TTL,
 } from '../wata/httpcache.interceptor';
+import { Admin } from 'src/common/decorators/admin.decorator';
 
 @ApiTags('Keywords')
 @Controller('admin/keywords')
 export class KeywordsController {
   constructor(private readonly keywordsService: KeywordsService) {}
 
+  @Admin()
   @ApiBearerAuth('access_token')
   @ApiOperation({
     summary: '카테고리 및 하위 장르, 키워드, 주의키워드, 플랫폼 목록 전체 조회',

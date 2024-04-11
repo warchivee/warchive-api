@@ -11,12 +11,14 @@ import { CautionService } from './caution.service';
 import { CreateCautionDto } from './dto/create-caution.dto';
 import { UpdateCautionDto } from './dto/update-caution.dto';
 import { ApiBearerAuth, ApiOperation, ApiTags } from '@nestjs/swagger';
+import { Admin } from 'src/common/decorators/admin.decorator';
 
 @ApiTags('Keywords')
 @Controller('admin/caution')
 export class CautionController {
   constructor(private readonly cautionService: CautionService) {}
 
+  @Admin()
   @ApiBearerAuth('access_token')
   @ApiOperation({
     summary: '주의 키워드 생성',
@@ -27,6 +29,7 @@ export class CautionController {
     return this.cautionService.create(createCautionDto);
   }
 
+  @Admin()
   @ApiBearerAuth('access_token')
   @ApiOperation({
     summary: '주의 키워드 목록 조회',
@@ -37,6 +40,7 @@ export class CautionController {
     return this.cautionService.findAll();
   }
 
+  @Admin()
   @ApiBearerAuth('access_token')
   @ApiOperation({
     summary: '주의 키워드 수정',
@@ -47,6 +51,7 @@ export class CautionController {
     return this.cautionService.update(+id, updateCautionDto);
   }
 
+  @Admin()
   @ApiBearerAuth('access_token')
   @ApiOperation({
     summary: '주의 키워드 삭제',
