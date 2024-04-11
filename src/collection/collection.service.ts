@@ -303,10 +303,10 @@ export class CollectionService {
 
     if (addItems.length !== 0) {
       const countByCollection = await this.collectionItemRepository
-        .createQueryBuilder()
-        .select('id')
-        .addSelect('COUNT(id)', 'count')
-        .groupBy('collection.id')
+        .createQueryBuilder('item')
+        .select('item.collection.id', 'id')
+        .addSelect('COUNT(item.id)', 'count')
+        .groupBy('item.collection.id')
         .execute();
 
       const countByAddItems: Record<number, number> = {};
