@@ -1,11 +1,6 @@
 import { Injectable } from '@nestjs/common';
 import { User } from 'src/user/entities/user.entity';
-import {
-  Repository,
-  EntityNotFoundError,
-  EntityManager,
-  FindOptionsWhere,
-} from 'typeorm';
+import { Repository, EntityNotFoundError, EntityManager, In } from 'typeorm';
 import { InjectRepository } from '@nestjs/typeorm';
 import { CreateCollectionDto } from './dto/create-collection.dto';
 import { Collection } from './entities/collection.entity';
@@ -20,6 +15,10 @@ import { Wata } from 'src/admin/wata/entities/wata.entity';
 import Sqids from 'sqids';
 import { ConfigService } from '@nestjs/config';
 import { UpdateItemDto } from './dto/update-item.dto';
+import {
+  COLLECTIONS_LIMMIT_COUNT,
+  COLLECTION_ITEMS_LIMIT_COUNT,
+} from 'src/common/utils/collection.const';
 
 @Injectable()
 export class CollectionService {
@@ -28,8 +27,6 @@ export class CollectionService {
     private readonly collectionRepository: Repository<Collection>,
     @InjectRepository(CollectionItem)
     private readonly collectionItemRepository: Repository<CollectionItem>,
-    @InjectRepository(Wata)
-    private readonly wataRepository: Repository<Wata>,
     private readonly entityManager: EntityManager,
     private readonly configService: ConfigService,
   ) {}
@@ -39,42 +36,31 @@ export class CollectionService {
     minLength: 4,
   });
 
-  private async whiteSpaceCheck(createCollectionDto: CreateCollectionDto) {
-    let note = createCollectionDto.note;
-    if (note !== null && note !== undefined) {
-      note = note.replaceAll(' ', '');
-
-      if (note === '') {
-        return 'Y';
-      }
-    }
+  private async getSharedId(id: number) {
+    return this.sqids.encode([id]);
   }
 
-  private async userCheck(user: User, id: number) {
-    const result = await this.collectionRepository
-      .createQueryBuilder('collection')
-      .leftJoinAndSelect('collection.adder', 'adder')
-      .where('collection.id = :id', { id: id })
-      .select(['adder.id'])
-      .getRawOne();
+  private async checkPermission(user: User, collectionId: number | number[]) {
+    const collections = await this.collectionRepository.find({
+      where: {
+        id: Array.isArray(collectionId) ? In([...collectionId]) : collectionId,
+        adder: { id: user.id } as User,
+      },
+    });
 
-    if (user.id !== result.adder_id) {
-      throw PermissionDenied();
-    }
+    collections.forEach((collection) => {
+      if (collection.adder.id !== user.id) {
+        throw PermissionDenied();
+      }
+    });
   }
 
   async createCollection(user: User, createCollectionDto: CreateCollectionDto) {
-    const noteWhiteSpace = await this.whiteSpaceCheck(createCollectionDto);
-    if (noteWhiteSpace === 'Y') {
-      createCollectionDto.note = null;
-    }
-
-    // 컬렉션 생성 계정당 최대 20개까지
-    const collecionMax = await this.collectionRepository.count({
+    // 컬렉션 생성 개수 제한 검사
+    const collecionCount = await this.collectionRepository.count({
       where: { adder: { id: user.id } },
     });
-
-    if (collecionMax >= 20) {
+    if (collecionCount >= COLLECTIONS_LIMMIT_COUNT) {
       throw TooManyCollectionException();
     }
 
@@ -89,7 +75,7 @@ export class CollectionService {
 
     return {
       ...added,
-      shared_id: this.sqids.encode([added.id]),
+      shared_id: this.getSharedId(added.id),
     };
   }
 
@@ -119,10 +105,9 @@ export class CollectionService {
       });
 
       return result.map((collection) => {
-        const encryptedText = this.sqids.encode([collection.id]);
         return {
           id: collection.id,
-          shared_id: encryptedText,
+          shared_id: this.getSharedId(collection.id),
           title: collection.title,
           note: collection.note,
           items: collection?.items?.map((item) => item?.wata?.id),
@@ -184,12 +169,7 @@ export class CollectionService {
     updater: User,
     updateCollectionDto: CreateCollectionDto,
   ) {
-    await this.userCheck(updater, id);
-
-    const noteWhiteSpace = await this.whiteSpaceCheck(updateCollectionDto);
-    if (noteWhiteSpace === 'Y') {
-      updateCollectionDto.note = null;
-    }
+    this.checkPermission(updater, id);
 
     return this.collectionRepository.save({
       id,
@@ -198,22 +178,22 @@ export class CollectionService {
     });
   }
 
-  async removeCollection(user: User, id: number) {
-    await this.userCheck(user, id);
+  async removeCollection(updater: User, id: number) {
+    await this.checkPermission(updater, id);
 
     return this.entityManager.transaction(
       async (transactionalEntityManager) => {
         const criteria = { collection: { id } };
         await transactionalEntityManager.delete(CollectionItem, criteria);
-        await transactionalEntityManager.delete(Collection, id);
+        await transactionalEntityManager.delete(Collection, criteria);
 
         return id;
       },
     );
   }
 
-  async addItem(user: User, collection_id: number, addIds: number[]) {
-    await this.userCheck(user, collection_id);
+  async addItem(adder: User, collection_id: number, addIds: number[]) {
+    await this.checkPermission(adder, collection_id);
 
     const totalCount = await this.collectionItemRepository.count({
       relations: { collection: true, wata: true },
@@ -230,8 +210,8 @@ export class CollectionService {
         const addItem = this.collectionItemRepository.create({
           collection: { id: collection_id } as Collection,
           wata: { id: id } as Wata,
-          adder: user,
-          updater: user,
+          adder: adder,
+          updater: adder,
         });
 
         saveEntities.push(addItem);
@@ -246,8 +226,8 @@ export class CollectionService {
     }
   }
 
-  async removeItem(collection_id: number, user: User, deleteIds: number[]) {
-    await this.userCheck(user, collection_id);
+  async removeItem(collection_id: number, remover: User, deleteIds: number[]) {
+    await this.checkPermission(remover, collection_id);
 
     try {
       const deletId: number[] = [];
@@ -273,8 +253,13 @@ export class CollectionService {
     }
   }
 
-  async updateItem(user: User, updateItems: UpdateItemDto[]) {
-    const addItems = [];
+  async updateItem(updater: User, updateItems: UpdateItemDto[]) {
+    let collectionIds = updateItems.map((item) => item.collection_id);
+    collectionIds = [...new Set(collectionIds)];
+
+    await this.checkPermission(updater, collectionIds);
+
+    const addItems: CollectionItem[] = [];
     let isDelete = false;
 
     const deleteQueryBuilder = await this.collectionItemRepository
@@ -286,20 +271,45 @@ export class CollectionService {
         const item = this.collectionItemRepository.create({
           collection: { id: updateItem?.collection_id } as Collection,
           wata: { id: updateItem?.wata_id } as Wata,
-          adder: user,
+          adder: updater,
+          updater: updater,
         });
 
         addItems.push(item);
       } else if (updateItem.action === 'DELETE') {
         isDelete = true;
         deleteQueryBuilder.orWhere(
-          `(wata.id = ${updateItem?.wata_id} and collection.id = ${updateItem?.collection_id} and adder.id = ${user.id})`,
+          `(wata.id = ${updateItem?.wata_id} and collection.id = ${updateItem?.collection_id} and adder.id = ${updater.id})`,
         );
       }
     });
 
     if (addItems.length !== 0) {
+      const countByCollection = await this.collectionItemRepository
+        .createQueryBuilder()
+        .select('id')
+        .addSelect('COUNT(id)', 'count')
+        .groupBy('collection.id')
+        .execute();
+
+      const countByAddItems: Record<number, number> = {};
+
+      addItems.forEach((i) => {
+        countByAddItems[i.collection.id] =
+          (countByAddItems[i.collection.id] ?? 0) + 1;
+      });
+
+      countByCollection.forEach((c) => {
+        const currentLength = c.count + countByAddItems[c.id];
+
+        if (currentLength >= COLLECTION_ITEMS_LIMIT_COUNT) {
+          throw TooManyCollectionItemException();
+        }
+      });
+
       await this.collectionItemRepository.save(addItems);
+
+      await this.collectionItemRepository.count({});
     }
 
     if (isDelete) {
