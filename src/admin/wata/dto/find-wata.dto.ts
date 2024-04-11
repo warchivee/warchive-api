@@ -5,8 +5,7 @@ import { WataLabelType, WataRequiredValuesType } from '../interface/wata.type';
 import {
   QueryValidEnumArray,
   QueryValidNumberArray,
-} from '../../../common/public.decorator.ts/dto.decorator';
-
+} from 'src/common/decorators/dto.decorator';
 // docs - query number[] issue : https://dev.to/avantar/validating-numeric-query-parameters-in-nestjs-gk9
 
 export class FindWataDto {

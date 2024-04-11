@@ -5,15 +5,14 @@ import {
   MaxLength,
   Matches,
   IsNotEmpty,
+  Validate,
 } from 'class-validator';
 import { Transform } from 'class-transformer';
 import {
   COLLECTION_COMMENT_LIMIT_LENGTH,
   COLLECTION_TITLE_LIMIT_LENGTH,
 } from 'src/common/utils/collection.const';
-
-const urlRegex =
-  /[(http(s)?)://(www.)?a-zA-Z0-9@:%._+~#=]{2,256}\.[a-z]{2,6}\b([-a-zA-Z0-9@:%_+.~#?&//=]*)/gi;
+import { IsNotUrl } from 'src/common/utils/custom-valid';
 
 export class CreateCollectionDto {
   @ApiProperty({
@@ -26,8 +25,8 @@ export class CreateCollectionDto {
   @MaxLength(COLLECTION_TITLE_LIMIT_LENGTH, {
     message: `제목은 ${COLLECTION_TITLE_LIMIT_LENGTH}자까지만 입력됩니다.`,
   })
-  @Matches(urlRegex, {
-    message: '컬렉션 이름에는 괄호, url을 입력할 수 없습니다.',
+  @Validate(IsNotUrl, {
+    message: '제목에는 url을 입력할 수 없습니다.',
   })
   @IsNotEmpty()
   title: string;
@@ -45,8 +44,8 @@ export class CreateCollectionDto {
     message: `코멘트는 ${COLLECTION_COMMENT_LIMIT_LENGTH}자까지만 입력됩니다.`,
   })
   @Transform((params) => (params.value?.length > 0 ? params.value : null))
-  @Matches(urlRegex, {
-    message: '코멘트에는 괄호, url을 입력할 수 없습니다.',
+  @Validate(IsNotUrl, {
+    message: '코멘트에는 url을 입력할 수 없습니다.',
   })
   note: string;
 }
