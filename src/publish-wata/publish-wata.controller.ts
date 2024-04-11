@@ -9,12 +9,13 @@ import {
 import { PublishWataService } from './publish-wata.service';
 import { ApiBearerAuth, ApiOperation, ApiTags } from '@nestjs/swagger';
 import { CacheKey, CacheTTL } from '@nestjs/cache-manager';
+import { Public } from 'src/common/decorators/public.decorator';
 import {
   CACHE_TTL,
   HttpCacheInterceptor,
   PUBLISH_WATA_CACHEKEY,
 } from 'src/admin/wata/httpcache.interceptor';
-import { SavePublishWataDto } from './dto/save-publish.dto';
+import { SavePublishWataDtoList } from './dto/save-publish.dto';
 
 @ApiTags('Wata')
 @Controller('/publish-wata')
