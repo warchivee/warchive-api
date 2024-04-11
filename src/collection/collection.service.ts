@@ -28,7 +28,7 @@ export class CollectionService {
     @InjectRepository(CollectionItem)
     private readonly collectionItemRepository: Repository<CollectionItem>,
     private readonly entityManager: EntityManager,
-    private readonly encrypt: Encrypt,
+    private readonly configService: ConfigService,
   ) {}
 
   private readonly sqids = new Sqids({
@@ -121,11 +121,6 @@ export class CollectionService {
           items: collection?.items?.map((item) => item?.wata?.id),
         };
       });
-
-      return {
-        total_count: totalCount,
-        result: result,
-      };
     } catch (error) {
       if (error instanceof EntityNotFoundError) {
         throw EntityNotFoundException();
