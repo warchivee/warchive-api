@@ -23,8 +23,6 @@ export class CollectionService {
     private readonly collectionRepository: Repository<Collection>,
     @InjectRepository(CollectionItem)
     private readonly collectionItemRepository: Repository<CollectionItem>,
-    @InjectRepository(Wata)
-    private readonly wataRepository: Repository<Wata>,
     private readonly entityManager: EntityManager,
     private readonly configService: ConfigService,
   ) {}
@@ -34,28 +32,23 @@ export class CollectionService {
     minLength: 4,
   });
 
-  private async whiteSpaceCheck(createCollectionDto: CreateCollectionDto) {
-    let note = createCollectionDto.note;
-    if (note !== null && note !== undefined) {
-      note = note.replaceAll(' ', '');
-
-      if (note === '') {
-        return 'Y';
-      }
-    }
+  private async getSharedId(id: number) {
+    return this.sqids.encode([id]);
   }
 
-  private async userCheck(user: User, id: number) {
-    const result = await this.collectionRepository
-      .createQueryBuilder('collection')
-      .leftJoinAndSelect('collection.adder', 'adder')
-      .where('collection.id = :id', { id: id })
-      .select(['adder.id'])
-      .getRawOne();
+  private async checkPermission(user: User, collectionId: number | number[]) {
+    const collections = await this.collectionRepository.find({
+      where: {
+        id: Array.isArray(collectionId) ? In([...collectionId]) : collectionId,
+        adder: { id: user.id } as User,
+      },
+    });
 
-    if (user.id !== result.adder_id) {
-      throw PermissionDenied();
-    }
+    collections.forEach((collection) => {
+      if (collection.adder.id !== user.id) {
+        throw PermissionDenied();
+      }
+    });
   }
 
   async createCollection(user: User, createCollectionDto: CreateCollectionDto) {
@@ -327,6 +320,28 @@ export class CollectionService {
     });
 
     if (addItems.length !== 0) {
+      const countByCollection = await this.collectionItemRepository
+        .createQueryBuilder()
+        .select('id')
+        .addSelect('COUNT(id)', 'count')
+        .groupBy('collection.id')
+        .execute();
+
+      const countByAddItems: Record<number, number> = {};
+
+      addItems.forEach((i) => {
+        countByAddItems[i.collection.id] =
+          (countByAddItems[i.collection.id] ?? 0) + 1;
+      });
+
+      countByCollection.forEach((c) => {
+        const currentLength = c.count + countByAddItems[c.id];
+
+        if (currentLength >= COLLECTION_ITEMS_LIMIT_COUNT) {
+          throw TooManyCollectionItemException();
+        }
+      });
+
       await this.collectionItemRepository.save(addItems);
 
       await this.collectionItemRepository.count({});
