@@ -13,7 +13,7 @@ import { CreateCollectionDto } from './dto/create-collection.dto';
 import { ApiBearerAuth, ApiOperation, ApiTags } from '@nestjs/swagger';
 import { AddCollectionItemListDto } from './dto/add-collection-item.dto';
 import { DeleteCollectionItemsDto } from './dto/delete-collection-item.dto';
-import { Public } from 'src/common/public.decorator.ts/public.decorator';
+import { Public } from 'src/common/decorators/public.decorator';
 import { UpdateItemDto } from './dto/update-item.dto';
 
 @ApiTags('Collection')
