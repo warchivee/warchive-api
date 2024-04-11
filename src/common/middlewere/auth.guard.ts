@@ -39,9 +39,11 @@ export class AuthGuard implements CanActivate {
     // 액세스토큰 갱신 요청이면 cookie 에 담긴 refresh token 을 검증한다.
     if (isReissueRequest) {
       try {
-        request['user'] = await this.authJwtService.validateRefresh(
+        const user = await this.authJwtService.validateRefresh(
           cookie.refresh_token,
         );
+
+        request['user'] = user;
       } catch (error) {
         if (error instanceof TokenExpiredError) {
           throw new UnauthorizedException('리프레시 토큰이 만료되었습니다.');

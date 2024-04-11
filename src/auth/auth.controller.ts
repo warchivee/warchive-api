@@ -1,4 +1,12 @@
-import { Body, Controller, Get, Post, Request, Res } from '@nestjs/common';
+import {
+  Body,
+  Controller,
+  Delete,
+  Get,
+  Post,
+  Request,
+  Res,
+} from '@nestjs/common';
 import { AuthService } from './auth.service';
 import { ApiCookieAuth, ApiOperation, ApiTags } from '@nestjs/swagger';
 import { Public } from '../common/decorators/public.decorator';
@@ -49,5 +57,14 @@ export class AuthController {
     const tokens = await this.authService.refreshAccessToken(req.user);
 
     return tokens.access_token;
+  }
+
+  @ApiOperation({
+    summary: '회원탈퇴',
+    description: '유저와 관련된 와카이브 db의 모든 정보를 삭제합니다.',
+  })
+  @Delete('withdrawal')
+  async widthdrawal(@Request() req) {
+    await this.authService.withdrawal(req.user);
   }
 }

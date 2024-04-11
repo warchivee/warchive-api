@@ -1,4 +1,8 @@
 import { HttpStatus } from '@nestjs/common';
+import {
+  COLLECTIONS_LIMMIT_COUNT,
+  COLLECTION_ITEMS_LIMIT_COUNT,
+} from '../utils/collection.const';
 
 class ErrorCodeVo {
   readonly error;
@@ -29,13 +33,13 @@ export const ENTITY_NOT_FOUND = new ErrorCodeVo(
 export const TOO_MANY_COLLECTION = new ErrorCodeVo(
   'too many collection',
   HttpStatus.FORBIDDEN,
-  '컬렉션 생성은 최대 20개까지만 가능합니다.',
+  `컬렉션 생성은 최대 ${COLLECTIONS_LIMMIT_COUNT}개까지만 가능합니다.`,
 );
 
 export const TOO_MANY_COLLECTION_ITEM = new ErrorCodeVo(
   'too many collection',
   HttpStatus.FORBIDDEN,
-  '컬렉션 아이템은 최대 500개까지만 추가할 수 있습니다.',
+  `컬렉션 아이템은 최대 ${COLLECTION_ITEMS_LIMIT_COUNT}개까지만 추가할 수 있습니다.`,
 );
 
 export const WRONG_ENCRYPTEDTEXT = new ErrorCodeVo(

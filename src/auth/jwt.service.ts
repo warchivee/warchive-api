@@ -24,25 +24,32 @@ export class AuthJwtService {
   );
 
   async validate(token: string) {
-    const payload = await this.jwtService.verifyAsync(token, {
+    const payload = await this.jwtService.verifyAsync<User>(token, {
       secret: this.JWT_SECRET,
     });
 
-    return payload;
+    return {
+      id: payload.id,
+      role: payload.role,
+      kakao_id: payload.kakao_id,
+    };
   }
 
   async validateRefresh(token: string) {
-    const payloadRefresh = await this.jwtService.verifyAsync(token, {
+    const payload = await this.jwtService.verifyAsync<User>(token, {
       secret: this.JWT_REFRESH_SECRET,
     });
 
-    return payloadRefresh;
+    return {
+      id: payload.id,
+    };
   }
 
   generateAccessToken(user: User): TokenType {
     const payload = {
       id: user.id,
       role: user.role,
+      kakao_id: user.kakao_id,
     };
     const options = {
       secret: this.JWT_SECRET,
@@ -61,7 +68,6 @@ export class AuthJwtService {
   generateRefreshToken(user: User): TokenType {
     const payload = {
       id: user.id,
-      role: user.role,
     };
     const options = {
       secret: this.JWT_REFRESH_SECRET,

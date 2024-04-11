@@ -42,6 +42,14 @@ export class CollectionService {
 
   private async checkPermission(user: User, collectionId: number | number[]) {
     const collections = await this.collectionRepository.find({
+      select: {
+        adder: {
+          id: true,
+        },
+      },
+      relations: {
+        adder: true,
+      },
       where: {
         id: Array.isArray(collectionId) ? In([...collectionId]) : collectionId,
         adder: { id: user.id } as User,
@@ -286,10 +294,10 @@ export class CollectionService {
 
     if (addItems.length !== 0) {
       const countByCollection = await this.collectionItemRepository
-        .createQueryBuilder()
-        .select('id')
-        .addSelect('COUNT(id)', 'count')
-        .groupBy('collection.id')
+        .createQueryBuilder('item')
+        .select('item.collection.id', 'id')
+        .addSelect('COUNT(item.id)', 'count')
+        .groupBy('item.collection.id')
         .execute();
 
       const countByAddItems: Record<number, number> = {};
@@ -317,5 +325,15 @@ export class CollectionService {
     }
 
     return updateItems;
+  }
+
+  async removeAll(user: User) {
+    await this.collectionItemRepository.delete({
+      adder: user,
+    });
+
+    await this.collectionRepository.delete({
+      adder: user,
+    });
   }
 }

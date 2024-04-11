@@ -42,4 +42,13 @@ export class UserService {
   async findOne(findUserDto: FindUserDto) {
     return await this.userRepository.findOne({ where: { ...findUserDto } });
   }
+
+  async deleteUser(user: User) {
+    if (user.role === 'ADMIN') {
+      throw new Error('어드민은 탈퇴할 수 없습니다.');
+    }
+
+    await this.collectionService.removeAll(user);
+    await this.userRepository.remove(user);
+  }
 }
