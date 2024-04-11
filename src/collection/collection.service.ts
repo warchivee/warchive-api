@@ -16,9 +16,9 @@ import { DeleteCollectionItemDto } from './dto/delete-collection-item.dto';
 import { Encrypt } from './collection.crypto';
 import { CollectionListResponseDto } from './dto/collection-list.dto';
 import { Wata } from 'src/admin/wata/entities/wata.entity';
-import { WataLabelType } from 'src/admin/wata/interface/wata.type';
 import Sqids from 'sqids';
 import { ConfigService } from '@nestjs/config';
+import { UpdateItemDto } from './dto/update-item.dto';
 
 @Injectable()
 export class CollectionService {
@@ -29,10 +29,38 @@ export class CollectionService {
     private readonly collectionItemRepository: Repository<CollectionItem>,
     @InjectRepository(Wata)
     private readonly wataRepository: Repository<Wata>,
-    // private readonly wataService: WataService,
     private readonly entityManager: EntityManager,
-    private readonly encrypt: Encrypt,
+    private readonly configService: ConfigService,
   ) {}
+
+  private readonly sqids = new Sqids({
+    alphabet: this.configService.get('SQIDS_AlPHABET'),
+    minLength: 4,
+  });
+
+  private async whiteSpaceCheck(createCollectionDto: CreateCollectionDto) {
+    let note = createCollectionDto.note;
+    if (note !== null && note !== undefined) {
+      note = note.replaceAll(' ', '');
+
+      if (note === '') {
+        return 'Y';
+      }
+    }
+  }
+
+  private async userCheck(user: User, id: number) {
+    const result = await this.collectionRepository
+      .createQueryBuilder('collection')
+      .leftJoinAndSelect('collection.adder', 'adder')
+      .where('collection.id = :id', { id: id })
+      .select(['adder.id'])
+      .getRawOne();
+
+    if (user.id !== result.adder_id) {
+      throw PermissionDenied();
+    }
+  }
 
   async createCollection(user: User, createCollectionDto: CreateCollectionDto) {
     // 컬렉션 생성 개수 제한 검사
@@ -89,11 +117,6 @@ export class CollectionService {
         const encryptedText = this.sqids.encode([collection.id]);
         result.push(CollectionListResponseDto.of(collection, encryptedText));
       });
-
-      return {
-        total_count: totalCount,
-        result: result,
-      };
     } catch (error) {
       if (error instanceof EntityNotFoundError) {
         throw EntityNotFoundException();
@@ -145,59 +168,23 @@ export class CollectionService {
     }
   }
 
-  async findCollectionInfo(id: number) {
-    try {
-      const collection = await this.collectionRepository.findOneOrFail({
-        where: { id },
-      });
+  async updateCollection(
+    id: number,
+    updater: User,
+    updateCollectionDto: CreateCollectionDto,
+  ) {
+    await this.userCheck(updater, id);
 
-      return collection;
-    } catch (error) {
-      if (error instanceof EntityNotFoundError) {
-        throw EntityNotFoundException();
-      } else {
-        throw error;
-      }
+    const noteWhiteSpace = await this.whiteSpaceCheck(updateCollectionDto);
+    if (noteWhiteSpace === 'Y') {
+      updateCollectionDto.note = null;
     }
-  }
-
-  async findAllItems(findCollectionDto: FindCollectionDto) {
-    try {
-      //collection_id 복호화
-      const collection_id = this.sqids.decode(findCollectionDto.id)[0];
-
-      const [collectionItems, totalCount] =
-        await this.collectionItemRepository.findAndCount({
-          where: {
-            collection: { id: collection_id },
-          },
-          relations: { wata: true },
-          select: ['id', 'wata', 'created_at'],
-          skip: findCollectionDto.getSkip(),
-          take: findCollectionDto.getTake(),
-          order: {
-            created_at: 'DESC',
-          },
-        });
-
-      return [collectionItems.map((row) => row.wata.id), totalCount];
-    } catch (error) {
-      if (error instanceof EntityNotFoundError) {
-        throw EntityNotFoundException();
-      } else {
-        throw error;
-      }
-    }
-  }
-
-  async updateCollection(id: number, updateCollectionDto: CreateCollectionDto) {
-    await this.findCollectionInfo(id);
 
     return this.collectionRepository.save({ id, ...updateCollectionDto });
   }
 
-  async removeCollection(id: number) {
-    await this.findCollectionInfo(id);
+  async removeCollection(user: User, id: number) {
+    await this.userCheck(user, id);
 
     return this.entityManager.transaction(
       async (transactionalEntityManager) => {
@@ -303,28 +290,6 @@ export class CollectionService {
     });
 
     if (addItems.length !== 0) {
-      const countByCollection = await this.collectionItemRepository
-        .createQueryBuilder('item')
-        .select('item.collection.id', 'id')
-        .addSelect('COUNT(item.id)', 'count')
-        .groupBy('item.collection.id')
-        .execute();
-
-      const countByAddItems: Record<number, number> = {};
-
-      addItems.forEach((i) => {
-        countByAddItems[i.collection.id] =
-          (countByAddItems[i.collection.id] ?? 0) + 1;
-      });
-
-      countByCollection.forEach((c) => {
-        const currentLength = c.count + countByAddItems[c.id];
-
-        if (currentLength >= COLLECTION_ITEMS_LIMIT_COUNT) {
-          throw TooManyCollectionItemException();
-        }
-      });
-
       await this.collectionItemRepository.save(addItems);
 
       await this.collectionItemRepository.count({});
