@@ -3,7 +3,6 @@ import { Type } from 'class-transformer';
 import {
   IsOptional,
   IsNotEmpty,
-  MaxLength,
   IsArray,
   IsString,
   IsNumber,
@@ -32,7 +31,6 @@ export class CreateWataDto {
     required: true,
   })
   @IsString()
-  @MaxLength(250, { message: '제목은 250자까지만 입력됩니다.' })
   @IsNotEmpty({ message: '제목은 필수 입력값입니다.' })
   title: string;
 
@@ -42,7 +40,6 @@ export class CreateWataDto {
     required: false,
   })
   @IsString()
-  @MaxLength(250, { message: '작가/감독은 250자까지만 입력됩니다.' })
   creators: string;
 
   @ApiProperty({

@@ -1,12 +1,5 @@
 import { ApiProperty } from '@nestjs/swagger';
-import {
-  IsBoolean,
-  IsDate,
-  IsNumber,
-  IsOptional,
-  MaxLength,
-  Min,
-} from 'class-validator';
+import { IsBoolean, IsDate, IsNumber, IsOptional, Min } from 'class-validator';
 import { Transform, Type } from 'class-transformer';
 import { WataLabelType, WataRequiredValuesType } from '../interface/wata.type';
 import {
@@ -45,7 +38,6 @@ export class FindWataDto {
   @ApiProperty({
     required: false,
   })
-  @MaxLength(250, { message: '제목은 250자까지만 입력됩니다.' })
   @IsOptional()
   title?: string;
 
@@ -54,7 +46,6 @@ export class FindWataDto {
     maximum: 100,
     required: false,
   })
-  @MaxLength(100, { message: '작가/감독은 100자까지만 입력됩니다.' })
   @IsOptional()
   creators?: string;
 
