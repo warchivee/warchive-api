@@ -9,7 +9,7 @@ import {
   FindOptionsWhere,
   Repository,
 } from 'typeorm';
-import { SavePublishWataDto } from './dto/save-publish.dto';
+import { SavePublishWataDtoList } from './dto/save-publish.dto';
 import { PublishWata } from './entities/publish-wata.entity';
 import { WataLabelType } from 'src/admin/wata/interface/wata.type';
 import { User } from 'src/user/entities/user.entity';
@@ -107,7 +107,7 @@ export class PublishWataService {
     }
   }
 
-  async puslish(user: User, publishWatas: SavePublishWataDto[]) {
+  async puslish(user: User, publishWatas: SavePublishWataDtoList) {
     let total_cnt = 0;
 
     let insert_cnt = 0;
@@ -119,7 +119,7 @@ export class PublishWataService {
     let delete_cnt = 0;
     const delete_items = [];
 
-    for (const publishWata of publishWatas) {
+    for (const publishWata of publishWatas.data) {
       const wata = await this.wataService.findOne(publishWata.id);
 
       if (wata.is_published) {

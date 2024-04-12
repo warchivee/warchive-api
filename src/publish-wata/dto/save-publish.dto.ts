@@ -119,3 +119,14 @@ export class SavePublishWataDto {
   @Type(() => PlatformInfoDto)
   platforms: PlatformInfoDto[];
 }
+
+export class SavePublishWataDtoList {
+  @ApiProperty({
+    description: 'list of publishWata',
+    type: [SavePublishWataDto], // List 로 받을 객체의 타입을 선언해준다.
+  })
+  @ValidateNested({ each: true })
+  @IsArray()
+  @Type(() => SavePublishWataDto)
+  data: SavePublishWataDto[];
+}
