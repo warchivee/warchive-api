@@ -77,7 +77,7 @@ export class PublishWataService {
     }
   }
 
-  async puslish(user: User, publishWatas: SavePublishWataDto[]) {
+  async puslish(user: User, publishWatas: SavePublishWataDtoList) {
     let total_cnt = 0;
 
     let insert_cnt = 0;
@@ -89,7 +89,7 @@ export class PublishWataService {
     let delete_cnt = 0;
     const delete_items = [];
 
-    for (const publishWata of publishWatas) {
+    for (const publishWata of publishWatas.data) {
       const wata = await this.wataService.findOne(publishWata.id);
 
       if (wata.is_published) {
