@@ -20,11 +20,14 @@ export class PublishWata {
   @Column({ length: 250, nullable: true })
   creators: string;
 
-  @Column({ length: 250, nullable: true })
-  thumbnail_card?: string;
+  @Column({ nullable: true })
+  thumbnail?: string;
 
-  @Column({ length: 250, nullable: true })
-  thumbnail_book?: string;
+  @Column({ type: 'json', nullable: true })
+  thumbnail_card?: string[];
+
+  @Column({ type: 'json', nullable: true })
+  thumbnail_book?: string[];
 
   @Column({ type: 'json', nullable: true })
   categories?: string[];
