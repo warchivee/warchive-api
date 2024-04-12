@@ -15,6 +15,7 @@ import {
   HttpCacheInterceptor,
   PUBLISH_WATA_CACHEKEY,
 } from 'src/admin/wata/httpcache.interceptor';
+import { SavePublishWataDto } from './dto/save-publish.dto';
 
 @ApiTags('Wata')
 @Controller('/publish-wata')
@@ -40,7 +41,7 @@ export class PublishWataController {
     description: 'publish wata 정보를 업데이트 합니다.',
   })
   @Post()
-  publishWata(@Request() req, @Body() publishWatas: SavePublishWataDto[]) {
+  publishWata(@Request() req, @Body() publishWatas: SavePublishWataDtoList) {
     return this.publishWataService.puslish(req.user, publishWatas);
   }
 }

@@ -9,7 +9,7 @@ import {
   FindOptionsWhere,
   Repository,
 } from 'typeorm';
-import { SavePublishWataDto } from './dto/save-publish.dto';
+import { SavePublishWataDtoList } from './dto/save-publish.dto';
 import { PublishWata } from './entities/publish-wata.entity';
 import { WataLabelType } from 'src/admin/wata/interface/wata.type';
 import { User } from 'src/user/entities/user.entity';
@@ -75,5 +75,128 @@ export class PublishWataService {
         throw error;
       }
     }
+  }
+
+  async puslish(user: User, publishWatas: SavePublishWataDto[]) {
+    let total_cnt = 0;
+
+    let insert_cnt = 0;
+    const insert_items = [];
+
+    let update_cnt = 0;
+    const update_items = [];
+
+    let delete_cnt = 0;
+    const delete_items = [];
+
+    for (const publishWata of publishWatas) {
+      const wata = await this.wataService.findOne(publishWata.id);
+
+      if (wata.is_published) {
+        if (this.checkLabel(wata.label)) {
+          const updateWata = await this.publishWataRepository.findOne({
+            where: { id: publishWata.id },
+          });
+
+          if (updateWata?.updated_at < wata?.updated_at) {
+            if (
+              publishWata.title &&
+              publishWata.creators &&
+              publishWata.genre &&
+              publishWata.keywords &&
+              publishWata.platforms &&
+              publishWata.thumbnail_book &&
+              publishWata.thumbnail_card
+            ) {
+              //update
+              this.publishWataRepository.save({
+                id: publishWata.id,
+                title: publishWata.title,
+                creators: publishWata.creators,
+                thumbnail_card: publishWata.thumbnail_card,
+                thumbnail_book: publishWata.thumbnail_book,
+                categories: [JSON.stringify(publishWata.category)],
+                genre: [JSON.stringify(publishWata.genre)],
+                keywords: [JSON.stringify(publishWata.keywords)],
+                cautions: [JSON.stringify(publishWata.cautions)],
+                platforms: [JSON.stringify(publishWata.platforms)],
+                updater: user,
+              });
+
+              update_items.push(wata.id);
+              update_cnt++;
+              total_cnt++;
+            }
+          }
+        } else {
+          //delete
+          this.publishWataRepository.delete(wata.id);
+          delete_items.push(wata.id);
+          delete_cnt++;
+          total_cnt++;
+        }
+      } else {
+        if (this.checkLabel(wata.label)) {
+          this.entityManager.transaction(async (transcationEntityManager) => {
+            //insert publishWata
+            await transcationEntityManager.insert(PublishWata, {
+              id: publishWata.id,
+              title: publishWata.title,
+              creators: publishWata.creators,
+              thumbnail_card: publishWata.thumbnail_card,
+              thumbnail_book: publishWata.thumbnail_book,
+              categories: [JSON.stringify(publishWata.category)],
+              genre: [JSON.stringify(publishWata.genre)],
+              keywords: [JSON.stringify(publishWata.keywords)],
+              cautions: [JSON.stringify(publishWata.cautions)],
+              platforms: [JSON.stringify(publishWata.platforms)],
+              adder: user,
+              updater: user,
+            });
+
+            //wata is_publish true
+            await transcationEntityManager.update(Wata, wata.id, {
+              is_published: true,
+            });
+          });
+
+          insert_items.push(wata.id);
+          insert_cnt++;
+          total_cnt++;
+        } else {
+          //delete
+          this.publishWataRepository.delete(wata.id);
+          delete_items.push(wata.id);
+          delete_cnt++;
+          total_cnt++;
+        }
+      }
+    }
+
+    return {
+      total_cnt: total_cnt,
+      items: {
+        new_watas: {
+          total_cnt: insert_cnt,
+          items: insert_items,
+        },
+        update_watas: {
+          total_cnt: update_cnt,
+          items: update_items,
+        },
+        delete_watas: {
+          total_cnt: delete_cnt,
+          items: delete_items,
+        },
+      },
+    };
+  }
+
+  private checkLabel(label) {
+    if (label === WataLabelType.CHECKED) {
+      return true;
+    }
+
+    return false;
   }
 }
