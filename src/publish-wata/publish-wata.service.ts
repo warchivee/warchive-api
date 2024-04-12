@@ -97,7 +97,6 @@ export class PublishWataService {
         id: 'ASC',
       },
     })
-    // console.log("publishWatas : " + publishWatas);
     // console.log(user);
 
     // for (const publishWata of publishWatas) {
@@ -144,28 +143,27 @@ export class PublishWataService {
 
           if (updateWata?.updated_at < wata?.updated_at) {
             if (
-              publishWata.title &&
-              publishWata.creators &&
-              publishWata.genre &&
-              publishWata.keywords &&
-              publishWata.platforms &&
-              publishWata.thumbnail &&
-              publishWata.thumbnail_book &&
-              publishWata.thumbnail_card
+              wata.title &&
+              wata.creators &&
+              wata.genre &&
+              wata.keywords &&
+              wata.platforms &&
+              wata.thumbnail &&
+              wata.thumbnail_book &&
+              wata.thumbnail_card
             ) {
               //update
               this.publishWataRepository.save({
-                id: publishWata.id,
-                title: publishWata.title,
-                creators: publishWata.creators,
-                thumbnail: publishWata.thumbnail,
-                thumbnail_card: [JSON.stringify(publishWata.thumbnail_card)],
-                thumbnail_book: [JSON.stringify(publishWata.thumbnail_book)],
-                categories: [JSON.stringify(publishWata.category)],
-                genre: [JSON.stringify(publishWata.genre)],
-                keywords: [JSON.stringify(publishWata.keywords)],
-                cautions: [JSON.stringify(publishWata.cautions)],
-                platforms: [JSON.stringify(publishWata.platforms)],
+                id: wata.id,
+                title: wata.title,
+                creators: wata.creators,
+                thumbnail: wata.thumbnail,
+                thumbnail_card: wata.thumbnail_card,
+                thumbnail_book: wata.thumbnail_book,
+                genre: wata.genre,
+                keywords: wata.keywords,
+                cautions: wata.cautions,
+                platforms: wata.platforms,
                 updater: user,
               });
 
@@ -186,17 +184,16 @@ export class PublishWataService {
           this.entityManager.transaction(async (transcationEntityManager) => {
             //insert publishWata
             await transcationEntityManager.insert(PublishWata, {
-              id: publishWata.id,
-              title: publishWata.title,
-              creators: publishWata.creators,
-              thumbnail: publishWata.thumbnail,
-              thumbnail_card: [JSON.stringify(publishWata.thumbnail_card)],
-              thumbnail_book: [JSON.stringify(publishWata.thumbnail_book)],
-              categories: [JSON.stringify(publishWata.category)],
-              genre: [JSON.stringify(publishWata.genre)],
-              keywords: [JSON.stringify(publishWata.keywords)],
-              cautions: [JSON.stringify(publishWata.cautions)],
-              platforms: [JSON.stringify(publishWata.platforms)],
+              id: wata.id,
+              title: wata.title,
+              creators: wata.creators,
+              thumbnail: wata.thumbnail,
+              thumbnail_card: wata.thumbnail_card,
+              thumbnail_book: wata.thumbnail_book,
+              genre: wata.genre,
+              keywords: wata.keywords,
+              cautions: wata.cautions,
+              platforms: wata.platforms,
               adder: user,
               updater: user,
             });
