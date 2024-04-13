@@ -18,7 +18,17 @@ export class CautionService {
   }
 
   findAll() {
-    return this.categoryRepository.find();
+    return this.categoryRepository.find({
+      select: {
+        id: true,
+        name: true,
+        required: true,
+      },
+      order: {
+        required: 'DESC',
+        name: 'ASC',
+      },
+    });
   }
 
   update(id: number, updateCautionDto: UpdateCautionDto) {

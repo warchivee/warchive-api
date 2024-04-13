@@ -5,4 +5,7 @@ import { Column, Entity } from 'typeorm';
 export class Caution extends CommonEntity {
   @Column({ length: 12, unique: true })
   name: string;
+
+  @Column({ default: false })
+  required?: boolean;
 }

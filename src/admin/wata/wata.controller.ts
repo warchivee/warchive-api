@@ -23,6 +23,7 @@ import {
 } from './httpcache.interceptor';
 import { CacheKey, CacheTTL } from '@nestjs/cache-manager';
 import { Admin } from 'src/common/decorators/admin.decorator';
+import { Public } from 'src/common/decorators/public.decorator';
 
 @ApiTags('Wata')
 @Controller('admin/wata')
@@ -40,8 +41,9 @@ export class WataController {
     return this.wataService.create(req.user, createWataDto);
   }
 
+  @Public()
   @Admin()
-  @ApiBearerAuth('access_token')
+  // @ApiBearerAuth('access_token')
   @ApiOperation({
     summary: '검수 데이터 목록 조회',
     description: '검수 데이터 목록을 조회합니다.',

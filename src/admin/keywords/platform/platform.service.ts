@@ -19,7 +19,17 @@ export class PlatformService {
   }
 
   findAll() {
-    return this.platformRepository.find();
+    return this.platformRepository.find({
+      select: {
+        id: true,
+        name: true,
+        order_top: true,
+      },
+      order: {
+        order_top: 'DESC',
+        name: 'ASC',
+      },
+    });
   }
 
   update(id: number, updatePlatformDto: UpdatePlatformDto) {

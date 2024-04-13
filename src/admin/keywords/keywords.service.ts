@@ -7,7 +7,6 @@ import { WataKeywordMapping } from '../wata/entities/wata-keyword.entity';
 import { WataPlatformMapping } from '../wata/entities/wata-platform.entity';
 import { Repository } from 'typeorm';
 import { InjectRepository } from '@nestjs/typeorm';
-import { WataLabelType } from '../wata/interface/wata.type';
 
 @Injectable()
 export class KeywordsService {
@@ -48,11 +47,15 @@ export class KeywordsService {
 
     const platforms = await this.platformMappingRepository
       .createQueryBuilder('platformMapping')
-      .select('DISTINCT genre.category_id, platform.id, platform.name')
+      .select(
+        'DISTINCT genre.category_id, platform.id, platform.name, platform.order_top',
+      )
       .innerJoin('platformMapping.wata', 'wata')
       .innerJoin('wata.genre', 'genre')
       .innerJoin('platformMapping.platform', 'platform')
       .where('wata.is_published = :isPublished', { isPublished: true })
+      .orderBy('platform.order_top', 'DESC')
+      .addOrderBy('platform.name', 'ASC')
       .getRawMany();
 
     let genres = [];

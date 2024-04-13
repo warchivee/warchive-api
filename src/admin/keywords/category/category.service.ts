@@ -29,6 +29,9 @@ export class CategoryService {
           name: true,
         },
       },
+      order: {
+        name: 'ASC',
+      },
     });
   }
 

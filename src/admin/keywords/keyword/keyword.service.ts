@@ -38,7 +38,15 @@ export class KeywordService {
   }
 
   findAll() {
-    return this.keywordRepository.find();
+    return this.keywordRepository.find({
+      select: {
+        id: true,
+        name: true,
+      },
+      order: {
+        name: 'ASC',
+      },
+    });
   }
 
   update(id: number, updateKeywordDto: UpdateKeywordDto) {
