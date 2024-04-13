@@ -1,5 +1,4 @@
 import {
-  Body,
   Controller,
   Get,
   Post,
@@ -14,7 +13,6 @@ import {
   HttpCacheInterceptor,
   PUBLISH_WATA_CACHEKEY,
 } from 'src/admin/wata/httpcache.interceptor';
-import { SavePublishWataDtoList } from './dto/save-publish.dto';
 
 @ApiTags('Wata')
 @Controller('/publish-wata')
@@ -27,20 +25,10 @@ export class PublishWataController {
     description: '게시 데이터를 조회합니다.',
   })
   @UseInterceptors(HttpCacheInterceptor)
-  @CacheKey(PUBLISH_WATA_CACHEKEY) //todo: publish 작업 시 캐시 초기화.
+  @CacheKey(PUBLISH_WATA_CACHEKEY)
   @CacheTTL(CACHE_TTL)
   @Get()
   findByKeywordsByCategory() {
     return this.publishWataService.findAll();
-  }
-
-  @ApiBearerAuth('access_token')
-  @ApiOperation({
-    summary: 'publish wata 정보 수정',
-    description: 'publish wata 정보를 업데이트 합니다.',
-  })
-  @Post()
-  publishWata(@Request() req, @Body() publishWatas: SavePublishWataDto[]) {
-    return this.publishWataService.puslish(req.user, publishWatas);
   }
 }

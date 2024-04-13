@@ -1,4 +1,4 @@
-import { Injectable } from '@nestjs/common';
+import { Inject, Injectable } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { KeywordsService } from 'src/admin/keywords/keywords.service';
 import { Wata } from 'src/admin/wata/entities/wata.entity';
@@ -6,14 +6,15 @@ import { EntityNotFoundException } from 'src/common/exception/service.exception'
 import {
   EntityManager,
   EntityNotFoundError,
-  FindOptionsWhere,
+  IsNull,
+  Not,
   Repository,
 } from 'typeorm';
-import { SavePublishWataDto } from './dto/save-publish.dto';
 import { PublishWata } from './entities/publish-wata.entity';
 import { WataLabelType } from 'src/admin/wata/interface/wata.type';
-import { User } from 'src/user/entities/user.entity';
 import { WataService } from 'src/admin/wata/wata.service';
+import { CACHE_MANAGER } from '@nestjs/cache-manager';
+import { PUBLISH_WATA_CACHEKEY } from 'src/admin/wata/httpcache.interceptor';
 
 @Injectable()
 export class PublishWataService {
@@ -24,27 +25,31 @@ export class PublishWataService {
     private readonly publishWataRepository: Repository<PublishWata>,
     private readonly wataService: WataService,
     private readonly entityManager: EntityManager,
+    @Inject(CACHE_MANAGER) private cacheManager: any,
   ) {}
 
+  // 지정된 캐시키로 시작되는 캐시 데이터들 삭제
+  async removeCache() {
+    const keys: string[] = await this.cacheManager.store.keys();
+    keys.forEach((key) => {
+      if (key.startsWith(PUBLISH_WATA_CACHEKEY)) {
+        console.log(key);
+        this.cacheManager.del(key);
+      }
+    });
+  }
+
   async findAll() {
-    //todo : 조회 테이블을 publish_wata 로 변경
-
-    // const [total, totalCount] = await this.wataRepository.findAndCount({
-    //   order: {
-    //   created_at: 'DESC',
-    //   id: 'ASC', // 처음에 밀어넣었던 데이터들의 생성 시간이 같아, id 순서로 정렬하는 옵션 추가
-    // }});
-    // return {total, totalCount};
-
+    console.log('findAll');
     try {
-      const [total, totalCount] = await this.publishWataRepository.findAndCount({
-        order: {
-          created_at: 'DESC',
-          id: 'ASC',
+      const [total, totalCount] = await this.publishWataRepository.findAndCount(
+        {
+          order: {
+            created_at: 'DESC',
+            id: 'ASC',
+          },
         },
-      });
-
-      console.log(total);
+      );
 
       const categories = await this.keywordsServices.findAllByCategory();
 
@@ -53,10 +58,10 @@ export class PublishWataService {
           id: wata.id,
           title: wata.title,
           creators: wata.creators,
-          genre: wata.genre,
           thumbnail: wata.thumbnail,
           thumbnail_card: wata.thumbnail_card,
           thumbnail_book: wata.thumbnail_book,
+          genre: wata.genre,
           keywords: wata.keywords,
           platforms: wata.platforms,
           cautions: wata.cautions,
@@ -65,8 +70,8 @@ export class PublishWataService {
 
       return {
         total_count: totalCount,
-        watas: watas,
         categories: categories,
+        watas: watas,
       };
     } catch (error) {
       if (error instanceof EntityNotFoundError) {
@@ -77,7 +82,7 @@ export class PublishWataService {
     }
   }
 
-  async puslish(user: User, publishWatas: SavePublishWataDtoList) {
+  async puslish(user: User, publishWatas: SavePublishWataDto[]) {
     let total_cnt = 0;
 
     let insert_cnt = 0;
@@ -89,37 +94,81 @@ export class PublishWataService {
     let delete_cnt = 0;
     const delete_items = [];
 
-    for (const publishWata of publishWatas.data) {
-      const wata = await this.wataService.findOne(publishWata.id);
+    let test = 0;
 
+    const [total, totalCount] = await this.wataRepository.findAndCount({
+      order: {
+        created_at: 'DESC',
+        id: 'ASC',
+      },
+    })
+    // console.log(user);
+
+    // for (const publishWata of publishWatas) {
+      for (const wata of total) {
+      // const wata = await this.wataService.findOne(publishWata.id);
+      test++;
+      console.log("publishWata : " + publishWata);
       if (wata.is_published) {
+        // console.log("wid" + wata.id);
+        // console.log("pid" + publishWata.id);
+        // console.log(wata.title);
+        // console.log(wata.thumbnail);
+        // console.log(wata.thumbnail_book);
+        // console.log(wata.thumbnail_card);
+        // console.log(wata.genre.category);
+        // console.log(publishWata.thumbnail);
+
         if (this.checkLabel(wata.label)) {
           const updateWata = await this.publishWataRepository.findOne({
-            where: { id: publishWata.id },
+            where: { id: wata.id },
           });
+          // console.log(updateWata);
+          if (updateWata == null) {
+            console.log('updateWata is null');
+            this.entityManager.transaction(async (transcationEntityManager) => {
+              //insert publishWata
+              await transcationEntityManager.insert(PublishWata, {
+                id: wata.id,
+                title: wata.title,
+                creators: wata.creators,
+                thumbnail: wata.thumbnail,
+                thumbnail_card: wata.thumbnail_card,
+                thumbnail_book: wata.thumbnail_book,
+                genre: wata.genre,
+                keywords: wata.keywords,
+                cautions: wata.cautions,
+                platforms: wata.platforms,
+                adder: user,
+                updater: user,
+              } as PublishWata);
+          });
+          continue;
+        }
 
           if (updateWata?.updated_at < wata?.updated_at) {
             if (
-              publishWata.title &&
-              publishWata.creators &&
-              publishWata.genre &&
-              publishWata.keywords &&
-              publishWata.platforms &&
-              publishWata.thumbnail_book &&
-              publishWata.thumbnail_card
+              wata.title &&
+              wata.creators &&
+              wata.genre &&
+              wata.keywords &&
+              wata.platforms &&
+              wata.thumbnail &&
+              wata.thumbnail_book &&
+              wata.thumbnail_card
             ) {
               //update
               this.publishWataRepository.save({
-                id: publishWata.id,
-                title: publishWata.title,
-                creators: publishWata.creators,
-                thumbnail_card: publishWata.thumbnail_card,
-                thumbnail_book: publishWata.thumbnail_book,
-                categories: [JSON.stringify(publishWata.category)],
-                genre: [JSON.stringify(publishWata.genre)],
-                keywords: [JSON.stringify(publishWata.keywords)],
-                cautions: [JSON.stringify(publishWata.cautions)],
-                platforms: [JSON.stringify(publishWata.platforms)],
+                id: wata.id,
+                title: wata.title,
+                creators: wata.creators,
+                thumbnail: wata.thumbnail,
+                thumbnail_card: wata.thumbnail_card,
+                thumbnail_book: wata.thumbnail_book,
+                genre: wata.genre,
+                keywords: wata.keywords,
+                cautions: wata.cautions,
+                platforms: wata.platforms,
                 updater: user,
               });
 
@@ -140,16 +189,16 @@ export class PublishWataService {
           this.entityManager.transaction(async (transcationEntityManager) => {
             //insert publishWata
             await transcationEntityManager.insert(PublishWata, {
-              id: publishWata.id,
-              title: publishWata.title,
-              creators: publishWata.creators,
-              thumbnail_card: publishWata.thumbnail_card,
-              thumbnail_book: publishWata.thumbnail_book,
-              categories: [JSON.stringify(publishWata.category)],
-              genre: [JSON.stringify(publishWata.genre)],
-              keywords: [JSON.stringify(publishWata.keywords)],
-              cautions: [JSON.stringify(publishWata.cautions)],
-              platforms: [JSON.stringify(publishWata.platforms)],
+              id: wata.id,
+              title: wata.title,
+              creators: wata.creators,
+              thumbnail: wata.thumbnail,
+              thumbnail_card: wata.thumbnail_card,
+              thumbnail_book: wata.thumbnail_book,
+              genre: wata.genre,
+              keywords: wata.keywords,
+              cautions: wata.cautions,
+              platforms: wata.platforms,
               adder: user,
               updater: user,
             });
@@ -160,43 +209,75 @@ export class PublishWataService {
             });
           });
 
-          insert_items.push(wata.id);
-          insert_cnt++;
-          total_cnt++;
-        } else {
-          //delete
-          this.publishWataRepository.delete(wata.id);
-          delete_items.push(wata.id);
-          delete_cnt++;
-          total_cnt++;
+          updatedItems.push(wataRecord.id);
+          updatedCount++;
         }
       }
+      console.log('Publish records updated successfully.');
+    } catch (error) {
+      console.error('Error occurred while updating records:', error);
+    }
+    return { updatedItems, updatedCount };
+  }
+
+  async remove(): Promise<{ removedItems: any[]; removedCount: number }> {
+    let removedCount = 0;
+    const removedItems = [];
+
+    try {
+      // Retrieve all relevant records from wata repository
+      const wataRecordsToRemove = await this.wataRepository.find({
+        where: {
+          label: Not(WataLabelType.CHECKED),
+        },
+        order: {
+          created_at: 'DESC',
+          id: 'ASC',
+        },
+      });
+
+      for (const wataRecord of wataRecordsToRemove) {
+        if (await this.publishWataRepository.findOneBy({ id: wataRecord.id })) {
+          this.publishWataRepository.delete(wataRecord.id);
+          removedItems.push(wataRecord.id);
+          removedCount++;
+        }
+      }
+      console.log('Publish records deleted successfully.');
+    } catch (error) {
+      console.error('Error occurred while deleting records:', error);
+    }
+    return { removedItems, removedCount };
+  }
+
+  async publish() {
+    const { createdItems, createdCount } = await this.create();
+    const { updatedItems, updatedCount } = await this.update();
+    const { removedItems, removedCount } = await this.remove();
+
+    const totalCount: number = createdCount + updatedCount + removedCount;
+
+    if (totalCount > 0) {
+      this.removeCache();
     }
 
     return {
+      test: test,
       total_cnt: total_cnt,
       items: {
         new_watas: {
-          total_cnt: insert_cnt,
-          items: insert_items,
+          total_count: createdCount,
+          items: createdItems,
         },
         update_watas: {
-          total_cnt: update_cnt,
-          items: update_items,
+          total_count: updatedCount,
+          items: updatedItems,
         },
         delete_watas: {
-          total_cnt: delete_cnt,
-          items: delete_items,
+          total_count: removedCount,
+          items: removedItems,
         },
       },
     };
-  }
-
-  private checkLabel(label) {
-    if (label === WataLabelType.CHECKED) {
-      return true;
-    }
-
-    return false;
   }
 }
