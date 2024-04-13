@@ -43,6 +43,7 @@ export class KeywordsService {
       .innerJoin('wata.genre', 'genre')
       .innerJoin('keywordMapping.keyword', 'keyword')
       .where('wata.is_published = :isPublished', { isPublished: true })
+      .orderBy('keyword.name', 'ASC')
       .getRawMany();
 
     const platforms = await this.platformMappingRepository

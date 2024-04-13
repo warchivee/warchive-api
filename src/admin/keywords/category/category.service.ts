@@ -31,6 +31,9 @@ export class CategoryService {
       },
       order: {
         name: 'ASC',
+        genres: {
+          name: 'ASC',
+        },
       },
     });
   }
