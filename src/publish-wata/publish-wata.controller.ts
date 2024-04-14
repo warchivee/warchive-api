@@ -14,6 +14,7 @@ import {
   CACHE_TTL,
   PUBLISH_WATA_CACHEKEY,
 } from 'src/common/utils/httpcache.const';
+import { Admin } from 'src/common/decorators/admin.decorator';
 
 @ApiTags('Wata')
 @Controller('/publish-wata')
@@ -33,6 +34,7 @@ export class PublishWataController {
     return this.publishWataService.findAll();
   }
 
+  @Admin()
   @ApiBearerAuth('access_token')
   @ApiOperation({
     summary: 'publish wata 정보 수정',

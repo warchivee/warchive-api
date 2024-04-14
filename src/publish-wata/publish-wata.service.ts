@@ -6,8 +6,10 @@ import { EntityNotFoundException } from 'src/common/exception/service.exception'
 import {
   EntityManager,
   EntityNotFoundError,
+  Equal,
   IsNull,
   Not,
+  Or,
   Repository,
 } from 'typeorm';
 import { PublishWata } from './entities/publish-wata.entity';
@@ -128,7 +130,7 @@ export class PublishWataService {
             is_published: true,
           });
         });
-        createdItems.push(wataRecord.id);
+        createdItems.push(wataRecord.title);
         createdCount++;
       }
       console.log('Publish records created successfully.');
@@ -168,6 +170,10 @@ export class PublishWataService {
         const publishRecordToUpdate =
           await this.publishWataRepository.findOneBy({ id: wataRecord.id });
 
+        if (!publishRecordToUpdate) {
+          continue;
+        }
+
         // If publish record found and its update_at is older than wata record, update publish record
         if (publishRecordToUpdate.updated_at < wataRecord.updated_at) {
           this.entityManager.transaction(async (transcationEntityManager) => {
@@ -187,7 +193,7 @@ export class PublishWataService {
             });
           });
 
-          updatedItems.push(wataRecord.id);
+          updatedItems.push(wataRecord.title);
           updatedCount++;
         }
       }
@@ -205,9 +211,15 @@ export class PublishWataService {
     try {
       // Retrieve all relevant records from wata repository
       const wataRecordsToRemove = await this.wataRepository.find({
-        where: {
-          label: Not(WataLabelType.CHECKED),
-        },
+        where: [
+          { label: Not(WataLabelType.CHECKED) },
+          { title: Or(IsNull(), Equal('')) },
+          { creators: Or(IsNull(), Equal('')) },
+          { thumbnail: Or(IsNull(), Equal('')) },
+          { genre: IsNull() },
+          { keywords: { keyword: IsNull() } },
+          { platforms: { platform: IsNull() } },
+        ],
         order: {
           created_at: 'DESC',
           id: 'ASC',
@@ -217,7 +229,7 @@ export class PublishWataService {
       for (const wataRecord of wataRecordsToRemove) {
         if (await this.publishWataRepository.findOneBy({ id: wataRecord.id })) {
           this.publishWataRepository.delete(wataRecord.id);
-          removedItems.push(wataRecord.id);
+          removedItems.push(wataRecord.title);
           removedCount++;
         }
       }
