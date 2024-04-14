@@ -1,3 +1,4 @@
+import { WataThumbnailCropAreaType } from 'src/admin/wata/interface/wata.type';
 import { User } from 'src/user/entities/user.entity';
 import {
   Column,
@@ -8,49 +9,53 @@ import {
   PrimaryColumn,
   UpdateDateColumn,
 } from 'typeorm';
+import { Genre } from 'src/admin/keywords/genre/entities/genre.entity';
+import { WataKeywordMapping } from 'src/admin/wata/entities/wata-keyword.entity';
+import { WataCautionMapping } from 'src/admin/wata/entities/wata-caution.entity';
+import { WataPlatformMapping } from 'src/admin/wata/entities/wata-platform.entity';
 
 @Entity({ name: 'published_wata' })
 export class PublishWata {
   @PrimaryColumn()
   id: number;
 
-    @Column({ length: 250 })
-    title: string;
-  
-    @Column({ length: 250, nullable: true })
-    creators: string;
-
-    @Column({ length: 250, nullable: true })
-    thumbnail_card?: string;
+  @Column({ length: 250, nullable: true })
+  title?: string;
 
   @Column({ length: 250, nullable: true })
-  thumbnail_book?: string;
+  creators?: string;
 
-  @Column({ type: 'json', nullable: true })
-  categories?: string[];
+  @Column({ nullable: true })
+  thumbnail?: string;
 
-  @Column({ type: 'json', nullable: true })
-  genre?: string[];
+  @Column({ type: 'simple-json', nullable: true })
+  thumbnail_card?: WataThumbnailCropAreaType;
 
-  @Column({ type: 'json', nullable: true })
-  keywords?: string[];
+  @Column({ type: 'simple-json', nullable: true })
+  thumbnail_book?: WataThumbnailCropAreaType;
 
-  @Column({ type: 'json', nullable: true })
-  cautions?: string[];
+  @Column({ type: 'simple-json', nullable: true })
+  genre?: Genre;
 
-  @Column({ type: 'json', nullable: true })
-  platforms?: string[];
+  @Column({ type: 'simple-json', nullable: true })
+  keywords?: WataKeywordMapping[];
+
+  @Column({ type: 'simple-json', nullable: true })
+  cautions?: WataCautionMapping[];
+
+  @Column({ type: 'simple-json', nullable: true })
+  platforms?: WataPlatformMapping[];
 
   @ManyToOne(() => User, (user) => user.id)
   @JoinColumn({ name: 'adder_id' })
-  adder: User;
+  adder?: User;
 
   @ManyToOne(() => User, (user) => user.id)
   @JoinColumn({ name: 'updater_id' })
-  updater: User;
+  updater?: User;
 
   @CreateDateColumn({ type: 'timestamp' })
-  created_at: Date;
+  created_at?: Date;
 
   @UpdateDateColumn({ type: 'timestamp' })
   updated_at: Date;
