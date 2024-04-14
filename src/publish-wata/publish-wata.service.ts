@@ -14,7 +14,7 @@ import { PublishWata } from './entities/publish-wata.entity';
 import { WataLabelType } from 'src/admin/wata/interface/wata.type';
 import { WataService } from 'src/admin/wata/wata.service';
 import { CACHE_MANAGER } from '@nestjs/cache-manager';
-import { PUBLISH_WATA_CACHEKEY } from 'src/admin/wata/httpcache.interceptor';
+import { PUBLISH_WATA_CACHEKEY } from 'src/common/utils/httpcache.const';
 
 @Injectable()
 export class PublishWataService {

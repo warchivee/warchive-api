@@ -19,10 +19,10 @@ export class PublishWata {
   @PrimaryColumn()
   id: number;
 
-  @Column({ length: 250, nullable: true })
+  @Column({ nullable: true })
   title?: string;
 
-  @Column({ length: 250, nullable: true })
+  @Column({ nullable: true })
   creators?: string;
 
   @Column({ nullable: true })

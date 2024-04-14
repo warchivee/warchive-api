@@ -13,12 +13,9 @@ import { CreateKeywordDto } from './dto/create-keyword.dto';
 import { UpdateKeywordDto } from './dto/update-keyword.dto';
 import { ApiBearerAuth, ApiOperation, ApiTags } from '@nestjs/swagger';
 import { CacheKey, CacheTTL } from '@nestjs/cache-manager';
-import {
-  HttpCacheInterceptor,
-  KEYWORD_CACHEKEY,
-  CACHE_TTL,
-} from 'src/admin/wata/httpcache.interceptor';
+import { HttpCacheInterceptor } from 'src/common/utils/httpcache.interceptor';
 import { Admin } from 'src/common/decorators/admin.decorator';
+import { CACHE_TTL, KEYWORD_CACHEKEY } from 'src/common/utils/httpcache.const';
 
 @ApiTags('Keywords')
 @Controller('admin/keyword')
