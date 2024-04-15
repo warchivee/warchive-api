@@ -4,6 +4,7 @@ import { KeywordsService } from 'src/admin/keywords/keywords.service';
 import { Wata } from 'src/admin/wata/entities/wata.entity';
 import { EntityNotFoundException } from 'src/common/exception/service.exception';
 import {
+  And,
   EntityManager,
   EntityNotFoundError,
   Equal,
@@ -82,78 +83,27 @@ export class PublishWataService {
     }
   }
 
-  async create(): Promise<{ createdItems: any[]; createdCount: number }> {
+  async upsert(): Promise<{
+    createdItems: any[];
+    updatedItems: any[];
+    createdCount: number;
+    updatedCount: number;
+  }> {
     let createdCount = 0;
-    const createdItems = [];
-
-    try {
-      // Retrieve all relevant records from wata repository
-      const wataRecordsToCreate = await this.wataRepository.find({
-        relations: this.wataService.relations,
-        where: {
-          is_published: false,
-          label: WataLabelType.CHECKED,
-          title: Not(IsNull()),
-          creators: Not(IsNull()),
-          thumbnail: Not(IsNull()),
-          genre: Not(IsNull()),
-          keywords: { keyword: Not(IsNull()) },
-          platforms: { platform: Not(IsNull()) },
-        },
-        order: {
-          created_at: 'DESC',
-          id: 'ASC',
-        },
-      });
-
-      // Iterate through each wata record
-      for (const wataRecord of wataRecordsToCreate) {
-        // Update the publish record with new data
-        this.entityManager.transaction(async (transcationEntityManager) => {
-          await transcationEntityManager.save(PublishWata, {
-            id: wataRecord.id,
-            title: wataRecord.title,
-            creators: wataRecord.creators,
-            thumbnail: wataRecord.thumbnail,
-            thumbnail_card: wataRecord.thumbnail_card,
-            thumbnail_book: wataRecord.thumbnail_book,
-            genre: wataRecord.genre,
-            keywords: wataRecord.keywords,
-            cautions: wataRecord.cautions,
-            platforms: wataRecord.platforms,
-            adder: wataRecord.adder,
-            updater: wataRecord.updater,
-          });
-
-          //wata is_publish true
-          await transcationEntityManager.update(Wata, wataRecord.id, {
-            is_published: true,
-          });
-        });
-        createdItems.push(wataRecord.title);
-        createdCount++;
-      }
-      console.log('Publish records created successfully.');
-    } catch (error) {
-      console.error('Error occurred while creating records:', error);
-    }
-    return { createdItems, createdCount };
-  }
-
-  async update(): Promise<{ updatedItems: any[]; updatedCount: number }> {
     let updatedCount = 0;
+    const createdItems = [];
     const updatedItems = [];
 
     try {
       // Retrieve all relevant records from wata repository
-      const wataRecordsToUpdate = await this.wataRepository.find({
+      const wataRecordsToUpsert = await this.wataRepository.find({
         relations: this.wataService.relations,
         where: {
-          is_published: true,
+          // is_published: false,
           label: WataLabelType.CHECKED,
-          title: Not(IsNull()),
-          creators: Not(IsNull()),
-          thumbnail: Not(IsNull()),
+          title: And(Not(IsNull()), Not(Equal(''))),
+          creators: And(Not(IsNull()), Not(Equal(''))),
+          thumbnail: And(Not(IsNull()), Not(Equal(''))),
           genre: Not(IsNull()),
           keywords: { keyword: Not(IsNull()) },
           platforms: { platform: Not(IsNull()) },
@@ -164,49 +114,83 @@ export class PublishWataService {
         },
       });
 
+      const publishRecordToUpsert = await this.publishWataRepository.find({
+        order: {
+          created_at: 'DESC',
+          id: 'ASC',
+        },
+      });
+
+      const upsertItems: PublishWata[] = [];
+
+      const createItems = wataRecordsToUpsert.filter(
+        (wata) =>
+          !publishRecordToUpsert.map((item) => item.id).includes(wata.id),
+      );
+
+      const updateItems = [];
+
+      for (const create of createItems) {
+        upsertItems.push(
+          this.publishWataRepository.create({
+            id: create.id,
+            title: create.title,
+            creators: create.creators,
+            thumbnail: create.thumbnail,
+            thumbnail_card: create.thumbnail_card,
+            thumbnail_book: create.thumbnail_book,
+            genre: create.genre,
+            keywords: create.keywords,
+            cautions: create.cautions,
+            platforms: create.platforms,
+            adder: create.adder,
+            updater: create.updater,
+          }),
+        );
+        createdItems.push(create.title);
+        createdCount++;
+        updateItems.push(create.id);
+      }
+
       // Iterate through each wata record
-      for (const wataRecord of wataRecordsToUpdate) {
-        // Find the corresponding publish record using the wata record's ID
-        const publishRecordToUpdate =
-          await this.publishWataRepository.findOneBy({ id: wataRecord.id });
+      for (const wataRecord of wataRecordsToUpsert) {
+        const publishRecord = publishRecordToUpsert.find(
+          (publish) => publish.id === wataRecord.id && wataRecord.is_published,
+        );
 
-        if (!publishRecordToUpdate) {
-          continue;
-        }
+        if (!publishRecord) continue;
 
-        // If publish record found and its update_at is older than wata record, update publish record
-        if (publishRecordToUpdate.updated_at < wataRecord.updated_at) {
-          this.entityManager.transaction(async (transcationEntityManager) => {
-            await transcationEntityManager.save(PublishWata, {
-              id: wataRecord.id,
-              title: wataRecord.title,
-              creators: wataRecord.creators,
-              thumbnail: wataRecord.thumbnail,
-              thumbnail_card: wataRecord.thumbnail_card,
-              thumbnail_book: wataRecord.thumbnail_book,
-              genre: wataRecord.genre,
-              keywords: wataRecord.keywords,
-              cautions: wataRecord.cautions,
-              platforms: wataRecord.platforms,
-              adder: wataRecord.adder,
-              updater: wataRecord.updater,
-            });
-          });
-
+        if (publishRecord.updated_at < wataRecord.updated_at) {
+          upsertItems.push(wataRecord);
           updatedItems.push(wataRecord.title);
           updatedCount++;
         }
       }
-      console.log('Publish records updated successfully.');
+
+      // Update the publish record with data
+      this.entityManager.transaction(async (transcationEntityManager) => {
+        if (updateItems.length > 0) {
+          await transcationEntityManager.update(Wata, updateItems, {
+            is_published: true,
+          });
+        }
+        await transcationEntityManager.save(PublishWata, upsertItems);
+      });
+
+      console.log('Publish records upserted successfully.');
     } catch (error) {
-      console.error('Error occurred while updating records:', error);
+      console.error('Error occurred while creating records:', error);
     }
-    return { updatedItems, updatedCount };
+    return { createdItems, updatedItems, createdCount, updatedCount };
   }
 
   async remove(): Promise<{ removedItems: any[]; removedCount: number }> {
     let removedCount = 0;
     const removedItems = [];
+
+    const deleteQueryBuilder = this.publishWataRepository
+      .createQueryBuilder()
+      .delete();
 
     try {
       // Retrieve all relevant records from wata repository
@@ -228,11 +212,13 @@ export class PublishWataService {
 
       for (const wataRecord of wataRecordsToRemove) {
         if (await this.publishWataRepository.findOneBy({ id: wataRecord.id })) {
-          this.publishWataRepository.delete(wataRecord.id);
+          deleteQueryBuilder.orWhere(`id=${wataRecord.id}`);
           removedItems.push(wataRecord.title);
           removedCount++;
         }
       }
+
+      deleteQueryBuilder.execute();
       console.log('Publish records deleted successfully.');
     } catch (error) {
       console.error('Error occurred while deleting records:', error);
@@ -241,8 +227,8 @@ export class PublishWataService {
   }
 
   async publish() {
-    const { createdItems, createdCount } = await this.create();
-    const { updatedItems, updatedCount } = await this.update();
+    const { createdItems, updatedItems, createdCount, updatedCount } =
+      await this.upsert();
     const { removedItems, removedCount } = await this.remove();
 
     const totalCount: number = createdCount + updatedCount + removedCount;
