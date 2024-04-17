@@ -36,7 +36,7 @@ export class CollectionService {
     minLength: 4,
   });
 
-  private async getSharedId(id: number) {
+  private getSharedId(id: number) {
     return this.sqids.encode([id]);
   }
 
@@ -135,6 +135,10 @@ export class CollectionService {
       //collection_id 복호화
       const collection_id = this.sqids.decode(sharedId)[0];
 
+      if (!collection_id) {
+        throw EntityNotFoundException();
+      }
+
       // collection info
       const result = await this.collectionRepository.findOneOrFail({
         select: {
@@ -193,7 +197,7 @@ export class CollectionService {
       async (transactionalEntityManager) => {
         const criteria = { collection: { id } };
         await transactionalEntityManager.delete(CollectionItem, criteria);
-        await transactionalEntityManager.delete(Collection, criteria);
+        await transactionalEntityManager.delete(Collection, id);
 
         return id;
       },
