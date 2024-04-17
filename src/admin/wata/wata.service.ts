@@ -246,7 +246,7 @@ export class WataService {
         };
       });
 
-      return await {
+      return {
         total_count: totalCount,
         result: result,
       };
