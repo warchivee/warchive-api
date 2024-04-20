@@ -31,8 +31,8 @@ export class UserService {
     const user = await this.userRepository.save(createUser);
 
     const firstScrapbook: CreateScrapbookDto = {
-      title: '첫번째 컬렉션',
-      note: '당신의 첫번째 컬렉션이에요! 원하는 작품을 추가해보세요. 이곳을 클릭해 컬렉션의 이름과 설명을 변경할 수 있습니다.',
+      title: '첫번째 스크랩북',
+      note: '당신의 첫번째 스크랩북이에요! 원하는 작품을 추가해보세요. 이곳을 클릭해 스크랩북의 이름과 설명을 변경할 수 있습니다.',
     };
     this.scrapbookService.createScrapbook(user, firstScrapbook);
 

@@ -64,7 +64,7 @@ export class ScrapbookService {
   }
 
   async createScrapbook(user: User, createScrapbookDto: CreateScrapbookDto) {
-    // 컬렉션 생성 개수 제한 검사
+    // 스크랩북 생성 개수 제한 검사
     const collecionCount = await this.scrapbookRepository.count({
       where: { adder: { id: user.id } },
     });

@@ -17,7 +17,7 @@ import { IsNotUrl } from 'src/common/utils/custom-valid';
 export class CreateScrapbookDto {
   @ApiProperty({
     description: '제목',
-    example: '파퍼가 좋아하는 드라마 컬렉션',
+    example: '파퍼가 좋아하는 드라마 스크랩북',
     required: true,
   })
   @IsString()

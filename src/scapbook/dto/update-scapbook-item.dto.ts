@@ -18,7 +18,7 @@ export class UpdateItemDto {
   action: 'ADD' | 'DELETE';
 
   @ApiProperty({
-    description: '컬렉션 아이디',
+    description: '스크랩북 아이디',
     required: true,
     type: Number,
   })

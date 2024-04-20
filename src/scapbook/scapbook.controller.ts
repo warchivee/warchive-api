@@ -23,8 +23,8 @@ export class ScrapbookController {
 
   @ApiBearerAuth('access_token')
   @ApiOperation({
-    summary: '컬렉션 목록 조회',
-    description: '사용자가 생성한 컬렉션 목록을 조회합니다.',
+    summary: '스크랩북 목록 조회',
+    description: '사용자가 생성한 스크랩북 목록을 조회합니다.',
   })
   @Get()
   findAllScrapbooks(@Request() req) {
@@ -33,8 +33,8 @@ export class ScrapbookController {
 
   @Public()
   @ApiOperation({
-    summary: '공유 컬렉션 조회',
-    description: '단일 컬렉션 정보 및 해당 아이템들을 조회합니다.',
+    summary: '공유 스크랩북 조회',
+    description: '단일 스크랩북 정보 및 해당 아이템들을 조회합니다.',
   })
   @Get('/shared/:sharedId')
   findScrapbook(@Param('sharedId') sharedId: string) {
@@ -43,8 +43,8 @@ export class ScrapbookController {
 
   @ApiBearerAuth('access_token')
   @ApiOperation({
-    summary: '컬렉션 데이터 생성',
-    description: '컬렉션 데이터를 생성합니다. 제목은 필수 입력값입니다.',
+    summary: '스크랩북 데이터 생성',
+    description: '스크랩북 데이터를 생성합니다. 제목은 필수 입력값입니다.',
   })
   @Post()
   createScrapbook(
@@ -56,8 +56,8 @@ export class ScrapbookController {
 
   @ApiBearerAuth('access_token')
   @ApiOperation({
-    summary: '컬렉션 아이템 수정',
-    description: '컬렉션 아이템을 여러건 수정합니다.',
+    summary: '스크랩북 아이템 수정',
+    description: '스크랩북 아이템을 여러건 수정합니다.',
   })
   @Patch('/items')
   updateItem(@Request() req, @Body() dto: UpdateItemDto[]) {
@@ -66,8 +66,8 @@ export class ScrapbookController {
 
   @ApiBearerAuth('access_token')
   @ApiOperation({
-    summary: '컬렉션 변경',
-    description: '컬렉션 이름이나 내용을 변경합니다.',
+    summary: '스크랩북 변경',
+    description: '스크랩북 이름이나 내용을 변경합니다.',
   })
   @Patch(':id')
   updateScrapbook(
@@ -84,8 +84,8 @@ export class ScrapbookController {
 
   @ApiBearerAuth('access_token')
   @ApiOperation({
-    summary: '컬렉션 데이터 삭제',
-    description: '컬렉션 데이터를 삭제합니다.',
+    summary: '스크랩북 데이터 삭제',
+    description: '스크랩북 데이터를 삭제합니다.',
   })
   @Delete(':id')
   removeScrapbook(@Request() req, @Param('id') id: number) {
@@ -94,8 +94,8 @@ export class ScrapbookController {
 
   @ApiBearerAuth('access_token')
   @ApiOperation({
-    summary: '컬렉션 아이템 다건 저장',
-    description: '컬렉션 아이템 저장합니다.',
+    summary: '스크랩북 아이템 다건 저장',
+    description: '스크랩북 아이템 저장합니다.',
   })
   @Post(':id/items')
   addItem(
@@ -108,8 +108,8 @@ export class ScrapbookController {
 
   @ApiBearerAuth('access_token')
   @ApiOperation({
-    summary: '컬렉션 아이템 다건 삭제',
-    description: '컬렉션 아이템을 삭제합니다.',
+    summary: '스크랩북 아이템 다건 삭제',
+    description: '스크랩북 아이템을 삭제합니다.',
   })
   @Delete(':id/items')
   removeItem(
