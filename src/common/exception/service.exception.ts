@@ -16,11 +16,11 @@ export const EntityNotFoundException = (message?: string): ServiceException => {
   return new ServiceException(ENTITY_NOT_FOUND, message);
 };
 
-export const TooManyCollectionException = (): ServiceException => {
+export const TooManyScrapbookException = (): ServiceException => {
   return new ServiceException(TOO_MANY_COLLECTION);
 };
 
-export const TooManyCollectionItemException = (): ServiceException => {
+export const TooManyScrapbookItemException = (): ServiceException => {
   return new ServiceException(TOO_MANY_COLLECTION_ITEM);
 };
 

@@ -11,10 +11,10 @@ import { Transform } from 'class-transformer';
 import {
   COLLECTION_COMMENT_LIMIT_LENGTH,
   COLLECTION_TITLE_LIMIT_LENGTH,
-} from 'src/common/utils/collection.const';
+} from 'src/common/utils/scrapbook.const';
 import { IsNotUrl } from 'src/common/utils/custom-valid';
 
-export class CreateCollectionDto {
+export class CreateScrapbookDto {
   @ApiProperty({
     description: '제목',
     example: '파퍼가 좋아하는 드라마 컬렉션',

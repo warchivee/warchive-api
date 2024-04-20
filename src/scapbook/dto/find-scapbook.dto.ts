@@ -1,11 +1,11 @@
 import { ApiProperty } from '@nestjs/swagger';
 import { IsString } from 'class-validator';
 import { Type } from 'class-transformer';
-import { FindAllCollectionDto } from './find-all-collection.dto';
+import { FindAllScrapbookDto } from './find-all-scapbook.dto';
 
-export class FindCollectionDto extends FindAllCollectionDto {
+export class FindScrapbookDto extends FindAllScrapbookDto {
   @ApiProperty({
-    description: '암호화된 collection id = shared_id',
+    description: '암호화된 scrapbook id = shared_id',
     example: 'asdfdsf==',
     required: true,
   })

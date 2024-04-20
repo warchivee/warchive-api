@@ -2,7 +2,7 @@ import { ApiProperty } from '@nestjs/swagger';
 import { Min, IsNumber, IsOptional } from 'class-validator';
 import { Type } from 'class-transformer';
 
-export class FindAllCollectionDto {
+export class FindAllScrapbookDto {
   // paginaton
   @ApiProperty({
     default: 1,

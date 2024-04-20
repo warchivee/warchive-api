@@ -23,5 +23,5 @@ export class UpdateItemDto {
     type: Number,
   })
   @IsNumber()
-  collection_id: number;
+  scrapbook_id: number;
 }

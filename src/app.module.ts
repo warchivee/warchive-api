@@ -13,8 +13,8 @@ import { CautionModule } from './admin/keywords/caution/caution.module';
 import { WataModule } from './admin/wata/wata.module';
 import { PlatformModule } from './admin/keywords/platform/platform.module';
 import { KeywordsModule } from './admin/keywords/keywords.module';
-import { CollectionModule } from './collection/collection.module';
 import { PublishWataModule } from './publish-wata/publish-wata.module';
+import { ScrapbookModule } from './scapbook/scapbook.module';
 
 @Module({
   imports: [
@@ -48,7 +48,7 @@ import { PublishWataModule } from './publish-wata/publish-wata.module';
     WataModule,
     PlatformModule,
     KeywordsModule,
-    CollectionModule,
+    ScrapbookModule,
     PublishWataModule,
   ],
   controllers: [AppController],
