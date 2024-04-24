@@ -1,7 +1,7 @@
 import { HttpStatus } from '@nestjs/common';
 import {
-  COLLECTIONS_LIMMIT_COUNT,
-  COLLECTION_ITEMS_LIMIT_COUNT,
+  SCRAPBOOKS_LIMMIT_COUNT,
+  SCRAPBOOK_ITEMS_LIMIT_COUNT,
 } from '../utils/scrapbook.const';
 
 class ErrorCodeVo {
@@ -30,16 +30,16 @@ export const ENTITY_NOT_FOUND = new ErrorCodeVo(
   '데이터가 없습니다.',
 );
 
-export const TOO_MANY_COLLECTION = new ErrorCodeVo(
+export const TOO_MANY_SCRAPBOOK = new ErrorCodeVo(
   'too many scrapbook',
   HttpStatus.FORBIDDEN,
-  `스크랩북 생성은 최대 ${COLLECTIONS_LIMMIT_COUNT}개까지만 가능합니다.`,
+  `스크랩북 생성은 최대 ${SCRAPBOOKS_LIMMIT_COUNT}개까지만 가능합니다.`,
 );
 
-export const TOO_MANY_COLLECTION_ITEM = new ErrorCodeVo(
+export const TOO_MANY_SCRAPBOOK_ITEM = new ErrorCodeVo(
   'too many scrapbook',
   HttpStatus.FORBIDDEN,
-  `스크랩북 아이템은 최대 ${COLLECTION_ITEMS_LIMIT_COUNT}개까지만 추가할 수 있습니다.`,
+  `스크랩북 아이템은 최대 ${SCRAPBOOK_ITEMS_LIMIT_COUNT}개까지만 추가할 수 있습니다.`,
 );
 
 export const WRONG_ENCRYPTEDTEXT = new ErrorCodeVo(

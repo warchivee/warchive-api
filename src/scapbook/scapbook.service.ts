@@ -13,8 +13,8 @@ import Sqids from 'sqids';
 import { ConfigService } from '@nestjs/config';
 import { UpdateItemDto } from './dto/update-scapbook-item.dto';
 import {
-  COLLECTIONS_LIMMIT_COUNT,
-  COLLECTION_ITEMS_LIMIT_COUNT,
+  SCRAPBOOKS_LIMMIT_COUNT,
+  SCRAPBOOK_ITEMS_LIMIT_COUNT,
 } from 'src/common/utils/scrapbook.const';
 import { Scrapbook } from './entities/scapbook.entity';
 import { ScrapbookItem } from './entities/scapbook-item.entity';
@@ -68,7 +68,7 @@ export class ScrapbookService {
     const collecionCount = await this.scrapbookRepository.count({
       where: { adder: { id: user.id } },
     });
-    if (collecionCount >= COLLECTIONS_LIMMIT_COUNT) {
+    if (collecionCount >= SCRAPBOOKS_LIMMIT_COUNT) {
       throw TooManyScrapbookException();
     }
 
@@ -298,13 +298,6 @@ export class ScrapbookService {
     });
 
     if (addItems.length !== 0) {
-      const countByScrapbook = await this.scrapbookItemRepository
-        .createQueryBuilder('item')
-        .select('item.scrapbook.id', 'id')
-        .addSelect('COUNT(item.id)', 'count')
-        .groupBy('item.scrapbook.id')
-        .execute();
-
       const countByAddItems: Record<number, number> = {};
 
       addItems.forEach((i) => {
@@ -312,10 +305,20 @@ export class ScrapbookService {
           (countByAddItems[i.scrapbook.id] ?? 0) + 1;
       });
 
-      countByScrapbook.forEach((c) => {
-        const currentLength = c.count + countByAddItems[c.id];
+      const countByScrapbook = await this.scrapbookItemRepository
+        .createQueryBuilder('item')
+        .select('item.scrapbook.id', 'id')
+        .addSelect('COUNT(item.id)', 'count')
+        .groupBy('item.scrapbook.id')
+        .where('item.scrapbook.id IN (:...ids)', {
+          ids: Object.keys(countByAddItems),
+        })
+        .execute();
 
-        if (currentLength >= COLLECTION_ITEMS_LIMIT_COUNT) {
+      countByScrapbook.forEach((c) => {
+        const currentLength = +c.count + countByAddItems[c.id];
+
+        if (currentLength >= SCRAPBOOK_ITEMS_LIMIT_COUNT) {
           throw TooManyScrapbookItemException();
         }
       });

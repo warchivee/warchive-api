@@ -2,8 +2,8 @@ import {
   ENTITY_NOT_FOUND,
   ErrorCode,
   UNABLE_DELETE_MERGED_DATA,
-  TOO_MANY_COLLECTION,
-  TOO_MANY_COLLECTION_ITEM,
+  TOO_MANY_SCRAPBOOK,
+  TOO_MANY_SCRAPBOOK_ITEM,
   WRONG_ENCRYPTEDTEXT,
   PERMISSION_DENIED,
 } from '../interface/error-code.type';
@@ -17,11 +17,11 @@ export const EntityNotFoundException = (message?: string): ServiceException => {
 };
 
 export const TooManyScrapbookException = (): ServiceException => {
-  return new ServiceException(TOO_MANY_COLLECTION);
+  return new ServiceException(TOO_MANY_SCRAPBOOK);
 };
 
 export const TooManyScrapbookItemException = (): ServiceException => {
-  return new ServiceException(TOO_MANY_COLLECTION_ITEM);
+  return new ServiceException(TOO_MANY_SCRAPBOOK_ITEM);
 };
 
 export const WrongEncryptedText = (): ServiceException => {

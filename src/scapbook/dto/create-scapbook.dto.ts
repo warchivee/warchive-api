@@ -9,8 +9,8 @@ import {
 } from 'class-validator';
 import { Transform } from 'class-transformer';
 import {
-  COLLECTION_COMMENT_LIMIT_LENGTH,
-  COLLECTION_TITLE_LIMIT_LENGTH,
+  SCRAPBOOK_COMMENT_LIMIT_LENGTH,
+  SCRAPBOOK_TITLE_LIMIT_LENGTH,
 } from 'src/common/utils/scrapbook.const';
 import { IsNotUrl } from 'src/common/utils/custom-valid';
 
@@ -22,8 +22,8 @@ export class CreateScrapbookDto {
   })
   @IsString()
   @Matches(/[^ ]+/, { message: '제목은 필수 입력값입니다.' })
-  @MaxLength(COLLECTION_TITLE_LIMIT_LENGTH, {
-    message: `제목은 ${COLLECTION_TITLE_LIMIT_LENGTH}자까지만 입력됩니다.`,
+  @MaxLength(SCRAPBOOK_TITLE_LIMIT_LENGTH, {
+    message: `제목은 ${SCRAPBOOK_TITLE_LIMIT_LENGTH}자까지만 입력됩니다.`,
   })
   @Validate(IsNotUrl, {
     message: '제목에는 url을 입력할 수 없습니다.',
@@ -40,8 +40,8 @@ export class CreateScrapbookDto {
   @IsString()
   @IsOptional()
   @IsNotEmpty()
-  @MaxLength(COLLECTION_COMMENT_LIMIT_LENGTH, {
-    message: `코멘트는 ${COLLECTION_COMMENT_LIMIT_LENGTH}자까지만 입력됩니다.`,
+  @MaxLength(SCRAPBOOK_COMMENT_LIMIT_LENGTH, {
+    message: `코멘트는 ${SCRAPBOOK_COMMENT_LIMIT_LENGTH}자까지만 입력됩니다.`,
   })
   @Transform((params) => (params.value?.length > 0 ? params.value : null))
   @Validate(IsNotUrl, {
