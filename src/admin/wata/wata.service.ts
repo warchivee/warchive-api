@@ -92,17 +92,19 @@ export class WataService {
     const findWhereConditions: FindOptionsWhere<Wata>[] = [];
     const itemValueCorrectConditions: FindOptionsWhere<Wata> = {};
 
-    if (title)
+    if (title) {
       itemValueCorrectConditions.title = Raw(
         (alias) => `replace(${alias}, ' ', '') ILike :title`,
-        { title: `%${title?.replace(' ', '')}%` },
+        { title: `%${title?.replace(/\s/g, '')}%` },
       );
+    }
 
-    if (creators)
+    if (creators) {
       itemValueCorrectConditions.creators = Raw(
         (alias) => `replace(${alias}, ' ', '') like :creators`,
-        { creators: `%${creators?.replace('/', '')?.replace(' ', '')}%` },
+        { creators: `%${creators?.replace('/', '')?.replace(/\s/g, '')}%` },
       );
+    }
 
     if (label) {
       itemValueCorrectConditions.label = In(label);
