@@ -130,26 +130,49 @@ export class PublishWataService {
 
       const updateItems = [];
 
-      for (const create of createItems) {
+      for (const createItem of createItems) {
         upsertItems.push(
           this.publishWataRepository.create({
-            id: create.id,
-            title: create.title,
-            creators: create.creators,
-            thumbnail: create.thumbnail,
-            thumbnail_card: create.thumbnail_card,
-            thumbnail_book: create.thumbnail_book,
-            genre: create.genre,
-            keywords: create.keywords,
-            cautions: create.cautions,
-            platforms: create.platforms,
-            adder: create.adder,
-            updater: create.updater,
+            id: createItem.id,
+            title: createItem.title,
+            creators: createItem.creators,
+            thumbnail: createItem.thumbnail,
+            thumbnail_card: createItem.thumbnail_card,
+            thumbnail_book: createItem.thumbnail_book,
+            genre: {
+              id: createItem.genre.id,
+              name: createItem.genre.name,
+              category: {
+                id: createItem.genre.category.id,
+                name: createItem.genre.category.name,
+              },
+            },
+            keywords: createItem.keywords?.map((keyword) => {
+              return {
+                id: keyword.keyword.id,
+                name: keyword.keyword.name,
+              };
+            }),
+            cautions: createItem.cautions?.map((caution) => {
+              return {
+                id: caution.caution.id,
+                name: caution.caution.name,
+              };
+            }),
+            platforms: createItem.platforms?.map((platform) => {
+              return {
+                id: platform.platform.id,
+                name: platform.platform.name,
+                url: platform.url,
+              };
+            }),
+            adder: createItem.adder,
+            updater: createItem.updater,
           }),
         );
-        createdItems.push(create.title);
+        createdItems.push(createItem.title);
         createdCount++;
-        updateItems.push(create.id);
+        updateItems.push(createItem.id);
       }
 
       // Iterate through each wata record
