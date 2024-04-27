@@ -188,10 +188,6 @@ export class PublishWataService {
     let removedCount = 0;
     const removedItems = [];
 
-    const deleteQueryBuilder = this.publishWataRepository
-      .createQueryBuilder()
-      .delete();
-
     try {
       // Retrieve all relevant records from wata repository
       const wataRecordsToRemove = await this.wataRepository.find({
@@ -204,25 +200,40 @@ export class PublishWataService {
           { keywords: { keyword: IsNull() } },
           { platforms: { platform: IsNull() } },
         ],
-        order: {
-          created_at: 'DESC',
-          id: 'ASC',
-        },
       });
+
+      // 뻐른 종료 (클린코드.)
+      if (!wataRecordsToRemove || wataRecordsToRemove.length <= 0) {
+        return { removedItems, removedCount };
+      }
+
+      const deleteIds = [];
 
       for (const wataRecord of wataRecordsToRemove) {
         if (await this.publishWataRepository.findOneBy({ id: wataRecord.id })) {
-          deleteQueryBuilder.orWhere(`id=${wataRecord.id}`);
+          deleteIds.push(wataRecord.id);
           removedItems.push(wataRecord.title);
           removedCount++;
         }
       }
 
+      // 만약에 deleteId가 아무것도 없으면 delete all 실행되므로 안전을 위해 넣음
+      if (deleteIds.length <= 0) {
+        return { removedItems, removedCount };
+      }
+
+      const deleteQueryBuilder = this.publishWataRepository
+        .createQueryBuilder()
+        .delete();
+
+      deleteQueryBuilder.whereInIds(deleteIds);
       deleteQueryBuilder.execute();
+
       console.log('Publish records deleted successfully.');
     } catch (error) {
       console.error('Error occurred while deleting records:', error);
     }
+
     return { removedItems, removedCount };
   }
 
