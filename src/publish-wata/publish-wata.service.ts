@@ -18,6 +18,7 @@ import { WataLabelType } from 'src/admin/wata/interface/wata.type';
 import { WataService } from 'src/admin/wata/wata.service';
 import { CACHE_MANAGER } from '@nestjs/cache-manager';
 import { PUBLISH_WATA_CACHEKEY } from 'src/admin/wata/httpcache.interceptor';
+import { UpsertPublishWataDto } from './dto/upsert-publish-wata.dto';
 
 @Injectable()
 export class PublishWataService {
@@ -114,6 +115,7 @@ export class PublishWataService {
         },
       });
 
+      // Retrieve all records from publish wata repository
       const publishRecordToUpsert = await this.publishWataRepository.find({
         order: {
           created_at: 'DESC',
@@ -122,37 +124,24 @@ export class PublishWataService {
       });
 
       const upsertItems: PublishWata[] = [];
+      const upsertItemsToSave: UpsertPublishWataDto[] = [];
 
       const createItems = wataRecordsToUpsert.filter(
         (wata) =>
           !publishRecordToUpsert.map((item) => item.id).includes(wata.id),
       );
 
-      const updateItems = [];
+      const updateToIsPublishedTrue = [];
 
-      for (const create of createItems) {
-        upsertItems.push(
-          this.publishWataRepository.create({
-            id: create.id,
-            title: create.title,
-            creators: create.creators,
-            thumbnail: create.thumbnail,
-            thumbnail_card: create.thumbnail_card,
-            thumbnail_book: create.thumbnail_book,
-            genre: create.genre,
-            keywords: create.keywords,
-            cautions: create.cautions,
-            platforms: create.platforms,
-            adder: create.adder,
-            updater: create.updater,
-          }),
-        );
-        createdItems.push(create.title);
+      for (const createItem of createItems) {
+        upsertItems.push(createItem);
+        createdItems.push(createItem.title);
         createdCount++;
-        updateItems.push(create.id);
+        if (createItem.is_published == false) {
+          updateToIsPublishedTrue.push(createItem.id);
+        }
       }
 
-      // Iterate through each wata record
       for (const wataRecord of wataRecordsToUpsert) {
         const publishRecord = publishRecordToUpsert.find(
           (publish) => publish.id === wataRecord.id && wataRecord.is_published,
@@ -167,19 +156,69 @@ export class PublishWataService {
         }
       }
 
-      // Update the publish record with data
+      // Update is_published from false to true
       this.entityManager.transaction(async (transcationEntityManager) => {
-        if (updateItems.length > 0) {
-          await transcationEntityManager.update(Wata, updateItems, {
+        if (updateToIsPublishedTrue.length > 0) {
+          await transcationEntityManager.update(Wata, updateToIsPublishedTrue, {
             is_published: true,
           });
         }
-        await transcationEntityManager.save(PublishWata, upsertItems);
+
+        // Map the raw data to DTO format
+        for (const upsertItem of upsertItems) {
+          const item: UpsertPublishWataDto = new UpsertPublishWataDto();
+          item.id = upsertItem.id;
+          item.title = upsertItem.title;
+          item.creators = upsertItem.creators;
+          item.thumbnail = upsertItem.thumbnail;
+          item.thumbnail_card = upsertItem.thumbnail_card;
+          item.thumbnail_book = upsertItem.thumbnail_book;
+          item.genre = {
+            id: upsertItem.genre.id,
+            name: upsertItem.genre.name,
+            category: {
+              id: upsertItem.genre.category.id,
+              name: upsertItem.genre.category.name,
+            },
+          };
+          item.keywords = upsertItem.keywords?.map((keyword) => {
+            return {
+              id: keyword.keyword.id,
+              name: keyword.keyword.name,
+            };
+          });
+          item.cautions = upsertItem.cautions?.map((caution) => {
+            return {
+              id: caution.caution.id,
+              name: caution.caution.name,
+            };
+          });
+          item.platforms = upsertItem.platforms?.map((platform) => {
+            return {
+              id: platform.platform.id,
+              name: platform.platform.name,
+              url: platform.url,
+            };
+          });
+          item.adder = {
+            id: upsertItem.adder?.id,
+            name: upsertItem.adder?.nickname,
+          };
+          item.updater = {
+            id: upsertItem.updater?.id,
+            name: upsertItem.updater?.nickname,
+          };
+
+          upsertItemsToSave.push(item);
+        }
+
+        // Save the create & update data to published_wata table
+        await transcationEntityManager.save(PublishWata, upsertItemsToSave);
       });
 
       console.log('Publish records upserted successfully.');
     } catch (error) {
-      console.error('Error occurred while creating records:', error);
+      console.error('Error occurred while upserting records:', error);
     }
     return { createdItems, updatedItems, createdCount, updatedCount };
   }
@@ -244,7 +283,7 @@ export class PublishWataService {
 
     const totalCount: number = createdCount + updatedCount + removedCount;
 
-    // remove Cache
+    // Remove Cache
     if (totalCount > 0) {
       this.removeCache();
     }
