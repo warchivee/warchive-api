@@ -115,6 +115,7 @@ export class PublishWataService {
         },
       });
 
+      // Retrieve all records from publish wata repository
       const publishRecordToUpsert = await this.publishWataRepository.find({
         order: {
           created_at: 'DESC',
@@ -130,16 +131,17 @@ export class PublishWataService {
           !publishRecordToUpsert.map((item) => item.id).includes(wata.id),
       );
 
-      const updateItems = [];
+      const updateToIsPublishedTrue = [];
 
       for (const createItem of createItems) {
         upsertItems.push(createItem);
         createdItems.push(createItem.title);
         createdCount++;
-        updateItems.push(createItem.id);
+        if (createItem.is_published == false) {
+          updateToIsPublishedTrue.push(createItem.id);
+        }
       }
 
-      // Iterate through each wata record
       for (const wataRecord of wataRecordsToUpsert) {
         const publishRecord = publishRecordToUpsert.find(
           (publish) => publish.id === wataRecord.id && wataRecord.is_published,
@@ -154,14 +156,15 @@ export class PublishWataService {
         }
       }
 
-      // Update the publish record with data
+      // Update is_published from false to true
       this.entityManager.transaction(async (transcationEntityManager) => {
-        if (updateItems.length > 0) {
-          await transcationEntityManager.update(Wata, updateItems, {
+        if (updateToIsPublishedTrue.length > 0) {
+          await transcationEntityManager.update(Wata, updateToIsPublishedTrue, {
             is_published: true,
           });
         }
 
+        // Map the raw data to DTO format
         for (const upsertItem of upsertItems) {
           const item: UpsertPublishWataDto = new UpsertPublishWataDto();
           item.id = upsertItem.id;
@@ -208,7 +211,8 @@ export class PublishWataService {
 
           upsertItemsToSave.push(item);
         }
-        console.log(upsertItemsToSave);
+
+        // Save the create & update data to published_wata table
         await transcationEntityManager.save(PublishWata, upsertItemsToSave);
       });
 
@@ -279,7 +283,7 @@ export class PublishWataService {
 
     const totalCount: number = createdCount + updatedCount + removedCount;
 
-    // remove Cache
+    // Remove Cache
     if (totalCount > 0) {
       this.removeCache();
     }
