@@ -18,6 +18,7 @@ import { WataLabelType } from 'src/admin/wata/interface/wata.type';
 import { WataService } from 'src/admin/wata/wata.service';
 import { CACHE_MANAGER } from '@nestjs/cache-manager';
 import { PUBLISH_WATA_CACHEKEY } from 'src/admin/wata/httpcache.interceptor';
+import { UpsertPublishWataDto } from './dto/upsert-publish-wata.dto';
 
 @Injectable()
 export class PublishWataService {
@@ -122,6 +123,7 @@ export class PublishWataService {
       });
 
       const upsertItems: PublishWata[] = [];
+      const upsertItemsToSave: UpsertPublishWataDto[] = [];
 
       const createItems = wataRecordsToUpsert.filter(
         (wata) =>
@@ -131,45 +133,7 @@ export class PublishWataService {
       const updateItems = [];
 
       for (const createItem of createItems) {
-        upsertItems.push(
-          this.publishWataRepository.create({
-            id: createItem.id,
-            title: createItem.title,
-            creators: createItem.creators,
-            thumbnail: createItem.thumbnail,
-            thumbnail_card: createItem.thumbnail_card,
-            thumbnail_book: createItem.thumbnail_book,
-            genre: {
-              id: createItem.genre.id,
-              name: createItem.genre.name,
-              category: {
-                id: createItem.genre.category.id,
-                name: createItem.genre.category.name,
-              },
-            },
-            keywords: createItem.keywords?.map((keyword) => {
-              return {
-                id: keyword.keyword.id,
-                name: keyword.keyword.name,
-              };
-            }),
-            cautions: createItem.cautions?.map((caution) => {
-              return {
-                id: caution.caution.id,
-                name: caution.caution.name,
-              };
-            }),
-            platforms: createItem.platforms?.map((platform) => {
-              return {
-                id: platform.platform.id,
-                name: platform.platform.name,
-                url: platform.url,
-              };
-            }),
-            adder: createItem.adder,
-            updater: createItem.updater,
-          }),
-        );
+        upsertItems.push(createItem);
         createdItems.push(createItem.title);
         createdCount++;
         updateItems.push(createItem.id);
@@ -197,12 +161,60 @@ export class PublishWataService {
             is_published: true,
           });
         }
-        await transcationEntityManager.save(PublishWata, upsertItems);
+
+        for (const upsertItem of upsertItems) {
+          const item: UpsertPublishWataDto = new UpsertPublishWataDto();
+          item.id = upsertItem.id;
+          item.title = upsertItem.title;
+          item.creators = upsertItem.creators;
+          item.thumbnail = upsertItem.thumbnail;
+          item.thumbnail_card = upsertItem.thumbnail_card;
+          item.thumbnail_book = upsertItem.thumbnail_book;
+          item.genre = {
+            id: upsertItem.genre.id,
+            name: upsertItem.genre.name,
+            category: {
+              id: upsertItem.genre.category.id,
+              name: upsertItem.genre.category.name,
+            },
+          };
+          item.keywords = upsertItem.keywords?.map((keyword) => {
+            return {
+              id: keyword.keyword.id,
+              name: keyword.keyword.name,
+            };
+          });
+          item.cautions = upsertItem.cautions?.map((caution) => {
+            return {
+              id: caution.caution.id,
+              name: caution.caution.name,
+            };
+          });
+          item.platforms = upsertItem.platforms?.map((platform) => {
+            return {
+              id: platform.platform.id,
+              name: platform.platform.name,
+              url: platform.url,
+            };
+          });
+          item.adder = {
+            id: upsertItem.adder?.id,
+            name: upsertItem.adder?.nickname,
+          };
+          item.updater = {
+            id: upsertItem.updater?.id,
+            name: upsertItem.updater?.nickname,
+          };
+
+          upsertItemsToSave.push(item);
+        }
+        console.log(upsertItemsToSave);
+        await transcationEntityManager.save(PublishWata, upsertItemsToSave);
       });
 
       console.log('Publish records upserted successfully.');
     } catch (error) {
-      console.error('Error occurred while creating records:', error);
+      console.error('Error occurred while upserting records:', error);
     }
     return { createdItems, updatedItems, createdCount, updatedCount };
   }
