@@ -1,5 +1,5 @@
 import { WataThumbnailCropAreaType } from 'src/admin/wata/interface/wata.type';
-import { Column, Entity, PrimaryColumn, UpdateDateColumn } from 'typeorm';
+import { Column, Entity, PrimaryColumn } from 'typeorm';
 
 @Entity({ name: 'published_wata' })
 export class PublishWata {

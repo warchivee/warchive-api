@@ -29,8 +29,7 @@ export class PublishWataController {
   }
 
   @Admin()
-  // @ApiBearerAuth('access_token')
-  @Public()
+  @ApiBearerAuth('access_token')
   @ApiOperation({
     summary: 'publish wata 업데이트',
     description: 'publish wata 정보를 업데이트 합니다.',
