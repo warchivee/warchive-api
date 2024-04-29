@@ -11,4 +11,8 @@ export class CreatePlatformDto {
   @IsOptional()
   @IsBoolean()
   order_top?: boolean;
+
+  @ApiProperty({ description: 'url 도메인', example: 'youtube' })
+  @IsString()
+  domain?: string;
 }

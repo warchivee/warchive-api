@@ -49,7 +49,7 @@ export class KeywordsService {
     const platforms = await this.platformMappingRepository
       .createQueryBuilder('platformMapping')
       .select(
-        'DISTINCT genre.category_id, platform.id, platform.name, platform.order_top',
+        'DISTINCT genre.category_id, platform.id, platform.name, platform.order_top, platform.domain',
       )
       .innerJoin('platformMapping.wata', 'wata')
       .innerJoin('wata.genre', 'genre')
