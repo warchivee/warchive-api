@@ -2,16 +2,21 @@ import { PartialType } from '@nestjs/swagger';
 import { Type } from 'class-transformer';
 import { WataThumbnailCropAreaType } from 'src/admin/wata/interface/wata.type';
 
-export class InfoDto {
+export class KeywordType {
   id: number;
   name: string;
 }
 
-export class PlatformInfoDto extends PartialType(InfoDto) {
-  url: string;
+export class CautionType extends PartialType(KeywordType) {
+  required: boolean;
 }
 
-export class GenreInfoDto extends PartialType(InfoDto) {
+export class PlatformType extends PartialType(KeywordType) {
+  url: string;
+  order_top: boolean;
+}
+
+export class GenreType extends PartialType(KeywordType) {
   category: {
     id: number;
     name: string;
@@ -20,30 +25,22 @@ export class GenreInfoDto extends PartialType(InfoDto) {
 
 export class UpsertPublishWataDto {
   id: number;
-
   title: string;
-
   creators: string;
-
   thumbnail: string;
-
   thumbnail_card?: WataThumbnailCropAreaType;
-
   thumbnail_book?: WataThumbnailCropAreaType;
+  genre: GenreType;
 
-  @Type(() => GenreInfoDto)
-  genre: GenreInfoDto;
+  @Type(() => KeywordType)
+  keywords: KeywordType[];
 
-  @Type(() => InfoDto)
-  keywords: InfoDto[];
+  @Type(() => CautionType)
+  cautions?: CautionType[];
 
-  @Type(() => InfoDto)
-  cautions?: InfoDto[];
+  @Type(() => PlatformType)
+  platforms: PlatformType[];
 
-  @Type(() => PlatformInfoDto)
-  platforms: PlatformInfoDto[];
-
-  adder?: InfoDto;
-
-  updater?: InfoDto;
+  adder?: KeywordType;
+  updater?: KeywordType;
 }

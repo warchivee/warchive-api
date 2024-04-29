@@ -191,6 +191,7 @@ export class PublishWataService {
             return {
               id: caution.caution.id,
               name: caution.caution.name,
+              required: caution.caution.required,
             };
           });
           item.platforms = upsertItem.platforms?.map((platform) => {
@@ -198,6 +199,7 @@ export class PublishWataService {
               id: platform.platform.id,
               name: platform.platform.name,
               url: platform.url,
+              order_top: platform.platform.order_top,
             };
           });
           item.adder = {
