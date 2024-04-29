@@ -1,4 +1,4 @@
-import { Controller, Get, Post, UseInterceptors } from '@nestjs/common';
+import { Controller, Delete, Get, Post, UseInterceptors } from '@nestjs/common';
 import { PublishWataService } from './publish-wata.service';
 import { ApiBearerAuth, ApiOperation, ApiTags } from '@nestjs/swagger';
 import { CacheKey, CacheTTL } from '@nestjs/cache-manager';
@@ -37,5 +37,16 @@ export class PublishWataController {
   @Post()
   publishWata() {
     return this.publishWataService.publish();
+  }
+
+  @Admin()
+  @ApiBearerAuth('access_token')
+  @ApiOperation({
+    summary: 'publish wata 캐시 삭제',
+    description: 'publish wata 캐시를 삭제합니다.',
+  })
+  @Delete()
+  removeFindAllPublishWataCache() {
+    return this.publishWataService.removeCache();
   }
 }
