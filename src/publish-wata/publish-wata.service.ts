@@ -71,7 +71,7 @@ export class PublishWataService {
 
   async findAll() {
     try {
-      const [total, totalCount] = await this.publishWataRepository.findAndCount(
+      const [watas, totalCount] = await this.publishWataRepository.findAndCount(
         {
           order: {
             updated_at: 'DESC',
@@ -81,21 +81,6 @@ export class PublishWataService {
       );
 
       const categories = await this.keywordsServices.findAllByCategory();
-
-      const watas = total?.map((wata) => {
-        return {
-          id: wata.id,
-          title: wata.title,
-          creators: wata.creators,
-          thumbnail: wata.thumbnail,
-          thumbnail_card: wata.thumbnail_card,
-          thumbnail_book: wata.thumbnail_book,
-          genre: wata.genre,
-          keywords: wata.keywords,
-          platforms: wata.platforms,
-          cautions: wata.cautions,
-        };
-      });
 
       return {
         total_count: totalCount,
