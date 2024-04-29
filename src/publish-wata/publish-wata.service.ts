@@ -8,17 +8,16 @@ import {
   EntityManager,
   EntityNotFoundError,
   Equal,
+  FindOptionsWhere,
+  In,
   IsNull,
   Not,
-  Or,
   Repository,
 } from 'typeorm';
 import { PublishWata } from './entities/publish-wata.entity';
 import { WataLabelType } from 'src/admin/wata/interface/wata.type';
-import { WataService } from 'src/admin/wata/wata.service';
 import { CACHE_MANAGER } from '@nestjs/cache-manager';
 import { PUBLISH_WATA_CACHEKEY } from 'src/admin/wata/httpcache.interceptor';
-import { UpsertPublishWataDto } from './dto/upsert-publish-wata.dto';
 
 @Injectable()
 export class PublishWataService {
@@ -27,10 +26,38 @@ export class PublishWataService {
     private readonly keywordsServices: KeywordsService,
     @InjectRepository(PublishWata)
     private readonly publishWataRepository: Repository<PublishWata>,
-    private readonly wataService: WataService,
     private readonly entityManager: EntityManager,
     @Inject(CACHE_MANAGER) private cacheManager: any,
   ) {}
+
+  private mapToPublishWata(wata: Wata) {
+    return {
+      id: wata.id,
+      title: wata.title,
+      creators: wata.creators,
+      thumbnail: wata.thumbnail,
+      thumbnail_card: wata.thumbnail_card,
+      thumbnail_book: wata.thumbnail_book,
+      category: {
+        id: wata.genre.category.id,
+        name: wata.genre.category.name,
+      },
+      genre: {
+        id: wata.genre.id,
+        name: wata.genre.name,
+      },
+      keywords: wata.keywords?.map((k) => {
+        return { id: k.keyword.id, name: k.keyword.name };
+      }),
+      cautions: wata.cautions?.map((c) => {
+        return { id: c.caution.id, name: c.caution.name };
+      }),
+      platforms: wata.platforms?.map((p) => {
+        return { id: p.platform.id, name: p.platform.name, url: p.url };
+      }),
+      updated_at: wata.updated_at,
+    };
+  }
 
   // 지정된 캐시키로 시작되는 캐시 데이터들 삭제
   async removeCache() {
@@ -47,7 +74,7 @@ export class PublishWataService {
       const [total, totalCount] = await this.publishWataRepository.findAndCount(
         {
           order: {
-            created_at: 'DESC',
+            updated_at: 'DESC',
             id: 'ASC',
           },
         },
@@ -84,23 +111,44 @@ export class PublishWataService {
     }
   }
 
-  async upsert(): Promise<{
-    createdItems: any[];
-    updatedItems: any[];
-    createdCount: number;
-    updatedCount: number;
+  async update(): Promise<{
+    createdItems: string[];
+    updatedItems: string[];
+    deletedItems: string[];
   }> {
-    let createdCount = 0;
-    let updatedCount = 0;
-    const createdItems = [];
-    const updatedItems = [];
+    const createdItems: string[] = [];
+    const updatedItems: string[] = [];
+    const deletedItems: string[] = [];
 
     try {
-      // Retrieve all relevant records from wata repository
-      const wataRecordsToUpsert = await this.wataRepository.find({
-        relations: this.wataService.relations,
-        where: {
-          // is_published: false,
+      const createWatas: PublishWata[] = [];
+      const updateWatas: PublishWata[] = [];
+
+      const wataRecordsToUpdateIds = await this.wataRepository
+        .createQueryBuilder('w')
+        .select(`w.id as id`)
+        .distinct(true)
+        .innerJoin(
+          PublishWata,
+          'pw',
+          `w.id = pw.id 
+          AND DATE_TRUNC('second', pw.updated_at ) != DATE_TRUNC('second', w.updated_at)`,
+        )
+        .leftJoin('wata_keyword', 'wk', 'wk.wata_id = w.id')
+        .leftJoin('wata_platform', 'wp', 'wp.wata_id = w.id')
+        .where(`w.label = :label`, { label: 'CHECKED' })
+        .andWhere(`w.thumbnail IS NOT NULL AND w.thumbnail != ''`)
+        .andWhere(`w.genre_id IS NOT NULL`)
+        .andWhere(`wk.id IS NOT NULL`)
+        .andWhere(`wp.id IS NOT NULL`)
+        .andWhere(`w.is_published = :isPublished`, {
+          isPublished: true,
+        })
+        .getRawMany();
+
+      // 입력 데이터
+      const find: FindOptionsWhere<Wata>[] = [
+        {
           label: WataLabelType.CHECKED,
           title: And(Not(IsNull()), Not(Equal(''))),
           creators: And(Not(IsNull()), Not(Equal(''))),
@@ -108,182 +156,136 @@ export class PublishWataService {
           genre: Not(IsNull()),
           keywords: { keyword: Not(IsNull()) },
           platforms: { platform: Not(IsNull()) },
+          is_published: false,
         },
-        order: {
-          created_at: 'DESC',
-          id: 'ASC',
-        },
-      });
+      ];
 
-      // Retrieve all records from publish wata repository
-      const publishRecordToUpsert = await this.publishWataRepository.find({
-        order: {
-          created_at: 'DESC',
-          id: 'ASC',
-        },
-      });
-
-      const upsertItems: PublishWata[] = [];
-      const upsertItemsToSave: UpsertPublishWataDto[] = [];
-
-      const createItems = wataRecordsToUpsert.filter(
-        (wata) =>
-          !publishRecordToUpsert.map((item) => item.id).includes(wata.id),
-      );
-
-      const updateToIsPublishedTrue = [];
-
-      for (const createItem of createItems) {
-        upsertItems.push(createItem);
-        createdItems.push(createItem.title);
-        createdCount++;
-        if (createItem.is_published == false) {
-          updateToIsPublishedTrue.push(createItem.id);
-        }
+      // 업데이트 데이터
+      if (wataRecordsToUpdateIds.length > 0) {
+        find.push({ id: In(wataRecordsToUpdateIds?.map(({ id }) => +id)) });
       }
 
-      for (const wataRecord of wataRecordsToUpsert) {
-        const publishRecord = publishRecordToUpsert.find(
-          (publish) => publish.id === wataRecord.id && wataRecord.is_published,
-        );
-
-        if (!publishRecord) continue;
-
-        if (publishRecord.updated_at < wataRecord.updated_at) {
-          upsertItems.push(wataRecord);
-          updatedItems.push(wataRecord.title);
-          updatedCount++;
-        }
-      }
-
-      // Update is_published from false to true
-      this.entityManager.transaction(async (transcationEntityManager) => {
-        if (updateToIsPublishedTrue.length > 0) {
-          await transcationEntityManager.update(Wata, updateToIsPublishedTrue, {
-            is_published: true,
-          });
-        }
-
-        // Map the raw data to DTO format
-        for (const upsertItem of upsertItems) {
-          const item: UpsertPublishWataDto = new UpsertPublishWataDto();
-          item.id = upsertItem.id;
-          item.title = upsertItem.title;
-          item.creators = upsertItem.creators;
-          item.thumbnail = upsertItem.thumbnail;
-          item.thumbnail_card = upsertItem.thumbnail_card;
-          item.thumbnail_book = upsertItem.thumbnail_book;
-          item.genre = {
-            id: upsertItem.genre.id,
-            name: upsertItem.genre.name,
-            category: {
-              id: upsertItem.genre.category.id,
-              name: upsertItem.genre.category.name,
-            },
-          };
-          item.keywords = upsertItem.keywords?.map((keyword) => {
-            return {
-              id: keyword.keyword.id,
-              name: keyword.keyword.name,
-            };
-          });
-          item.cautions = upsertItem.cautions?.map((caution) => {
-            return {
-              id: caution.caution.id,
-              name: caution.caution.name,
-              required: caution.caution.required,
-            };
-          });
-          item.platforms = upsertItem.platforms?.map((platform) => {
-            return {
-              id: platform.platform.id,
-              name: platform.platform.name,
-              url: platform.url,
-              order_top: platform.platform.order_top,
-            };
-          });
-          item.adder = {
-            id: upsertItem.adder?.id,
-            name: upsertItem.adder?.nickname,
-          };
-          item.updater = {
-            id: upsertItem.updater?.id,
-            name: upsertItem.updater?.nickname,
-          };
-
-          upsertItemsToSave.push(item);
-        }
-
-        // Save the create & update data to published_wata table
-        await transcationEntityManager.save(PublishWata, upsertItemsToSave);
-      });
-
-      console.log('Publish records upserted successfully.');
-    } catch (error) {
-      console.error('Error occurred while upserting records:', error);
-    }
-    return { createdItems, updatedItems, createdCount, updatedCount };
-  }
-
-  async remove(): Promise<{ removedItems: any[]; removedCount: number }> {
-    let removedCount = 0;
-    const removedItems = [];
-
-    try {
-      // Retrieve all relevant records from wata repository
-      const wataRecordsToRemove = await this.wataRepository.find({
-        where: [
-          { label: Not(WataLabelType.CHECKED) },
-          { title: Or(IsNull(), Equal('')) },
-          { creators: Or(IsNull(), Equal('')) },
-          { thumbnail: Or(IsNull(), Equal('')) },
-          { genre: IsNull() },
-          { keywords: { keyword: IsNull() } },
-          { platforms: { platform: IsNull() } },
+      const wataRecordsToUpsert = await this.wataRepository.find({
+        relations: [
+          'genre.category',
+          'genre',
+          'keywords',
+          'keywords.keyword',
+          'cautions',
+          'cautions.caution',
+          'platforms',
+          'platforms.platform',
+          'updater',
+          'adder',
         ],
+        where: find,
+        order: {
+          created_at: 'ASC',
+          id: 'ASC',
+        },
       });
 
-      // 뻐른 종료 (클린코드.)
-      if (!wataRecordsToRemove || wataRecordsToRemove.length <= 0) {
-        return { removedItems, removedCount };
-      }
-
-      const deleteIds = [];
-
-      for (const wataRecord of wataRecordsToRemove) {
-        if (await this.publishWataRepository.findOneBy({ id: wataRecord.id })) {
-          deleteIds.push(wataRecord.id);
-          removedItems.push(wataRecord.title);
-          removedCount++;
+      for (const wata of wataRecordsToUpsert) {
+        if (wata.is_published === true) {
+          updateWatas.push(this.mapToPublishWata(wata));
+        } else {
+          createWatas.push(this.mapToPublishWata(wata));
         }
       }
 
-      // 만약에 deleteId가 아무것도 없으면 delete all 실행되므로 안전을 위해 넣음
-      if (deleteIds.length <= 0) {
-        return { removedItems, removedCount };
-      }
+      // 삭제할 데이터
+      const deleteWatas = await this.publishWataRepository
+        .createQueryBuilder('pw')
+        .select(`pw.id, pw.title`)
+        .distinct(true)
+        .innerJoin(
+          'wata',
+          'w',
+          `w.id = pw.id 
+          AND DATE_TRUNC('second', w.updated_at) !=  DATE_TRUNC('second', pw.updated_at)`,
+        )
+        .leftJoin('wata_keyword', 'wk', 'wk.wata_id = w.id')
+        .leftJoin('wata_platform', 'wp', 'wp.wata_id = w.id')
+        .where(
+          `(w.label != :label AND w.is_published = :isPublished) 
+          OR w.thumbnail IS NULL 
+          OR w.thumbnail = :emptyThumbnail
+          OR w.genre_id IS NULL 
+          OR wk.id IS NULL
+          OR wp.id IS NULL`,
+          {
+            label: 'CHECKED',
+            isPublished: true,
+            emptyThumbnail: '',
+          },
+        )
+        .getRawMany();
 
-      const deleteQueryBuilder = this.publishWataRepository
-        .createQueryBuilder()
-        .delete();
+      // delete -> update -> create
+      this.entityManager.transaction(async (transcationEntityManager) => {
+        if (deleteWatas.length > 0) {
+          await transcationEntityManager.delete(PublishWata, {
+            id: In(deleteWatas?.map((w) => +w.id)),
+          });
 
-      deleteQueryBuilder.whereInIds(deleteIds);
-      deleteQueryBuilder.execute();
+          console.log('Publish records deleted successfully.');
+        }
 
-      console.log('Publish records deleted successfully.');
+        // save 하면 find 후 insert or update 함 (query 2번 날림)
+        if (updateWatas.length > 0) {
+          for (const updateWata of updateWatas) {
+            await transcationEntityManager.update(
+              PublishWata,
+              updateWata.id,
+              updateWata,
+            );
+          }
+
+          console.log('Publish records updated successfully.');
+        }
+
+        if (createWatas.length > 0) {
+          await transcationEntityManager.insert(PublishWata, createWatas);
+
+          // 처음으로 게시되는 데이터의 is_published 컬럼 업데이트
+          await transcationEntityManager.update(
+            Wata,
+            {
+              id: In(createWatas?.map((c) => c.id)),
+            },
+            {
+              is_published: true,
+            },
+          );
+
+          console.log('Publish records created successfully.');
+        }
+      });
+
+      return {
+        createdItems: createWatas?.map((w) => w.title),
+        updatedItems: updateWatas?.map((w) => w.title),
+        deletedItems: deleteWatas?.map((w) => w.title),
+      };
     } catch (error) {
-      console.error('Error occurred while deleting records:', error);
+      console.error(
+        'Error occurred while updating publish wata records:',
+        error,
+      );
     }
 
-    return { removedItems, removedCount };
+    return {
+      createdItems,
+      updatedItems,
+      deletedItems,
+    };
   }
 
   async publish() {
-    const { createdItems, updatedItems, createdCount, updatedCount } =
-      await this.upsert();
-    const { removedItems, removedCount } = await this.remove();
+    const { createdItems, updatedItems, deletedItems } = await this.update();
 
-    const totalCount: number = createdCount + updatedCount + removedCount;
+    const totalCount: number =
+      createdItems.length + updatedItems.length + deletedItems.length;
 
     // Remove Cache
     if (totalCount > 0) {
@@ -294,16 +296,16 @@ export class PublishWataService {
       total_count: totalCount,
       items: {
         new_watas: {
-          total_count: createdCount,
+          total_count: createdItems.length,
           items: createdItems,
         },
         update_watas: {
-          total_count: updatedCount,
+          total_count: updatedItems.length,
           items: updatedItems,
         },
         delete_watas: {
-          total_count: removedCount,
-          items: removedItems,
+          total_count: deletedItems.length,
+          items: deletedItems,
         },
       },
     };

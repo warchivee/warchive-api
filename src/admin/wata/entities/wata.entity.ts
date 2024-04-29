@@ -1,4 +1,3 @@
-import { CommonEntity } from 'src/common/entities/common.entity';
 import { Column, Entity, JoinColumn, ManyToOne, OneToMany } from 'typeorm';
 import { WataKeywordMapping } from './wata-keyword.entity';
 import { WataCautionMapping } from './wata-caution.entity';
@@ -8,9 +7,10 @@ import {
   WataThumbnailCropAreaType,
 } from '../interface/wata.type';
 import { Genre } from 'src/admin/keywords/genre/entities/genre.entity';
+import { CommonNotUpdatedAtEntity } from 'src/common/entities/commonNotUpdatedAt.entity';
 
 @Entity({ name: 'wata' })
-export class Wata extends CommonEntity {
+export class Wata extends CommonNotUpdatedAtEntity {
   @Column()
   title: string;
 
@@ -49,4 +49,8 @@ export class Wata extends CommonEntity {
 
   @Column({ nullable: true })
   note?: string;
+
+  //is_publish 업데이트 때 적용 하지 않기 위해 별도로 분리
+  @Column({ type: 'timestamp' })
+  updated_at?: Date;
 }

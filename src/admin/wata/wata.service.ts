@@ -293,6 +293,7 @@ export class WataService {
           note: createWataDto.note,
           adder: user,
           updater: user,
+          updated_at: new Date(),
         } as Wata);
 
         await this.mappingService.createKeywordMappings(
@@ -335,6 +336,7 @@ export class WataService {
           note: updateWataDto.note ?? wata.note,
           label: updateWataDto.label ?? wata.label,
           updater: user,
+          updated_at: new Date(),
         } as Wata);
 
         if (updateWataDto.keywords) {

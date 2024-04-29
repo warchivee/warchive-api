@@ -6,14 +6,12 @@ import { TypeOrmModule } from '@nestjs/typeorm';
 import { KeywordsModule } from 'src/admin/keywords/keywords.module';
 import { CacheModule } from '@nestjs/cache-manager';
 import { PublishWata } from './entities/publish-wata.entity';
-import { WataModule } from 'src/admin/wata/wata.module';
 
 @Module({
   imports: [
     TypeOrmModule.forFeature([Wata, PublishWata]),
     KeywordsModule,
     CacheModule.register(),
-    WataModule,
   ],
   controllers: [PublishWataController],
   providers: [PublishWataService],
