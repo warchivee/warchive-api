@@ -75,8 +75,8 @@ export class PublishWataService {
       const [watas, totalCount] = await this.publishWataRepository.findAndCount(
         {
           order: {
-            created_at: 'ASC',
-            id: 'ASC',
+            created_at: 'DESC',
+            id: 'DESC',
           },
         },
       );
