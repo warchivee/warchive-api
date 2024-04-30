@@ -7,12 +7,15 @@ import { WataKeywordMapping } from '../wata/entities/wata-keyword.entity';
 import { WataPlatformMapping } from '../wata/entities/wata-platform.entity';
 import { Repository } from 'typeorm';
 import { InjectRepository } from '@nestjs/typeorm';
+import { WataCautionMapping } from '../wata/entities/wata-caution.entity';
 
 @Injectable()
 export class KeywordsService {
   constructor(
     @InjectRepository(WataKeywordMapping)
     private readonly keywordMappingRepository: Repository<WataKeywordMapping>,
+    @InjectRepository(WataCautionMapping)
+    private readonly cautionMappingRepository: Repository<WataCautionMapping>,
     @InjectRepository(WataPlatformMapping)
     private readonly platformMappingRepository: Repository<WataPlatformMapping>,
 
@@ -44,6 +47,16 @@ export class KeywordsService {
       .innerJoin('keywordMapping.keyword', 'keyword')
       .where('wata.is_published = :isPublished', { isPublished: true })
       .orderBy('keyword.name', 'ASC')
+      .getRawMany();
+
+    const cautions = await this.cautionMappingRepository
+      .createQueryBuilder('cautionMapping')
+      .select('DISTINCT genre.category_id, caution.id, caution.name')
+      .innerJoin('cautionMapping.wata', 'wata')
+      .innerJoin('wata.genre', 'genre')
+      .innerJoin('cautionMapping.caution', 'caution')
+      .where('wata.is_published = :isPublished', { isPublished: true })
+      .orderBy('caution.name', 'ASC')
       .getRawMany();
 
     const platforms = await this.platformMappingRepository
@@ -78,6 +91,13 @@ export class KeywordsService {
       }
     });
 
+    const allCautions = [];
+    cautions.forEach((c) => {
+      if (!allCautions.some((ac) => ac.id === c.id)) {
+        allCautions.push({ ...c, category_id: 0 });
+      }
+    });
+
     const allPlatforms = [];
     platforms.forEach((p) => {
       if (!allPlatforms.some((ap) => ap.id === p.id)) {
@@ -91,6 +111,7 @@ export class KeywordsService {
         name: '전체',
         genres: allGenres,
         keywords: allKeywords,
+        cautions: allCautions,
         platforms: allPlatforms,
       },
     ];
@@ -100,6 +121,9 @@ export class KeywordsService {
         const keywordsByCategory = keywords?.filter(
           (keyword) => keyword.category_id === category.id,
         );
+        const cautionsByCategory = cautions?.filter(
+          (caution) => caution.category_id === category.id,
+        );
         const platformsByCategory = platforms?.filter(
           (platform) => platform.category_id === category.id,
         );
@@ -107,6 +131,7 @@ export class KeywordsService {
         return {
           ...category,
           keywords: keywordsByCategory,
+          cautions: cautionsByCategory,
           platforms: platformsByCategory,
         };
       }),

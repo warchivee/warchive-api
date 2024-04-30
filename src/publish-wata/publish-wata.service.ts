@@ -40,20 +40,18 @@ export class PublishWataService {
       thumbnail_book: wata.thumbnail_book,
       category: {
         id: wata.genre.category.id,
-        name: wata.genre.category.name,
       },
       genre: {
         id: wata.genre.id,
-        name: wata.genre.name,
       },
       keywords: wata.keywords?.map((k) => {
-        return { id: k.keyword.id, name: k.keyword.name };
+        return { id: k.keyword.id };
       }),
       cautions: wata.cautions?.map((c) => {
-        return { id: c.caution.id, name: c.caution.name };
+        return { id: c.caution.id };
       }),
       platforms: wata.platforms?.map((p) => {
-        return { id: p.platform.id, name: p.platform.name, url: p.url };
+        return { id: p.platform.id, url: p.url };
       }),
       created_at: wata.created_at,
       updated_at: wata.updated_at,

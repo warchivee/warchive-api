@@ -9,10 +9,15 @@ import { CacheModule } from '@nestjs/cache-manager';
 import { WataPlatformMapping } from '../wata/entities/wata-platform.entity';
 import { WataKeywordMapping } from '../wata/entities/wata-keyword.entity';
 import { TypeOrmModule } from '@nestjs/typeorm';
+import { WataCautionMapping } from '../wata/entities/wata-caution.entity';
 
 @Module({
   imports: [
-    TypeOrmModule.forFeature([WataPlatformMapping, WataKeywordMapping]),
+    TypeOrmModule.forFeature([
+      WataPlatformMapping,
+      WataKeywordMapping,
+      WataCautionMapping,
+    ]),
     CategoryModule,
     KeywordModule,
     CautionModule,

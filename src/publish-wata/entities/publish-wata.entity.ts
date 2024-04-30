@@ -22,19 +22,19 @@ export class PublishWata {
   thumbnail_book?: WataThumbnailCropAreaType;
 
   @Column({ type: 'simple-json', nullable: true })
-  category?: { id: number; name: string };
+  category?: { id: number };
 
   @Column({ type: 'simple-json', nullable: true })
-  genre?: { id: number; name: string };
+  genre?: { id: number };
 
   @Column({ type: 'simple-json', nullable: true })
-  keywords?: { id: number; name: string }[];
+  keywords?: { id: number }[];
 
   @Column({ type: 'simple-json', nullable: true })
-  cautions?: { id: number; name: string }[];
+  cautions?: { id: number }[];
 
   @Column({ type: 'simple-json', nullable: true })
-  platforms?: { id: number; name: string; url: string }[];
+  platforms?: { id: number; url: string }[];
 
   @Column({ type: 'timestamp' })
   created_at?: Date;
