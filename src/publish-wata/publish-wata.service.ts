@@ -55,6 +55,7 @@ export class PublishWataService {
       platforms: wata.platforms?.map((p) => {
         return { id: p.platform.id, name: p.platform.name, url: p.url };
       }),
+      created_at: wata.created_at,
       updated_at: wata.updated_at,
     };
   }
@@ -74,7 +75,7 @@ export class PublishWataService {
       const [watas, totalCount] = await this.publishWataRepository.findAndCount(
         {
           order: {
-            updated_at: 'DESC',
+            created_at: 'ASC',
             id: 'ASC',
           },
         },

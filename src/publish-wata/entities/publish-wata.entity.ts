@@ -37,5 +37,8 @@ export class PublishWata {
   platforms?: { id: number; name: string; url: string }[];
 
   @Column({ type: 'timestamp' })
+  created_at?: Date;
+
+  @Column({ type: 'timestamp' })
   updated_at?: Date;
 }
