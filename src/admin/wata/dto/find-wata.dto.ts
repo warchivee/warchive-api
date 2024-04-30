@@ -9,7 +9,6 @@ import {
 // docs - query number[] issue : https://dev.to/avantar/validating-numeric-query-parameters-in-nestjs-gk9
 
 export class FindWataDto {
-  // page
   @ApiProperty({
     default: 1,
     required: false,
@@ -21,7 +20,6 @@ export class FindWataDto {
   @IsOptional()
   page?: number;
 
-  // page size
   @ApiProperty({
     default: 10,
     required: false,
@@ -33,14 +31,12 @@ export class FindWataDto {
   @IsOptional()
   page_size?: number;
 
-  // title
   @ApiProperty({
     required: false,
   })
   @IsOptional()
   title?: string;
 
-  // creators
   @ApiProperty({
     maximum: 100,
     required: false,
@@ -48,32 +44,26 @@ export class FindWataDto {
   @IsOptional()
   creators?: string;
 
-  // label
   @QueryValidEnumArray(WataLabelType)
   @IsOptional()
   label?: WataLabelType[];
 
-  // category
   @QueryValidNumberArray()
   @IsOptional()
   categories?: number[];
 
-  // genre
   @QueryValidNumberArray()
   @IsOptional()
   genres?: number[];
 
-  // keyword
   @QueryValidNumberArray()
   @IsOptional()
   keywords?: number[];
 
-  //caution
   @QueryValidNumberArray()
   @IsOptional()
   cautions?: number[];
 
-  // platform
   @QueryValidNumberArray()
   @IsOptional()
   platforms?: number[];

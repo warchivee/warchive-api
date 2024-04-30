@@ -1,13 +1,10 @@
 import { Controller, Get, UseInterceptors } from '@nestjs/common';
 import { KeywordsService } from './keywords.service';
 import { ApiBearerAuth, ApiOperation, ApiTags } from '@nestjs/swagger';
-import { CacheKey, CacheTTL } from '@nestjs/cache-manager';
-import {
-  HttpCacheInterceptor,
-  KEYWORDS_CACHEKEY,
-  CACHE_TTL,
-} from '../wata/httpcache.interceptor';
 import { Admin } from 'src/common/decorators/admin.decorator';
+import { CacheKey, CacheTTL } from '@nestjs/cache-manager';
+import { HttpCacheInterceptor } from '../../common/utils/httpcache.interceptor';
+import { CACHE_TTL, KEYWORDS_CACHEKEY } from 'src/common/utils/httpcache.const';
 
 @ApiTags('Keywords')
 @Controller('admin/keywords')

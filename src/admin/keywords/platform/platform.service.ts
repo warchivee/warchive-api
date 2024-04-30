@@ -9,7 +9,7 @@ import { PlatformWithUrlDto } from 'src/admin/wata/dto/create-wata.dto';
 import {
   KEYWORDS_CACHEKEY,
   KEYWORD_CACHEKEY,
-} from 'src/admin/wata/httpcache.interceptor';
+} from 'src/common/utils/httpcache.const';
 import { CACHE_MANAGER } from '@nestjs/cache-manager';
 
 @Injectable()

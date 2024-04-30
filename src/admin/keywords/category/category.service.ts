@@ -6,9 +6,9 @@ import { Category } from './entities/category.entity';
 import { Repository } from 'typeorm';
 import { CACHE_MANAGER } from '@nestjs/cache-manager';
 import {
-  KEYWORD_CACHEKEY,
   KEYWORDS_CACHEKEY,
-} from 'src/admin/wata/httpcache.interceptor';
+  KEYWORD_CACHEKEY,
+} from 'src/common/utils/httpcache.const';
 
 @Injectable()
 export class CategoryService {

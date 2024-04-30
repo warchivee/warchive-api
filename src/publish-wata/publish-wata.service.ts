@@ -17,7 +17,7 @@ import {
 import { PublishWata } from './entities/publish-wata.entity';
 import { WataLabelType } from 'src/admin/wata/interface/wata.type';
 import { CACHE_MANAGER } from '@nestjs/cache-manager';
-import { PUBLISH_WATA_CACHEKEY } from 'src/admin/wata/httpcache.interceptor';
+import { PUBLISH_WATA_CACHEKEY } from 'src/common/utils/httpcache.const';
 
 @Injectable()
 export class PublishWataService {
@@ -60,12 +60,15 @@ export class PublishWataService {
 
   // 지정된 캐시키로 시작되는 캐시 데이터들 삭제
   async removeCache() {
+    const removedKeys = [];
     const keys: string[] = await this.cacheManager.store.keys();
     keys.forEach((key) => {
       if (key.startsWith(PUBLISH_WATA_CACHEKEY)) {
         this.cacheManager.del(key);
+        removedKeys.push(key);
       }
     });
+    return removedKeys;
   }
 
   async findAll() {
