@@ -8,7 +8,6 @@ import {
   Delete,
   Request,
   Query,
-  UseInterceptors,
 } from '@nestjs/common';
 
 import { WataService } from './wata.service';
@@ -16,12 +15,6 @@ import { FindWataDto } from './dto/find-wata.dto';
 import { CreateWataDto } from './dto/create-wata.dto';
 import { UpdateWataDto } from './dto/update-wata.dto';
 import { ApiBearerAuth, ApiOperation, ApiTags } from '@nestjs/swagger';
-import {
-  CACHE_TTL,
-  WATA_CACHEKEY,
-  HttpCacheInterceptor,
-} from './httpcache.interceptor';
-import { CacheKey, CacheTTL } from '@nestjs/cache-manager';
 import { Admin } from 'src/common/decorators/admin.decorator';
 import { Public } from 'src/common/decorators/public.decorator';
 
@@ -48,9 +41,6 @@ export class WataController {
     summary: '검수 데이터 목록 조회',
     description: '검수 데이터 목록을 조회합니다.',
   })
-  @UseInterceptors(HttpCacheInterceptor)
-  @CacheKey(WATA_CACHEKEY)
-  @CacheTTL(CACHE_TTL)
   @Get()
   findAll(@Query() findWataDto: FindWataDto) {
     return this.wataService.findAll(findWataDto);
