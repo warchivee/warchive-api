@@ -212,7 +212,7 @@ export class ScrapbookService {
       where: { scrapbook: { id: scrapbook_id } },
     });
 
-    if (totalCount >= 200) {
+    if (totalCount >= SCRAPBOOK_ITEMS_LIMIT_COUNT) {
       throw TooManyScrapbookItemException();
     }
 
