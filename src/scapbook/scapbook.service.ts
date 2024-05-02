@@ -109,6 +109,9 @@ export class ScrapbookService {
         },
         order: {
           created_at: 'ASC',
+          items: {
+            created_at: 'DESC',
+          },
         },
       });
 
@@ -156,6 +159,12 @@ export class ScrapbookService {
         relations: {
           items: {
             wata: true,
+          },
+        },
+        order: {
+          created_at: 'ASC',
+          items: {
+            created_at: 'ASC',
           },
         },
       });
