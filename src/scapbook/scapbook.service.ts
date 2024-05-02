@@ -153,6 +153,7 @@ export class ScrapbookService {
             wata: {
               id: true,
             },
+            created_at: true,
           },
         },
         where: { id: scrapbook_id },
@@ -162,9 +163,8 @@ export class ScrapbookService {
           },
         },
         order: {
-          created_at: 'ASC',
           items: {
-            created_at: 'ASC',
+            created_at: 'DESC',
           },
         },
       });
