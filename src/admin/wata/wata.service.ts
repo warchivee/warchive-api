@@ -1,4 +1,4 @@
-import { Inject, Injectable } from '@nestjs/common';
+import { Injectable } from '@nestjs/common';
 import { FindWataDto } from './dto/find-wata.dto';
 import { CreateWataDto } from './dto/create-wata.dto';
 import { UpdateWataDto } from './dto/update-wata.dto';
@@ -31,8 +31,6 @@ import { KeywordService } from '../keywords/keyword/keyword.service';
 import { CautionService } from '../keywords/caution/caution.service';
 import { PlatformService } from '../keywords/platform/platform.service';
 import { WataRequiredValuesColumnInfo } from './interface/wata.type';
-import { CACHE_MANAGER } from '@nestjs/cache-manager';
-import { WATA_CACHEKEY } from './httpcache.interceptor';
 
 @Injectable()
 export class WataService {
@@ -45,7 +43,6 @@ export class WataService {
     private readonly platformService: PlatformService,
     private readonly mappingService: WataMappingService,
     private readonly entityManager: EntityManager,
-    @Inject(CACHE_MANAGER) private cacheManager: any,
   ) {}
 
   relations = [
@@ -60,16 +57,6 @@ export class WataService {
     'updater',
     'adder',
   ];
-
-  // 지정된 캐시키로 시작되는 캐시 데이터들 삭제
-  async removeCache() {
-    const keys: string[] = await this.cacheManager.store.keys();
-    keys.forEach((key) => {
-      if (key.startsWith(WATA_CACHEKEY)) {
-        this.cacheManager.del(key);
-      }
-    });
-  }
 
   async findAll(findWataDto: FindWataDto) {
     const {
@@ -279,8 +266,6 @@ export class WataService {
   async create(user: User, createWataDto: CreateWataDto) {
     const create = await this.verifyAndGetDataToDto(createWataDto);
 
-    await this.removeCache(); // 캐시 삭제
-
     return this.entityManager.transaction(
       async (transactionalEntityManager) => {
         const createdWata = await transactionalEntityManager.save(Wata, {
@@ -321,8 +306,6 @@ export class WataService {
 
   async update(user: User, id: number, updateWataDto: UpdateWataDto) {
     const wata = await this.validate(id);
-
-    await this.removeCache(); // 캐시 삭제
 
     return this.entityManager.transaction(
       async (transactionalEntityManager) => {
@@ -377,8 +360,6 @@ export class WataService {
     if (wata.is_published) {
       throw UnableDeleteMergedDataException();
     }
-
-    await this.removeCache(); // 캐시 삭제
 
     return this.entityManager.transaction(
       async (transactionalEntityManager) => {

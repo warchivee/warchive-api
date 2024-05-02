@@ -9,7 +9,7 @@ import { CACHE_MANAGER } from '@nestjs/cache-manager';
 import {
   KEYWORDS_CACHEKEY,
   KEYWORD_CACHEKEY,
-} from 'src/admin/wata/httpcache.interceptor';
+} from 'src/common/utils/httpcache.const';
 
 @Injectable()
 export class KeywordService {
