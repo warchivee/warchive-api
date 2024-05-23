@@ -22,6 +22,7 @@ import { PublishWata } from './entities/publish-wata.entity';
     // ]),
   ],
   controllers: [PublishWataController],
+  providers: [PublishWataService],
   // providers: [
   //   PublishWataService,
   //   {
