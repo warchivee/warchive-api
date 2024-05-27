@@ -112,6 +112,11 @@ export class PublishWataService {
       const createWatas: PublishWata[] = [];
       const updateWatas: PublishWata[] = [];
 
+      const isTitleFilter =
+        filterPublishWataDto &&
+        Array.isArray(filterPublishWataDto.titles) &&
+        filterPublishWataDto.titles.length > 0;
+
       // 업데이트할 데이터의 id 를 조회한다.
       const wataRecordsToUpdateIdsQuery = this.wataRepository
         .createQueryBuilder('w')
@@ -135,14 +140,16 @@ export class PublishWataService {
         });
 
       // 아티클, 인터뷰 작업 등으로 특정 데이터만 업데이트 필요한 경우
-      if (filterPublishWataDto?.titles) {
-        wataRecordsToUpdateIdsQuery.andWhere(`w.title IN (:titles)`, {
+      if (isTitleFilter) {
+        wataRecordsToUpdateIdsQuery.andWhere(`w.title IN (:...titles)`, {
           titles: filterPublishWataDto.titles,
         });
       }
 
       const wataRecordsToUpdateIds =
         await wataRecordsToUpdateIdsQuery.getRawMany();
+
+      console.log(wataRecordsToUpdateIdsQuery.getQuery());
 
       // 입력할 데이터 조건
       const find: FindOptionsWhere<Wata>[] = [
@@ -158,14 +165,15 @@ export class PublishWataService {
         },
       ];
 
+      console.log(wataRecordsToUpdateIds);
+
       //입력할 데이터 조건에 업데이트하는 데이터 id 들도 추가
       if (wataRecordsToUpdateIds.length > 0) {
         find.push({ id: In(wataRecordsToUpdateIds?.map(({ id }) => +id)) });
       }
 
-      // 아티클, 인터뷰 작업 등으로 특정 데이터만 업데이트 필요한 경우
-      if (filterPublishWataDto?.titles) {
-        find.push({ title: In(filterPublishWataDto.titles) });
+      if (isTitleFilter) {
+        find[0] = { ...find[0], title: In(filterPublishWataDto.titles) };
       }
 
       const wataRecordsToUpsert = await this.wataRepository.find({
@@ -196,33 +204,37 @@ export class PublishWataService {
         }
       }
 
-      // 삭제할 데이터를 조회한다.
-      const deleteWatas = await this.publishWataRepository
-        .createQueryBuilder('pw')
-        .select(`pw.id, pw.title`)
-        .distinct(true)
-        .innerJoin(
-          'wata',
-          'w',
-          `w.id = pw.id 
+      let deleteWatas = [];
+
+      if (!isTitleFilter) {
+        // 삭제할 데이터를 조회한다.
+        deleteWatas = await this.publishWataRepository
+          .createQueryBuilder('pw')
+          .select(`pw.id, pw.title`)
+          .distinct(true)
+          .innerJoin(
+            'wata',
+            'w',
+            `w.id = pw.id 
           AND DATE_TRUNC('second', w.updated_at) !=  DATE_TRUNC('second', pw.updated_at)`,
-        )
-        .leftJoin('wata_keyword', 'wk', 'wk.wata_id = w.id')
-        .leftJoin('wata_platform', 'wp', 'wp.wata_id = w.id')
-        .where(
-          `(w.label != :label AND w.is_published = :isPublished) 
+          )
+          .leftJoin('wata_keyword', 'wk', 'wk.wata_id = w.id')
+          .leftJoin('wata_platform', 'wp', 'wp.wata_id = w.id')
+          .where(
+            `(w.label != :label AND w.is_published = :isPublished) 
           OR w.thumbnail IS NULL 
           OR w.thumbnail = :emptyThumbnail
           OR w.genre_id IS NULL 
           OR wk.id IS NULL
           OR wp.id IS NULL`,
-          {
-            label: 'CHECKED',
-            isPublished: true,
-            emptyThumbnail: '',
-          },
-        )
-        .getRawMany();
+            {
+              label: 'CHECKED',
+              isPublished: true,
+              emptyThumbnail: '',
+            },
+          )
+          .getRawMany();
+      }
 
       // delete -> update -> create
       this.entityManager.transaction(async (transcationEntityManager) => {
