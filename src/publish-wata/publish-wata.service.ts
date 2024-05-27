@@ -149,8 +149,6 @@ export class PublishWataService {
       const wataRecordsToUpdateIds =
         await wataRecordsToUpdateIdsQuery.getRawMany();
 
-      console.log(wataRecordsToUpdateIdsQuery.getQuery());
-
       // 입력할 데이터 조건
       const find: FindOptionsWhere<Wata>[] = [
         {
@@ -164,8 +162,6 @@ export class PublishWataService {
           is_published: false,
         },
       ];
-
-      console.log(wataRecordsToUpdateIds);
 
       //입력할 데이터 조건에 업데이트하는 데이터 id 들도 추가
       if (wataRecordsToUpdateIds.length > 0) {
