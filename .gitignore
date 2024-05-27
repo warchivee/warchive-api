@@ -1,6 +1,9 @@
 # env
 *.env
 
+# PRIVATE KEY
+*.pem
+
 .vscode
 
 # compiled output

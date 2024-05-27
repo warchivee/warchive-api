@@ -5,10 +5,20 @@ import { ValidationPipe } from '@nestjs/common';
 import { ServiceExceptionsFilter } from './common/middlewere/service-exception.filter';
 import * as cookieParser from 'cookie-parser';
 import { ResponseInterceptor } from './common/middlewere/response.interceptor';
+import { readFileSync } from 'fs';
 
 async function bootstrap() {
   const serverPort = 3000;
-  const app = await NestFactory.create(AppModule);
+
+  const app = await NestFactory.create(AppModule, {
+    httpsOptions:
+      process.env.NODE_ENV === 'ssl' // .ssl.env 파일 필요
+        ? {
+            key: readFileSync('./key.pem'),
+            cert: readFileSync('./cert.pem'),
+          }
+        : undefined,
+  });
 
   app.setGlobalPrefix('/api/v1');
 

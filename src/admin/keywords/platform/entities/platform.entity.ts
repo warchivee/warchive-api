@@ -9,6 +9,6 @@ export class Platform extends CommonEntity {
   @Column({ default: false })
   order_top?: boolean;
 
-  @Column()
+  @Column({ nullable: true })
   domain?: string;
 }

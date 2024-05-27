@@ -18,6 +18,7 @@ import { PublishWata } from './entities/publish-wata.entity';
 import { WataLabelType } from 'src/admin/wata/interface/wata.type';
 import { CACHE_MANAGER } from '@nestjs/cache-manager';
 import { PUBLISH_WATA_CACHEKEY } from 'src/common/utils/httpcache.const';
+import { FilterPublishWataDto } from './dto/FilterPublishWata.dto';
 
 @Injectable()
 export class PublishWataService {
@@ -98,7 +99,7 @@ export class PublishWataService {
     }
   }
 
-  async update(): Promise<{
+  async update(filterPublishWataDto: FilterPublishWataDto): Promise<{
     createdItems: string[];
     updatedItems: string[];
     deletedItems: string[];
@@ -111,7 +112,8 @@ export class PublishWataService {
       const createWatas: PublishWata[] = [];
       const updateWatas: PublishWata[] = [];
 
-      const wataRecordsToUpdateIds = await this.wataRepository
+      // 업데이트할 데이터의 id 를 조회한다.
+      const wataRecordsToUpdateIdsQuery = this.wataRepository
         .createQueryBuilder('w')
         .select(`w.id as id`)
         .distinct(true)
@@ -130,10 +132,19 @@ export class PublishWataService {
         .andWhere(`wp.id IS NOT NULL`)
         .andWhere(`w.is_published = :isPublished`, {
           isPublished: true,
-        })
-        .getRawMany();
+        });
 
-      // 입력 데이터
+      // 아티클, 인터뷰 작업 등으로 특정 데이터만 업데이트 필요한 경우
+      if (filterPublishWataDto?.titles) {
+        wataRecordsToUpdateIdsQuery.andWhere(`w.title IN (:titles)`, {
+          titles: filterPublishWataDto.titles,
+        });
+      }
+
+      const wataRecordsToUpdateIds =
+        await wataRecordsToUpdateIdsQuery.getRawMany();
+
+      // 입력할 데이터 조건
       const find: FindOptionsWhere<Wata>[] = [
         {
           label: WataLabelType.CHECKED,
@@ -147,9 +158,14 @@ export class PublishWataService {
         },
       ];
 
-      // 업데이트 데이터
+      //입력할 데이터 조건에 업데이트하는 데이터 id 들도 추가
       if (wataRecordsToUpdateIds.length > 0) {
         find.push({ id: In(wataRecordsToUpdateIds?.map(({ id }) => +id)) });
+      }
+
+      // 아티클, 인터뷰 작업 등으로 특정 데이터만 업데이트 필요한 경우
+      if (filterPublishWataDto?.titles) {
+        find.push({ title: In(filterPublishWataDto.titles) });
       }
 
       const wataRecordsToUpsert = await this.wataRepository.find({
@@ -180,7 +196,7 @@ export class PublishWataService {
         }
       }
 
-      // 삭제할 데이터
+      // 삭제할 데이터를 조회한다.
       const deleteWatas = await this.publishWataRepository
         .createQueryBuilder('pw')
         .select(`pw.id, pw.title`)
@@ -268,8 +284,9 @@ export class PublishWataService {
     };
   }
 
-  async publish() {
-    const { createdItems, updatedItems, deletedItems } = await this.update();
+  async publish(filterPublishWataDto?: FilterPublishWataDto) {
+    const { createdItems, updatedItems, deletedItems } =
+      await this.update(filterPublishWataDto);
 
     const totalCount: number =
       createdItems.length + updatedItems.length + deletedItems.length;

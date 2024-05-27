@@ -1,4 +1,11 @@
-import { Controller, Delete, Get, Post, UseInterceptors } from '@nestjs/common';
+import {
+  Body,
+  Controller,
+  Delete,
+  Get,
+  Post,
+  UseInterceptors,
+} from '@nestjs/common';
 import { PublishWataService } from './publish-wata.service';
 import { ApiBearerAuth, ApiOperation, ApiTags } from '@nestjs/swagger';
 import { CacheKey, CacheTTL } from '@nestjs/cache-manager';
@@ -9,6 +16,7 @@ import {
   CACHE_TTL,
   PUBLISH_WATA_CACHEKEY,
 } from 'src/common/utils/httpcache.const';
+import { FilterPublishWataDto } from './dto/FilterPublishWata.dto';
 
 @ApiTags('Wata')
 @Controller('/publish-wata')
@@ -35,8 +43,8 @@ export class PublishWataController {
     description: 'publish wata 정보를 업데이트 합니다.',
   })
   @Post()
-  publishWata() {
-    return this.publishWataService.publish();
+  publishWata(@Body() filterPublishWataDto: FilterPublishWataDto) {
+    return this.publishWataService.publish(filterPublishWataDto);
   }
 
   @Admin()
