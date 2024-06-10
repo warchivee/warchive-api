@@ -2,7 +2,6 @@ import { Injectable } from '@nestjs/common';
 import { CreateReactionDto } from './dto/create-reaction.dto';
 import { ConfigService } from '@nestjs/config';
 import { google, sheets_v4 } from 'googleapis';
-import { v4 as uuidv4 } from 'uuid';
 
 @Injectable()
 export class BookclubReviewService {
@@ -16,10 +15,6 @@ export class BookclubReviewService {
     'https://www.googleapis.com/auth/spreadsheets',
   );
 
-  private generateUuid(): string {
-    return uuidv4();
-  }
-
   private convertToBoolean(value: any): boolean {
     if (typeof value === 'string') {
       return value.toLowerCase() === 'true';
@@ -28,9 +23,6 @@ export class BookclubReviewService {
   }
 
   async create(createReactionDto: CreateReactionDto) {
-    // const uuid = this.generateUuid();
-    // console.log(uuid);
-
     // google sheet instance
     const sheetInstance = await google.sheets({
       version: 'v4',
