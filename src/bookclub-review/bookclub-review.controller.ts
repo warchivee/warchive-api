@@ -7,14 +7,14 @@ import {
   // Param,
   // Delete,
 } from '@nestjs/common';
-import { BookclubReviewService } from './bookclub-review.service';
+// import { BookclubReviewService } from './bookclub-review.service';
 import { CreateReactionDto } from './dto/create-reaction.dto';
 import { Public } from 'src/common/decorators/public.decorator';
 import { ApiOperation } from '@nestjs/swagger';
 
 @Controller('bookclub-review')
 export class BookclubReviewController {
-  constructor(private readonly bookclubReviewService: BookclubReviewService) {}
+  // constructor(private readonly bookclubReviewService: BookclubReviewService) {}
 
   @Public()
   @ApiOperation({
@@ -22,7 +22,7 @@ export class BookclubReviewController {
   })
   @Post()
   create(@Body() createReactionDto: CreateReactionDto) {
-    return this.bookclubReviewService.create(createReactionDto);
+    // return this.bookclubReviewService.create(createReactionDto);
   }
 
   @Public()
@@ -31,7 +31,7 @@ export class BookclubReviewController {
   })
   @Get()
   findReactionCount() {
-    return this.bookclubReviewService.findReactionCount();
+    // return this.bookclubReviewService.findReactionCount();
   }
 
   // @ApiOperation({
