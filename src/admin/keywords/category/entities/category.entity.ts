@@ -4,7 +4,7 @@ import { Genre } from '../../genre/entities/genre.entity';
 
 @Entity({ name: 'category' })
 export class Category extends CommonEntity {
-  @Column({ length: 12, unique: true })
+  @Column({ length: 12, unique: true, collation: 'ko_KR.utf8' })
   name: string;
 
   @OneToMany(() => Genre, (genre) => genre.category)

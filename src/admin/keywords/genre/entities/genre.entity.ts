@@ -8,6 +8,6 @@ export class Genre extends CommonEntity {
   @JoinColumn({ name: 'category_id' })
   category: Category;
 
-  @Column({ length: 12, unique: true })
+  @Column({ length: 12, unique: true, collation: 'ko_KR.utf8' })
   name: string;
 }

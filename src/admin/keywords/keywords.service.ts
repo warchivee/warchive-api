@@ -69,7 +69,7 @@ export class KeywordsService {
       .innerJoin('platformMapping.platform', 'platform')
       .where('wata.is_published = :isPublished', { isPublished: true })
       .orderBy('platform.order_top', 'DESC')
-      .addOrderBy('platform.name', 'ASC')
+      .addOrderBy('platform.name"', 'ASC')
       .getRawMany();
 
     let genres = [];
