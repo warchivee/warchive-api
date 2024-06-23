@@ -16,7 +16,9 @@ import { APP_GUARD } from '@nestjs/core';
           ? '.dev.env'
           : process.env.NODE_ENV === 'prod'
             ? '.prod.env'
-            : '.env',
+            : process.env.NODE_ENV === 'ssl'
+              ? '.ssl.env'
+              : '.env',
     }),
     JwtModule.register({}),
     UserModule,

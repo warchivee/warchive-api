@@ -201,36 +201,37 @@ export class PublishWataService {
       }
 
       let deleteWatas = [];
-
-      if (!isTitleFilter) {
-        // 삭제할 데이터를 조회한다.
-        deleteWatas = await this.publishWataRepository
-          .createQueryBuilder('pw')
-          .select(`pw.id, pw.title`)
-          .distinct(true)
-          .innerJoin(
-            'wata',
-            'w',
-            `w.id = pw.id 
-          AND DATE_TRUNC('second', w.updated_at) !=  DATE_TRUNC('second', pw.updated_at)`,
-          )
-          .leftJoin('wata_keyword', 'wk', 'wk.wata_id = w.id')
-          .leftJoin('wata_platform', 'wp', 'wp.wata_id = w.id')
-          .where(
-            `(w.label != :label AND w.is_published = :isPublished) 
+      let deleteWatasAndConditions = `(w.label != :label AND w.is_published = :isPublished) 
           OR w.thumbnail IS NULL 
           OR w.thumbnail = :emptyThumbnail
           OR w.genre_id IS NULL 
           OR wk.id IS NULL
-          OR wp.id IS NULL`,
-            {
-              label: 'CHECKED',
-              isPublished: true,
-              emptyThumbnail: '',
-            },
-          )
-          .getRawMany();
+          OR wp.id IS NULL`;
+
+      if (isTitleFilter) {
+        deleteWatasAndConditions = `(${deleteWatasAndConditions}) AND w.title IN (:...titles)`;
       }
+
+      // 삭제할 데이터를 조회한다.
+      deleteWatas = await this.publishWataRepository
+        .createQueryBuilder('pw')
+        .select(`pw.id, pw.title`)
+        .distinct(true)
+        .innerJoin(
+          'wata',
+          'w',
+          `w.id = pw.id 
+          AND DATE_TRUNC('second', w.updated_at) !=  DATE_TRUNC('second', pw.updated_at)`,
+        )
+        .leftJoin('wata_keyword', 'wk', 'wk.wata_id = w.id')
+        .leftJoin('wata_platform', 'wp', 'wp.wata_id = w.id')
+        .where(deleteWatasAndConditions, {
+          label: 'CHECKED',
+          isPublished: true,
+          emptyThumbnail: '',
+          titles: filterPublishWataDto.titles,
+        })
+        .getRawMany();
 
       // delete -> update -> create
       this.entityManager.transaction(async (transcationEntityManager) => {
@@ -266,6 +267,17 @@ export class PublishWataService {
             },
             {
               is_published: true,
+            },
+          );
+
+          // 게시됐다가 내려간 데이터의 게시여부 수정
+          await transcationEntityManager.update(
+            Wata,
+            {
+              id: In(deleteWatas?.map((c) => c.id)),
+            },
+            {
+              is_published: false,
             },
           );
 

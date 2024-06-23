@@ -4,7 +4,7 @@ import { IsArray, IsOptional, IsString } from 'class-validator';
 export class FilterPublishWataDto {
   @ApiProperty({
     description: '제목',
-    example: '가부장제의 창조',
+    example: ['작품명1', '작품명2'],
     required: false,
     type: [String],
   })
