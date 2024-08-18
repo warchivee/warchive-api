@@ -1,11 +1,12 @@
-import { Injectable } from '@nestjs/common';
+import { Injectable, NotFoundException } from '@nestjs/common';
 import { User } from './entities/user.entity';
 import { FindUserDto } from './dto/find-user.dto';
 import { Repository } from 'typeorm';
 import { InjectRepository } from '@nestjs/typeorm';
-import { LoginDto } from 'src/auth/dto/login.dto';
+import { SocialLoginDto } from 'src/auth/dto/socialLogin.dto';
 import { ScrapbookService } from 'src/scapbook/scapbook.service';
 import { CreateScrapbookDto } from 'src/scapbook/dto/create-scapbook.dto';
+import { AdminLoginDto } from 'src/auth/dto/adminLogin.dto';
 
 @Injectable()
 export class UserService {
@@ -14,9 +15,9 @@ export class UserService {
     private readonly scrapbookService: ScrapbookService,
   ) {}
 
-  async findBySocialIdOrCreateUser(loginDto: LoginDto) {
+  async findBySocialIdOrCreateUser(socialLoginDto: SocialLoginDto) {
     const findUser = await this.userRepository.findOneBy({
-      [`${loginDto.platform}_id`]: loginDto.platform_id,
+      [`${socialLoginDto.platform}_id`]: socialLoginDto.platform_id,
     });
 
     if (findUser) {
@@ -25,7 +26,7 @@ export class UserService {
 
     const createUser = this.userRepository.create({
       nickname: '익명',
-      [`${loginDto.platform}_id`]: loginDto.platform_id,
+      [`${socialLoginDto.platform}_id`]: socialLoginDto.platform_id,
     } as unknown as User);
 
     const user = await this.userRepository.save(createUser);
@@ -37,6 +38,19 @@ export class UserService {
     this.scrapbookService.createScrapbook(user, firstScrapbook);
 
     return user;
+  }
+
+  async findUserByAdminLoginInfo(adminLoginDto: AdminLoginDto) {
+    const findUser = await this.userRepository.findOneBy({
+      account: adminLoginDto.account,
+      password: adminLoginDto.password,
+    });
+
+    if (!findUser) {
+      throw new NotFoundException();
+    }
+
+    return findUser;
   }
 
   async findOne(findUserDto: FindUserDto) {

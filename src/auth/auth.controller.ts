@@ -10,7 +10,8 @@ import {
 import { AuthService } from './auth.service';
 import { ApiCookieAuth, ApiOperation, ApiTags } from '@nestjs/swagger';
 import { Public } from '../common/decorators/public.decorator';
-import { LoginDto } from './dto/login.dto';
+import { SocialLoginDto } from './dto/socialLogin.dto';
+import { AdminLoginDto } from './dto/adminLogin.dto';
 
 @ApiTags('Auth')
 @Controller('auth')
@@ -23,8 +24,11 @@ export class AuthController {
   })
   @Public()
   @Post('login')
-  async login(@Res({ passthrough: true }) res, @Body() loginInfo: LoginDto) {
-    const tokens = await this.authService.login(loginInfo);
+  async socialLogin(
+    @Res({ passthrough: true }) res,
+    @Body() loginInfo: SocialLoginDto,
+  ) {
+    const tokens = await this.authService.socialLogin(loginInfo);
 
     /**
      * cookie 설정 참고
@@ -35,6 +39,29 @@ export class AuthController {
      * path: 해당 path 의 요청으로만 이 쿠키를 전송함
      * maxAge: 쿠키의 유효 시간
      */
+    res.cookie('refresh_token', tokens.refresh_token.token, {
+      sameSite: 'none', //api 와 프론트의 도메인이 달라... none 으로 설정 (login 요청이 POST 라 Lax 가 안됨.)
+      secure: true,
+      httpOnly: true,
+      path: '/api/v1/auth/reissue',
+      maxAge: tokens.refresh_token.expires_in,
+    });
+
+    return { ...tokens.access_token, user: tokens.user };
+  }
+
+  @ApiOperation({
+    summary: '관리자 로그인',
+    description: '관리자 정보로 로그인합니다.',
+  })
+  @Public()
+  @Post('admin/login')
+  async adminLogin(
+    @Res({ passthrough: true }) res,
+    @Body() loginInfo: AdminLoginDto,
+  ) {
+    const tokens = await this.authService.adminLogin(loginInfo);
+
     res.cookie('refresh_token', tokens.refresh_token.token, {
       sameSite: 'none', //api 와 프론트의 도메인이 달라... none 으로 설정 (login 요청이 POST 라 Lax 가 안됨.)
       secure: true,

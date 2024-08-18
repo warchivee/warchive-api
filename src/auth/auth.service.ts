@@ -3,7 +3,8 @@ import { Injectable } from '@nestjs/common';
 import { UserService } from 'src/user/user.service';
 import { AuthJwtService } from './jwt.service';
 import { User } from 'src/user/entities/user.entity';
-import { LoginDto } from './dto/login.dto';
+import { SocialLoginDto } from './dto/socialLogin.dto';
+import { AdminLoginDto } from './dto/adminLogin.dto';
 
 // docs : https://developers.kakao.com/docs/latest/ko/kakaologin/rest-api#request-code
 
@@ -19,11 +20,25 @@ export class AuthService {
    * 만약 이전에 로그인한 적 없는 사용자라면 사용자 정보를 추가하고
    * 이전에 로그인한 적 있는 사용자라면 기존 정보를 응답해준다.
    *
-   * @param loginDto 소셜로그인 사용자 정보 (소셜플랫폼 정보, 소셜플랫폼의 유저 uuid)
+   * @param socialLoginDto 소셜로그인 사용자 정보 (소셜플랫폼 정보, 소셜플랫폼의 유저 uuid)
    * @returns 액세스토큰, 리프레시토큰, 유저정보
    */
-  async login(loginDto: LoginDto) {
-    const user = await this.userService.findBySocialIdOrCreateUser(loginDto);
+  async socialLogin(socialLoginDto: SocialLoginDto) {
+    const user =
+      await this.userService.findBySocialIdOrCreateUser(socialLoginDto);
+
+    const accessToken = this.authJwtService.generateAccessToken(user);
+    const refreshToken = this.authJwtService.generateRefreshToken(user);
+
+    return {
+      access_token: accessToken,
+      refresh_token: refreshToken,
+      user: user,
+    };
+  }
+
+  async adminLogin(adminLoginDto: AdminLoginDto) {
+    const user = await this.userService.findUserByAdminLoginInfo(adminLoginDto);
 
     const accessToken = this.authJwtService.generateAccessToken(user);
     const refreshToken = this.authJwtService.generateRefreshToken(user);

@@ -3,7 +3,7 @@ import { IsNumber, IsString } from 'class-validator';
 
 type SocialPlatform = 'kakao';
 
-export class LoginDto {
+export class SocialLoginDto {
   @ApiProperty({ description: '소셜 플랫폼의 유저 id' })
   @IsNumber()
   platform_id: number;

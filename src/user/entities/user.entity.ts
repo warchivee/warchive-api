@@ -10,5 +10,11 @@ export class User extends CommonEntity {
   kakao_id: number;
 
   @Column({ length: 7, default: 'USER' })
-  role: 'ADMIN' | 'USER';
+  role: 'MAINTAINER' | 'ADMIN' | 'USER';
+
+  @Column({ length: 20, unique: true })
+  account?: string;
+
+  @Column({ length: 20, unique: true })
+  password?: string;
 }
