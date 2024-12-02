@@ -136,7 +136,7 @@ export class PublishWataService {
         .andWhere(`w.thumbnail IS NOT NULL AND w.thumbnail != ''`)
         .andWhere(`w.genre_id IS NOT NULL`)
         .andWhere(`wk.id IS NOT NULL`)
-        .andWhere(`wp.id IS NOT NULL`)
+        .andWhere(`(wp.id IS NOT NULL or w.no_platform = true)`)
         .andWhere(`w.is_published = :isPublished`, {
           isPublished: true,
         });
@@ -152,16 +152,24 @@ export class PublishWataService {
         await wataRecordsToUpdateIdsQuery.getRawMany();
 
       // 입력할 데이터 조건
+      const base = {
+        label: WataLabelType.CHECKED,
+        title: And(Not(IsNull()), Not(Equal(''))),
+        creators: And(Not(IsNull()), Not(Equal(''))),
+        thumbnail: And(Not(IsNull()), Not(Equal(''))),
+        genre: Not(IsNull()),
+        keywords: { keyword: Not(IsNull()) },
+        is_published: false,
+      };
+
       const find: FindOptionsWhere<Wata>[] = [
         {
-          label: WataLabelType.CHECKED,
-          title: And(Not(IsNull()), Not(Equal(''))),
-          creators: And(Not(IsNull()), Not(Equal(''))),
-          thumbnail: And(Not(IsNull()), Not(Equal(''))),
-          genre: Not(IsNull()),
-          keywords: { keyword: Not(IsNull()) },
+          ...base,
           platforms: { platform: Not(IsNull()) },
-          is_published: false,
+        },
+        {
+          ...base,
+          no_platform: false,
         },
       ];
 
@@ -208,7 +216,7 @@ export class PublishWataService {
           OR w.thumbnail = :emptyThumbnail
           OR w.genre_id IS NULL 
           OR wk.id IS NULL
-          OR wp.id IS NULL`;
+          OR (wp.id IS NULL AND w.no_platform = false)`;
 
       if (isTitleFilter) {
         deleteWatasAndConditions = `(${deleteWatasAndConditions}) AND w.title IN (:...titles)`;
