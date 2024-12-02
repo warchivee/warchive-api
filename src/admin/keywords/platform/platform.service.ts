@@ -7,8 +7,8 @@ import { In, Repository } from 'typeorm';
 import { EntityNotFoundException } from 'src/common/exception/service.exception';
 import { PlatformWithUrlDto } from 'src/admin/wata/dto/create-wata.dto';
 import {
-  KEYWORDS_CACHEKEY,
   KEYWORD_CACHEKEY,
+  KEYWORDS_CACHEKEY,
 } from 'src/common/utils/httpcache.const';
 import { CACHE_MANAGER } from '@nestjs/cache-manager';
 
@@ -39,18 +39,32 @@ export class PlatformService {
   }
 
   findAll() {
-    return this.platformRepository.find({
-      select: {
-        id: true,
-        name: true,
-        domain: true,
-        order_top: true,
-      },
-      order: {
-        order_top: 'DESC',
-        name: 'ASC',
-      },
-    });
+    // 데이터 조회
+    return this.platformRepository
+      .find({
+        select: {
+          id: true,
+          name: true,
+          domain: true,
+          order_top: true,
+        },
+        order: {
+          order_top: 'DESC',
+          name: 'ASC',
+        },
+      })
+      .then((platforms) => {
+        // 중복된 name 제거
+        return platforms.reduce(
+          (acc, current) => {
+            if (!acc.some((item) => item.name === current.name)) {
+              acc.push(current);
+            }
+            return acc;
+          },
+          [] as typeof platforms,
+        );
+      });
   }
 
   update(id: number, updatePlatformDto: UpdatePlatformDto) {
