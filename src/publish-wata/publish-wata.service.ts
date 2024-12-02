@@ -169,7 +169,7 @@ export class PublishWataService {
         },
         {
           ...base,
-          no_platform: false,
+          no_platform: true,
         },
       ];
 

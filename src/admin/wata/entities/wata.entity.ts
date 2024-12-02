@@ -50,7 +50,7 @@ export class Wata extends CommonNotUpdatedAtEntity {
   @Column({ nullable: true })
   note?: string;
 
-  @Column({ nullable: true })
+  @Column({ nullable: false, default: false })
   no_platform?: boolean;
 
   //is_publish 업데이트 때 적용 하지 않기 위해 별도로 분리
