@@ -43,18 +43,8 @@ export class PublishWataController {
     description: 'publish wata 정보를 업데이트 합니다.',
   })
   @Post()
-  publishWata(@Body() filterPublishWataDto: FilterPublishWataDto) {
+  async publishWata(@Body() filterPublishWataDto: FilterPublishWataDto) {
+    await this.publishWataService.removeCache();
     return this.publishWataService.publish(filterPublishWataDto);
-  }
-
-  @Admin()
-  @ApiBearerAuth('access_token')
-  @ApiOperation({
-    summary: 'publish wata 캐시 삭제',
-    description: 'publish wata 캐시를 삭제합니다.',
-  })
-  @Delete()
-  removeFindAllPublishWataCache() {
-    return this.publishWataService.removeCache();
   }
 }
