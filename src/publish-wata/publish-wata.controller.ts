@@ -44,7 +44,14 @@ export class PublishWataController {
   })
   @Post()
   async publishWata(@Body() filterPublishWataDto: FilterPublishWataDto) {
-    await this.publishWataService.removeCache();
     return this.publishWataService.publish(filterPublishWataDto);
+  }
+
+  @ApiOperation({
+    summary: 'publish wata 캐시 삭제',
+  })
+  @Delete('/cache')
+  async removeCache() {
+    await this.publishWataService.removeCache();
   }
 }
