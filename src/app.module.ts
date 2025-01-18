@@ -15,6 +15,7 @@ import { PlatformModule } from './admin/keywords/platform/platform.module';
 import { KeywordsModule } from './admin/keywords/keywords.module';
 import { PublishWataModule } from './publish-wata/publish-wata.module';
 import { ScrapbookModule } from './scapbook/scapbook.module';
+import { QuotesModule } from './admin/transcription/quotes/quotes.module';
 
 @Module({
   imports: [
@@ -50,6 +51,7 @@ import { ScrapbookModule } from './scapbook/scapbook.module';
     KeywordsModule,
     ScrapbookModule,
     PublishWataModule,
+    QuotesModule,
   ],
   controllers: [AppController],
   providers: [AppService],
