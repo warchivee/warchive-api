@@ -1,8 +1,7 @@
-// DTO (admin.transcription.quotes/dto/create-transcription-quote.dto.ts)
 import { ApiProperty } from '@nestjs/swagger';
 import { IsNotEmpty, IsOptional, IsString, MaxLength } from 'class-validator';
 
-export class CreateTranscriptionQuoteDto {
+export class FindTranscriptionQuoteDto {
   @ApiProperty({
     description: '필사 문구 내용',
     example: '서두를 필요가 없습니다. 재치를 번뜩일 필요도 없지요.',
