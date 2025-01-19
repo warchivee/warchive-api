@@ -16,6 +16,7 @@ import { KeywordsModule } from './admin/keywords/keywords.module';
 import { PublishWataModule } from './publish-wata/publish-wata.module';
 import { ScrapbookModule } from './scapbook/scapbook.module';
 import { QuotesModule } from './admin/transcription/quotes/quotes.module';
+import { UserQuotesModule } from './transcription/user-quotes/user-quotes.module';
 
 @Module({
   imports: [
@@ -52,6 +53,7 @@ import { QuotesModule } from './admin/transcription/quotes/quotes.module';
     ScrapbookModule,
     PublishWataModule,
     QuotesModule,
+    UserQuotesModule,
   ],
   controllers: [AppController],
   providers: [AppService],
