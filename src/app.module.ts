@@ -18,6 +18,7 @@ import { ScrapbookModule } from './scapbook/scapbook.module';
 import { QuotesModule } from './admin/transcription/quotes/quotes.module';
 import { UserQuotesModule } from './transcription/user-quotes/user-quotes.module';
 import { FavoritesModule } from './transcription/favorite/favorites.module';
+import { TranscriptionRecordModule } from './transcription/user-quotes-records/user-quotes-records.module'
 
 @Module({
   imports: [
@@ -56,6 +57,7 @@ import { FavoritesModule } from './transcription/favorite/favorites.module';
     QuotesModule,
     UserQuotesModule,
     FavoritesModule,
+    TranscriptionRecordModule,
   ],
   controllers: [AppController],
   providers: [AppService],
