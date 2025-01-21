@@ -1,6 +1,7 @@
 import { Controller, Get } from '@nestjs/common';
 import { ApiOperation, ApiTags } from '@nestjs/swagger';
 import { UserQuotesService } from './user-quotes.service';
+import { Public } from '../../common/decorators/public.decorator';
 
 @ApiTags('User Transcription Quotes')
 @Controller('transcription/user-quotes')
@@ -11,6 +12,7 @@ export class UserQuotesController {
     summary: '필사 문구 전체 조회',
     description: '저장된 필사 문구를 모두 조회합니다.',
   })
+  @Public()
   @Get()
   getAllQuotesForUsers() {
     return this.userQuotesService.findAllQuotes();

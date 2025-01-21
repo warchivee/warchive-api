@@ -1,5 +1,5 @@
 import { Body, Controller, Get, Post, Request } from '@nestjs/common';
-import { ApiOperation, ApiTags } from '@nestjs/swagger';
+import { ApiBearerAuth, ApiOperation, ApiTags } from '@nestjs/swagger';
 import { FavoritesService } from './favorites.service';
 import { CreateFavoriteDto } from './dto/create-favorite.dto';
 
@@ -12,6 +12,7 @@ export class FavoritesController {
     summary: '필사할 문구 저장',
     description: '필사하고 싶은 문구를 저장합니다.',
   })
+  @ApiBearerAuth('access_token')
   @Post()
   addFavorite(@Request() req, @Body() createFavoriteDto: CreateFavoriteDto) {
     const userId = req.user?.id;
@@ -22,6 +23,7 @@ export class FavoritesController {
     summary: '저장한 문구 조회',
     description: '사용자가 저장한 필사할 문구를 조회합니다',
   })
+  @ApiBearerAuth('access_token')
   @Get()
   getFavoritesByUser(@Request() req) {
     const userId = req.user?.id;
