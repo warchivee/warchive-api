@@ -6,7 +6,9 @@ import { CreateUserQuoteRecordDto } from './dto/create-user-quotes-records.dto';
 @ApiTags('User Quotes Records')
 @Controller('transcription/user-quotes-records')
 export class UserQuotesRecordsController {
-  constructor(private readonly userQuotesRecordsService: UserQuotesRecordsService) {}
+  constructor(
+    private readonly userQuotesRecordsService: UserQuotesRecordsService,
+  ) {}
 
   @ApiOperation({
     summary: '필사한 문구 저장',

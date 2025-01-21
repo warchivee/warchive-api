@@ -13,11 +13,16 @@ export class QuotesService {
 
   async createQuote(
     dto: CreateTranscriptionQuoteDto,
-  ): Promise<TranscriptionQuote> {
+  ) {
     const newQuote = this.transcriptionRepository.create({
+      title: dto.title,
       content: dto.content,
       author: dto.author,
+      translator: dto.translator,
+      publisher: dto.publisher,
+      language: dto.language,
     });
-    return await this.transcriptionRepository.save(newQuote);
+    const savedQuote = await this.transcriptionRepository.save(newQuote);
+    return savedQuote.id;
   }
 }

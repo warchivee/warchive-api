@@ -18,8 +18,12 @@ export class UserQuotesService {
 
     return quotes.map((quote) => {
       const dto = new FindTranscriptionQuoteDto();
+      dto.title = quote.title;
       dto.content = quote.content;
       dto.author = quote.author;
+      dto.translator = quote.translator;
+      dto.publisher = quote.publisher;
+      dto.language = quote.language;
       return dto;
     });
   }

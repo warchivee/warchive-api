@@ -3,20 +3,57 @@ import { IsNotEmpty, IsOptional, IsString, MaxLength } from 'class-validator';
 
 export class CreateTranscriptionQuoteDto {
   @ApiProperty({
+    description: '제목',
+    example: '정치적으로 올바르지 않은 페미니스트',
+  })
+  @IsNotEmpty()
+  @IsString()
+  @MaxLength(255)
+  title: string;
+
+  @ApiProperty({
     description: '필사 문구 내용',
-    example: '서두를 필요가 없습니다. 재치를 번뜩일 필요도 없지요.',
+    example: '때때로 우리는 서로를 구원한다. 대다수의 여자들은 서로의 친밀한 관계 없이는 단 하루도 살아낼 수가 없었다.',
   })
   @IsNotEmpty()
   @IsString()
   content: string;
 
   @ApiProperty({
-    description: '작성자 이름',
-    example: '버지니아 울프',
+    description: '저자',
+    example: '필리스 체슬러',
+  })
+  @IsNotEmpty()
+  @IsString()
+  @MaxLength(100)
+  author: string;
+
+  @ApiProperty({
+    description: '옮긴이',
+    example: '박경선',
     required: false,
   })
   @IsOptional()
   @IsString()
   @MaxLength(100)
-  author?: string;
+  translator?: string;
+
+  @ApiProperty({
+    description: '출판사',
+    example: '바다출판사',
+    required: false,
+  })
+  @IsOptional()
+  @IsString()
+  @MaxLength(100)
+  publisher?: string;
+
+  @ApiProperty({
+    description: '언어',
+    example: 'KOREAN/ENGLISH',
+  })
+  @IsNotEmpty()
+  @IsString()
+  @MaxLength(50)
+  language: string;
 }

@@ -23,7 +23,7 @@ export class FavoritesService {
   async addFavorite(
     userId: number,
     dto: CreateFavoriteDto,
-  ): Promise<TranscriptionFavorite> {
+  ) {
     try {
       const existingFavorite = await this.favoritesRepository.findOne({
         where: { user_id: userId, quote_id: dto.quoteId },
@@ -37,13 +37,14 @@ export class FavoritesService {
         user_id: userId,
         quote_id: dto.quoteId,
       });
-      return this.favoritesRepository.save(favorite);
+      const savedFavorite = await this.favoritesRepository.save(favorite);
+      return savedFavorite.id;
     } catch (error) {
       if (error instanceof ConflictException) {
         throw error;
       }
       throw new InternalServerErrorException(
-        'An unexpected error occurred while saving the favorite.',
+        '문구 저장 중 오류가 발생했습니다.',
       );
     }
   }
@@ -67,8 +68,12 @@ export class FavoritesService {
 
     return quotes.map((quote) => {
       const dto = new FindFavoriteDto();
+      dto.title = quote.title;
       dto.content = quote.content;
       dto.author = quote.author;
+      dto.translator = quote.translator;
+      dto.publisher = quote.publisher;
+      dto.language = quote.language;
       return dto;
     });
   }
