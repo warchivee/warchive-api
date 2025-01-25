@@ -50,6 +50,7 @@ export class PublishWataController {
   @ApiOperation({
     summary: 'publish wata 캐시 삭제',
   })
+  @ApiBearerAuth('access_token')
   @Delete('/cache')
   async removeCache() {
     await this.publishWataService.removeCache();
