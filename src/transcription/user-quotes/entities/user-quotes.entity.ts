@@ -10,7 +10,7 @@ export class UserQuote {
   @PrimaryGeneratedColumn()
   id: number;
 
-  @Column({ type: 'varchar', length: 255, nullable: false })
+  @Column({ type: 'varchar', length: 255, nullable: true })
   title: string;
 
   @Column({ type: 'text', nullable: false })

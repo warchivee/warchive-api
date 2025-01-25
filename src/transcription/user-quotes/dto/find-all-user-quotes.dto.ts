@@ -6,7 +6,7 @@ export class FindTranscriptionQuoteDto {
     description: '제목',
     example: '정치적으로 올바르지 않은 페미니스트',
   })
-  @IsNotEmpty()
+
   @IsString()
   @MaxLength(255)
   title: string;
