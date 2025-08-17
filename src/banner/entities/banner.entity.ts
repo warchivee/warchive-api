@@ -32,6 +32,9 @@ export class Banner {
   @Column({ length: 8, nullable: true })
   bg_end_color: string;
 
+  @Column({ length: 6, nullable: true })
+  style: string;
+
   @Column({ length: 7, default: 'PENDING' })
   status: string;
 }

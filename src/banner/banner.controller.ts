@@ -19,6 +19,7 @@ export class BannerController {
     return this.bannerService.findPosted();
   }
 
+  @Public()
   @Post('cache/clear')
   clearCache() {
     return this.bannerService.clearCache();
