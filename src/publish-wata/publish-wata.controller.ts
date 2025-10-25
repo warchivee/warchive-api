@@ -15,6 +15,7 @@ import { HttpCacheInterceptor } from 'src/common/utils/httpcache.interceptor';
 import {
   CACHE_TTL,
   PUBLISH_WATA_CACHEKEY,
+  PUBLISH_WATA_FOR_SUMMARY_CACHEKEY,
 } from 'src/common/utils/httpcache.const';
 import { FilterPublishWataDto } from './dto/FilterPublishWata.dto';
 
@@ -34,6 +35,19 @@ export class PublishWataController {
   @Get()
   findByKeywordsByCategory() {
     return this.publishWataService.findAll();
+  }
+
+  @Public()
+  @ApiOperation({
+    summary: '자동 완성 컴포넌트용 게시 데이터 조회',
+    description: '자동 완성 컴포넌트용 게시 데이터를 조회합니다.',
+  })
+  @UseInterceptors(HttpCacheInterceptor)
+  @CacheKey(PUBLISH_WATA_FOR_SUMMARY_CACHEKEY)
+  @CacheTTL(CACHE_TTL)
+  @Get('/summary')
+  findAllForAutocomplete() {
+    return this.publishWataService.findAllForSummary();
   }
 
   @Admin()

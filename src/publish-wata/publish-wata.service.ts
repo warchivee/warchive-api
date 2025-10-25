@@ -17,7 +17,10 @@ import {
 import { PublishWata } from './entities/publish-wata.entity';
 import { WataLabelType } from 'src/admin/wata/interface/wata.type';
 import { CACHE_MANAGER } from '@nestjs/cache-manager';
-import { PUBLISH_WATA_CACHEKEY } from 'src/common/utils/httpcache.const';
+import {
+  PUBLISH_WATA_CACHEKEY,
+  PUBLISH_WATA_FOR_SUMMARY_CACHEKEY,
+} from 'src/common/utils/httpcache.const';
 import { FilterPublishWataDto } from './dto/FilterPublishWata.dto';
 
 @Injectable()
@@ -70,6 +73,11 @@ export class PublishWataService {
         this.cacheManager.del(key);
         removedKeys.push(key);
       }
+
+      if (key.startsWith(PUBLISH_WATA_FOR_SUMMARY_CACHEKEY)) {
+        this.cacheManager.del(key);
+        removedKeys.push(key);
+      }
     });
     return removedKeys;
   }
@@ -92,6 +100,34 @@ export class PublishWataService {
         categories: categories,
         watas: watas,
       };
+    } catch (error) {
+      if (error instanceof EntityNotFoundError) {
+        throw EntityNotFoundException();
+      } else {
+        throw error;
+      }
+    }
+  }
+
+  async findAllForSummary() {
+    try {
+      const results = await this.publishWataRepository.find({
+        select: ['title', 'category', 'creators', 'genre'],
+        order: {
+          title: 'DESC',
+        },
+      });
+
+      //db collation 이슈로 title order 지정 해도 먹히지 않아 임시로 js 로직으로 처리
+      const sorted = results
+        .map((w) => ({
+          ...w,
+          category: w.category?.name,
+          genre: w.genre?.name,
+        }))
+        .sort((a, b) => a.title.localeCompare(b.title, 'ko'));
+
+      return sorted;
     } catch (error) {
       if (error instanceof EntityNotFoundError) {
         throw EntityNotFoundException();
