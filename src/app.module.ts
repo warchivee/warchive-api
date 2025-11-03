@@ -16,6 +16,7 @@ import { KeywordsModule } from './admin/keywords/keywords.module';
 import { PublishWataModule } from './publish-wata/publish-wata.module';
 import { ScrapbookModule } from './scapbook/scapbook.module';
 import { BannerModule } from './banner/banner.module';
+import { ReceiptModule } from './receipt/receipt.mocule';
 
 @Module({
   imports: [
@@ -52,6 +53,7 @@ import { BannerModule } from './banner/banner.module';
     ScrapbookModule,
     PublishWataModule,
     BannerModule,
+    ReceiptModule,
   ],
   controllers: [AppController],
   providers: [AppService],

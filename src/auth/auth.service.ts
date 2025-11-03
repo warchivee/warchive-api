@@ -46,14 +46,25 @@ export class AuthService {
     return {
       access_token: accessToken,
       refresh_token: refreshToken,
-      user: user,
+      user: {
+        id: user.id,
+        nickname: user.nickname,
+        role: user.role,
+      },
     };
   }
 
   async refreshAccessToken(user: User) {
     const findUser = await this.userService.findOne({ id: user.id });
 
-    return { access_token: this.authJwtService.generateAccessToken(findUser) };
+    return {
+      access_token: this.authJwtService.generateAccessToken(findUser),
+      user: {
+        id: findUser.id,
+        nickname: findUser.nickname,
+        role: findUser.role,
+      },
+    };
   }
 
   async withdrawal(user: User) {

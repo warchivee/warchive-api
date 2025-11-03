@@ -39,8 +39,12 @@ async function bootstrap() {
 
   app.use(cookieParser());
 
+  const allowedOrigins = process.env.FRONTEND_DOMAINS
+    ? process.env.FRONTEND_DOMAINS.split(',').map((origin) => origin.trim())
+    : [];
+
   app.enableCors({
-    origin: process.env.FRONTEND_DOMAIN,
+    origin: allowedOrigins,
     methods: 'GET,PUT,PATCH,POST,DELETE',
     credentials: true,
   });

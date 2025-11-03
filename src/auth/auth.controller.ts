@@ -44,6 +44,7 @@ export class AuthController {
       secure: true,
       httpOnly: true,
       path: '/api/v1/auth/reissue',
+      domain: '.localhost',
       maxAge: tokens.refresh_token.expires_in,
     });
 
@@ -83,7 +84,7 @@ export class AuthController {
   async refreshAccessToken(@Request() req) {
     const tokens = await this.authService.refreshAccessToken(req.user);
 
-    return tokens.access_token;
+    return { ...tokens.access_token, user: tokens.user };
   }
 
   @ApiOperation({
