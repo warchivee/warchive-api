@@ -4,7 +4,6 @@ import { Repository, EntityNotFoundError, EntityManager } from 'typeorm';
 import { InjectRepository } from '@nestjs/typeorm';
 import { EntityNotFoundException } from 'src/common/exception/service.exception';
 import { Receipt } from './entities/receipt.entity';
-import { UpdateReceiptDto } from './dto/update-receipt.dto';
 import { CreateReceiptDto } from './dto/create-receipt.dto';
 import { ReceiptSyncInfo } from './entities/receipt-sync-info.entity';
 
@@ -13,6 +12,7 @@ export class ReceiptService {
   constructor(
     @InjectRepository(Receipt)
     private readonly receiptRepository: Repository<Receipt>,
+    @InjectRepository(ReceiptSyncInfo)
     private readonly receiptSyncInfoRepository: Repository<ReceiptSyncInfo>,
     private readonly entityManager: EntityManager,
   ) {}
@@ -35,7 +35,7 @@ export class ReceiptService {
 
   async findSyncInfo(user: User) {
     try {
-      const result = await this.receiptSyncInfoRepository.find({
+      const result = await this.receiptSyncInfoRepository.findOne({
         where: { user_id: user.id },
       });
 
@@ -51,6 +51,8 @@ export class ReceiptService {
 
   async synchronize(user: User, createReceiptDtos: CreateReceiptDto[]) {
     try {
+      const now = new Date();
+
       await this.entityManager.transaction(async (manager) => {
         // 1️⃣ 기존 유저 영수증 데이터 삭제
         await manager.delete(Receipt, { adder: { id: user.id } });
@@ -74,19 +76,22 @@ export class ReceiptService {
         });
 
         if (existingSync) {
-          existingSync.last_synced_at = new Date();
+          existingSync.last_synced_at = now;
           await manager.save(existingSync);
         } else {
           const newSyncInfo = manager.create(ReceiptSyncInfo, {
             user_id: user.id,
-            lastSyncedAt: new Date(),
+            lastSyncedAt: now,
           });
           await manager.save(newSyncInfo);
         }
       });
 
       // 4️⃣ 동기화 후 최신 데이터 반환
-      return await this.find(user);
+      return {
+        last_synced_at: now,
+        datas: await this.find(user),
+      };
     } catch (error) {
       if (error instanceof EntityNotFoundError) {
         throw EntityNotFoundException();
