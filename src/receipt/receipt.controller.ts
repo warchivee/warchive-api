@@ -1,17 +1,6 @@
-import {
-  Controller,
-  Get,
-  Body,
-  Patch,
-  Request,
-  Put,
-  Post,
-  Param,
-  Delete,
-} from '@nestjs/common';
+import { Controller, Get, Body, Request, Put } from '@nestjs/common';
 import { ApiBearerAuth, ApiOperation, ApiTags } from '@nestjs/swagger';
 import { ReceiptService } from './receipt.service';
-import { UpdateReceiptDto } from './dto/update-receipt.dto';
 import { CreateReceiptDto } from './dto/create-receipt.dto';
 
 @ApiTags('Receipt')
@@ -31,45 +20,21 @@ export class ReceiptController {
 
   @ApiBearerAuth('access_token')
   @ApiOperation({
-    summary: '영수증 아이템 수정',
-    description: '영수증 아이템을 수정합니다.',
+    summary: '영수증 동기화 정보 조회',
+    description: '동기화 정보를 조회합니다.',
   })
-  @Put('/:id')
-  update(
-    @Request() req,
-    @Param('id') id: number,
-    @Body() dto: UpdateReceiptDto,
-  ) {
-    return this.receiptService.update(req.user, id, dto);
+  @Get('/sync')
+  findSyncInfo(@Request() req) {
+    return this.receiptService.findSyncInfo(req.user);
   }
 
   @ApiBearerAuth('access_token')
   @ApiOperation({
-    summary: '영수증 아이템 생성',
-    description: '영수증 아이템을 생성합니다.',
+    summary: '영수증 아이템 동기화',
+    description: '영수증을 동기화합니다.',
   })
-  @Post()
-  create(@Request() req, @Body() dto: CreateReceiptDto) {
-    return this.receiptService.create(req.user, dto);
-  }
-
-  @ApiBearerAuth('access_token')
-  @ApiOperation({
-    summary: '영수증 아이템 삭제',
-    description: '영수증 아이템 삭제합니다.',
-  })
-  @Delete('/:id')
-  delete(@Request() req, @Param('id') id: number) {
-    return this.receiptService.delete(req.user, id);
-  }
-
-  @ApiBearerAuth('access_token')
-  @ApiOperation({
-    summary: '영수증 아이템 수정',
-    description: '영수증 아이템을 여러건 수정합니다.',
-  })
-  @Patch('/bulk')
-  updateItem(@Request() req, @Body() dtos: UpdateReceiptDto[]) {
-    return this.receiptService.bulkUpdate(req.user, dtos);
+  @Put('/sync')
+  update(@Request() req, @Body() dtos: CreateReceiptDto[]) {
+    return this.receiptService.synchronize(req.user, dtos);
   }
 }
